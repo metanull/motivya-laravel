@@ -100,7 +100,7 @@ This file tracks all key technical and business decisions for the Motivya projec
 
 - **Status**: DECIDED
 - **Date**: 2026-04
-- **Decision**: Single OVH VPS Starter (1 vCPU, 2 GB RAM, 20 GB SSD, France datacenter) running Docker Compose. Domain: `metanull.eu`. SSL via Let's Encrypt.
+- **Decision**: Single OVH VPS Starter (1 vCPU, 2 GB RAM, 20 GB SSD, France datacenter) running Docker Compose. Domain: `motivya.metanull.eu` (app), `metanull.eu` (static landing). SSL via Let's Encrypt.
 - **Rationale**: Cheapest viable option (~€3.50/mo). Free OVH credits cover initial period. A single VPS running the same Docker Compose stack as local dev (Nginx + PHP-FPM + MySQL + Valkey) handles MVP traffic easily. No multi-server orchestration needed at this scale.
 - **Deployment**: GitHub Actions SSH-based deploy on push to `main`. No container registry — code synced via rsync/git pull, containers rebuilt on the VPS.
 - **Cost model**: VPS is billed monthly (not per-hour). Shutting down does not save money. At ~€3.50/mo this is acceptable.

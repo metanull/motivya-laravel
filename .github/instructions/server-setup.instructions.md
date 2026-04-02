@@ -33,9 +33,10 @@ A single OVH VPS Starter runs the entire stack via Docker Compose.
 ## Domain & DNS
 
 - **Domain**: `metanull.eu` (registered at OVH)
-- **DNS**: OVH DNS zone — A record pointing to the VPS IP
-- **SSL**: Let's Encrypt via Certbot, auto-renewing (cron or systemd timer)
-- **Subdomains** (optional): `www.metanull.eu` (CNAME to `metanull.eu`)
+- **App URL**: `motivya.metanull.eu` (CNAME → `metanull.eu`)
+- **Landing page**: `metanull.eu` / `www.metanull.eu` — static page linking to GitHub
+- **DNS**: OVH DNS zone — A record for `metanull.eu` pointing to VPS IP, CNAME `www` and `motivya` → `metanull.eu`
+- **SSL**: Let's Encrypt via Certbot, auto-renewing (cron or systemd timer) — covers all three hostnames
 
 ## VPS Provisioning Checklist
 
@@ -86,7 +87,7 @@ These steps are automated by `scripts/provision.sh` but listed here for referenc
 
 ```bash
 # Initial certificate
-certbot certonly --standalone -d metanull.eu -d www.metanull.eu --agree-tos -m admin@metanull.eu
+certbot certonly --standalone -d motivya.metanull.eu -d metanull.eu -d www.metanull.eu --agree-tos -m admin@metanull.eu
 
 # Auto-renewal cron (runs twice daily, renews only if expiring within 30 days)
 echo "0 */12 * * * certbot renew --quiet --deploy-hook 'docker compose -f /opt/motivya/docker-compose.prod.yml restart nginx'" | crontab -
@@ -114,7 +115,7 @@ Production `.env.production` (stored on VPS, never in Git):
 ```env
 APP_ENV=production
 APP_DEBUG=false
-APP_URL=https://metanull.eu
+APP_URL=https://motivya.metanull.eu
 
 DB_CONNECTION=mysql
 DB_HOST=mysql
@@ -163,12 +164,13 @@ VPS: scripts/deploy.sh
   7. php artisan event:cache
   8. docker compose restart app
   9. php artisan queue:restart
-  10. curl --fail https://metanull.eu/health
+  10. curl --fail https://motivya.metanull.eu/health
 ```
 
-## GitHub Repository Secrets
+## GitHub Environment Secrets
 
-Configure these in the GitHub repository settings under **Settings → Secrets and variables → Actions**:
+Secrets are stored in the **`motivya.metanull.eu`** GitHub Environment (not repo-level).
+Configure at **Settings → Environments → motivya.metanull.eu → Environment secrets**:
 
 | Secret | Value | Used by |
 |--------|-------|---------|

@@ -26,7 +26,8 @@ set -euo pipefail
 # --- Configuration -----------------------------------------------------------
 DEPLOY_USER="deploy"
 APP_DIR="/opt/motivya"
-DOMAIN="metanull.eu"
+APP_DOMAIN="motivya.metanull.eu"
+ROOT_DOMAIN="metanull.eu"
 TIMEZONE="Europe/Brussels"
 LOCALE="fr_BE.UTF-8"
 
@@ -49,7 +50,7 @@ source /etc/os-release
 # --- Prompt for SSH public key ------------------------------------------------
 echo ""
 echo "============================================================"
-echo "  Motivya VPS Provisioning — metanull.eu"
+echo "  Motivya VPS Provisioning — motivya.metanull.eu"
 echo "============================================================"
 echo ""
 
@@ -178,7 +179,7 @@ info "Installing Certbot..."
 apt-get install -y -qq certbot
 
 # Note: SSL certificate must be obtained AFTER DNS is configured.
-# Run manually: certbot certonly --standalone -d metanull.eu --agree-tos -m admin@metanull.eu
+# Run manually: certbot certonly --standalone -d motivya.metanull.eu -d metanull.eu -d www.metanull.eu --agree-tos -m admin@metanull.eu
 
 # --- 9. Application directory -------------------------------------------------
 info "Creating application directory at ${APP_DIR}..."
@@ -214,8 +215,8 @@ echo "============================================================"
 echo ""
 echo "Next steps:"
 echo "  1. Test SSH: ssh ${DEPLOY_USER}@<VPS_IP>"
-echo "  2. Configure DNS: A record for ${DOMAIN} → <VPS_IP>"
-echo "  3. Obtain SSL: certbot certonly --standalone -d ${DOMAIN} --agree-tos -m admin@${DOMAIN}"
+echo "  2. Configure DNS: A record for ${ROOT_DOMAIN} → <VPS_IP>, CNAME motivya → ${ROOT_DOMAIN}"
+echo "  3. Obtain SSL: certbot certonly --standalone -d ${APP_DOMAIN} -d ${ROOT_DOMAIN} -d www.${ROOT_DOMAIN} --agree-tos -m admin@${ROOT_DOMAIN}"
 echo "  4. Clone repo: cd ${APP_DIR}/src && git clone https://github.com/metanull/motivya-laravel.git ."
 echo "  5. Create .env.production at ${APP_DIR}/.env.production"
 echo "  6. First deploy: bash ${APP_DIR}/src/scripts/deploy.sh"

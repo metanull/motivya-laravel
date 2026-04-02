@@ -25,7 +25,7 @@ set -euo pipefail
 APP_DIR="/opt/motivya"
 SRC_DIR="${APP_DIR}/src"
 COMPOSE_FILE="${APP_DIR}/docker-compose.prod.yml"
-DOMAIN="metanull.eu"
+DOMAIN="motivya.metanull.eu"
 
 # --- Colors -------------------------------------------------------------------
 RED='\033[0;31m'

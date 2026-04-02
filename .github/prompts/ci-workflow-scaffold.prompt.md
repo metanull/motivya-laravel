@@ -195,8 +195,8 @@ jobs:
     name: Build & Deploy
     runs-on: ubuntu-24.04
     environment:
-      name: production
-      url: https://metanull.eu
+      name: motivya.metanull.eu
+      url: https://motivya.metanull.eu
 
     steps:
       - name: Checkout code
@@ -256,7 +256,7 @@ jobs:
 
 **Environment:**
 - Uses GitHub Environments `production` — secrets stored there, not in workflow
-- `url` set to `https://metanull.eu`
+- `url` set to `https://motivya.metanull.eu`
 
 **Build:**
 - `--no-dev` on Composer — production has no dev dependencies
