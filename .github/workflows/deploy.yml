@@ -1,7 +1,9 @@
 name: Deploy
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
 
 concurrency:
@@ -9,51 +11,21 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
-    name: Build & Deploy
+  deploy:
+    name: Deploy to VPS
     runs-on: ubuntu-24.04
+    if: github.event.workflow_run.conclusion == 'success'
     environment:
       name: motivya.metanull.eu
       url: https://motivya.metanull.eu
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
+      - name: Download release artifact
+        uses: actions/download-artifact@v4
         with:
-          php-version: '8.3'
-          extensions: pdo_sqlite, bcmath, intl, gd, zip, pcntl, redis
-          coverage: none
-
-      - name: Cache Composer dependencies
-        uses: actions/cache@v5
-        with:
-          path: vendor
-          key: composer-${{ hashFiles('composer.lock') }}
-          restore-keys: composer-
-
-      - name: Install Composer dependencies
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-
-      - name: Cache NPM dependencies
-        uses: actions/cache@v5
-        with:
-          path: node_modules
-          key: npm-${{ hashFiles('package-lock.json') }}
-          restore-keys: npm-
-
-      - name: Install Node dependencies
-        run: npm ci
-
-      - name: Build production assets
-        run: npm run build
+          name: release-${{ github.event.workflow_run.head_sha }}
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup SSH
         run: |
@@ -62,33 +34,40 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
 
-      - name: Verify SSH key
-        run: |
-          echo "Key file info:"
-          wc -c ~/.ssh/deploy_key
-          head -1 ~/.ssh/deploy_key
-          tail -1 ~/.ssh/deploy_key
-          ssh-keygen -lf ~/.ssh/deploy_key || echo "FINGERPRINT FAILED"
-          echo "---"
-          file ~/.ssh/deploy_key
-
-      - name: Deploy to VPS
+      - name: Upload release to VPS
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
           VPS_USER: ${{ secrets.VPS_SSH_USER }}
         run: |
-          ssh -vvv -i ~/.ssh/deploy_key -o ConnectTimeout=30 "${VPS_USER}@${VPS_HOST}" bash -s <<'DEPLOY_SCRIPT'
+          scp -i ~/.ssh/deploy_key -o ConnectTimeout=30 \
+            release.tar.gz "${VPS_USER}@${VPS_HOST}:/tmp/motivya-release.tar.gz"
+
+      - name: Run deploy script on VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_SSH_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o ConnectTimeout=30 "${VPS_USER}@${VPS_HOST}" bash -s <<'REMOTE'
             set -e
+            ARCHIVE="/tmp/motivya-release.tar.gz"
+            DEPLOY_SCRIPT="/opt/motivya/current/scripts/deploy.sh"
 
-            APP_DIR="/opt/motivya/src"
-
-            # Bootstrap: clone repo if first deploy
-            if [ ! -d "$APP_DIR/.git" ]; then
-              echo "[DEPLOY] First deploy — cloning repository..."
-              mkdir -p /opt/motivya
-              git clone https://github.com/metanull/motivya-laravel.git "$APP_DIR"
+            # First deploy: extract to get the deploy script
+            if [ ! -f "$DEPLOY_SCRIPT" ]; then
+              echo "[DEPLOY] First deploy — bootstrapping from artifact..."
+              mkdir -p /opt/motivya/current
+              tar xzf "$ARCHIVE" -C /opt/motivya/current
             fi
 
-            # Run the deploy script from the repo
-            bash "$APP_DIR/scripts/deploy.sh"
-          DEPLOY_SCRIPT
+            bash "$DEPLOY_SCRIPT" "$ARCHIVE"
+          REMOTE
+
+      - name: Cleanup
+        if: always()
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_SSH_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o ConnectTimeout=30 \
+            "${VPS_USER}@${VPS_HOST}" \
+            'rm -f /tmp/motivya-release.tar.gz' || true
