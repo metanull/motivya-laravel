@@ -1,5 +1,5 @@
 ---
-description: "Use when creating or modifying Livewire components, their Blade views, wire:model bindings, component validation, form handling, pagination, authorization in components, or mobile-first layout. Covers Livewire 3 syntax, directory conventions, service delegation, and Pest test patterns."
+description: "Use when creating or modifying Livewire components, their Blade views, wire:model bindings, component validation, form handling, file uploads, pagination, authorization in components, or mobile-first layout. Covers Livewire 3 syntax, Form Objects (mandatory), WithFileUploads, directory conventions, service delegation, and Pest test patterns."
 applyTo: "app/Livewire/**,resources/views/livewire/**"
 ---
 
@@ -36,6 +36,17 @@ app/Livewire/
     └── Register.php
 ```
 
+### Form Object Classes
+
+```
+app/Livewire/Forms/
+├── SessionForm.php
+├── BookingForm.php
+├── CoachProfileForm.php
+├── LoginForm.php
+└── RegisterForm.php
+```
+
 ### Blade Views
 
 ```
@@ -61,24 +72,30 @@ resources/views/livewire/
 | Blade tag | `<livewire:feature.action />` | `<livewire:session.create />` |
 | Feature grouping | One directory per domain model | `Session/`, `Booking/`, `Coach/` |
 
-## Component Class Pattern
+## Form Objects (Mandatory)
+
+**Every form in Motivya uses a `Livewire\Form` object.** No inline `#[Validate]` properties on components — all form state and validation lives in a dedicated Form class.
+
+### Why Form Objects Everywhere
+
+- Single source of truth for validation rules per form
+- Components stay thin — Form handles state, component handles authorization + orchestration
+- Easy to share between Create and Edit (call `$this->form->fill($model)` in Edit's `mount()`)
+- Composable with Service classes: `$service->create($this->form->toArray())`
+
+### Form Class Pattern — `app/Livewire/Forms/SessionForm.php`
 
 ```php
 <?php
 
 declare(strict_types=1);
 
-namespace App\Livewire\Session;
+namespace App\Livewire\Forms;
 
-use App\Enums\SessionLevel;
-use App\Models\Session;
-use App\Services\SessionService;
-use Illuminate\Support\Facades\Gate;
-use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
-use Livewire\Component;
+use Livewire\Form;
 
-final class Create extends Component
+final class SessionForm extends Form
 {
     #[Validate('required|string|max:255')]
     public string $location = '';
@@ -104,13 +121,9 @@ final class Create extends Component
     #[Validate('required|integer|min:1|gte:minParticipants')]
     public int $maxParticipants = 1;
 
-    public function save(SessionService $service): void
+    public function toServiceArray(): array
     {
-        Gate::authorize('create', Session::class);
-
-        $this->validate();
-
-        $service->create(auth()->user(), $this->only([
+        return $this->only([
             'location',
             'postalCode',
             'date',
@@ -119,7 +132,67 @@ final class Create extends Component
             'pricePerPerson',
             'minParticipants',
             'maxParticipants',
-        ]));
+        ]);
+    }
+}
+```
+
+### Form Class Rules
+
+- **Location**: `app/Livewire/Forms/` — one Form class per form (not per component)
+- **Naming**: `{Model}Form.php` — e.g., `SessionForm`, `BookingForm`, `CoachProfileForm`
+- `declare(strict_types=1)` and `final class` — same as components
+- Extend `Livewire\Form` — not `Component`, not a custom base
+- Use `#[Validate]` attributes on every property — this is the single location for all form validation
+- Typed properties with sensible defaults: `string $location = ''`, `int $price = 0`
+- Money properties: `public int` — always cents, never float
+- Add a `toServiceArray()` method that returns the validated data shaped for the Service class
+- For Edit forms, use `$this->fill($model->only([...]))` in the component's `mount()`
+- For complex cross-field rules, override `rules()` method on the Form
+- Forms MAY contain a `setFromModel(Model $model): void` helper to populate from an existing record
+
+### Shared Create/Edit Pattern
+
+Reuse the same Form class for both Create and Edit:
+
+```php
+// In Edit component mount():
+public function mount(Session $session): void
+{
+    $this->session = $session;
+    $this->form->fill($session->only([
+        'location', 'postal_code', 'date', 'start_time', 'end_time',
+        'price_per_person', 'min_participants', 'max_participants',
+    ]));
+}
+```
+
+## Component Class Pattern
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Livewire\Session;
+
+use App\Livewire\Forms\SessionForm;
+use App\Models\Session;
+use App\Services\SessionService;
+use Illuminate\Support\Facades\Gate;
+use Livewire\Component;
+
+final class Create extends Component
+{
+    public SessionForm $form;
+
+    public function save(SessionService $service): void
+    {
+        Gate::authorize('create', Session::class);
+
+        $this->form->validate();
+
+        $service->create(auth()->user(), $this->form->toServiceArray());
 
         $this->dispatch('notify', type: 'success', message: __('sessions.created'));
         $this->redirect(route('coach.sessions.index'), navigate: true);
@@ -140,12 +213,14 @@ final class Create extends Component
 
 ### Properties
 
-- Use `#[Validate]` attributes for inline validation — preferred for simple rules
-- For complex rules (cross-field, conditional), override `rules()` method instead
+- **All form state lives in a Form Object** — components own only non-form state (e.g., a loaded model, a search string, a filter flag)
+- Components declare `public {Model}Form $form;` — Livewire auto-instantiates it
+- Non-form properties (search, sort, filter) may use inline `#[Validate]` on the component
 - Property names: `camelCase` — Livewire auto-converts to `wire:model` compatible names
 - Money properties: `public int` — always cents, never float
-- Typed properties with defaults: `public string $location = ''`, `public int $price = 0`
+- Typed properties with defaults: `public string $search = ''`, `public int $page = 1`
 - Do NOT use `public $property` without a type — always type-hint
+- Do NOT put `#[Validate]` on component properties for form fields — that belongs in the Form Object
 
 ### Lifecycle Methods
 
@@ -251,12 +326,12 @@ final class Index extends Component
                 {{ __('sessions.label_location') }}
             </label>
             <input
-                wire:model.blur="location"
+                wire:model.blur="form.location"
                 type="text"
                 id="location"
                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             />
-            @error('location')
+            @error('form.location')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
             @enderror
         </div>
@@ -269,7 +344,7 @@ final class Index extends Component
             <div class="relative mt-1">
                 <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">€</span>
                 <input
-                    wire:model.blur="pricePerPerson"
+                    wire:model.blur="form.pricePerPerson"
                     type="number"
                     id="pricePerPerson"
                     min="0"
@@ -278,7 +353,7 @@ final class Index extends Component
                 />
             </div>
             <p class="mt-1 text-xs text-gray-500">{{ __('sessions.hint_price_cents') }}</p>
-            @error('pricePerPerson')
+            @error('form.pricePerPerson')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
             @enderror
         </div>
@@ -333,15 +408,15 @@ For long-running actions, add a `wire:target="method"` to scope the loading stat
 
 ### Error Display
 
-Use `@error` for inline validation and a generic error block for domain exceptions:
+Use `@error` with the `form.` prefix for Form Object fields:
 
 ```blade
-{{-- Inline field error --}}
-@error('location')
+{{-- Inline field error (Form Object) --}}
+@error('form.location')
     <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
 @enderror
 
-{{-- General error for domain exceptions --}}
+{{-- General error for domain exceptions (set on component) --}}
 @error('booking')
     <div class="rounded-md bg-red-50 p-4">
         <p class="text-sm text-red-700">{{ $message }}</p>
@@ -488,6 +563,202 @@ $this->dispatch('notify', type: 'error', message: __('sessions.create_failed'));
 
 The main layout listens for the `notify` event and renders the toast. Components never render toast UI directly.
 
+## File Uploads
+
+Use `WithFileUploads` for any component that handles file uploads (coach profile photo, session cover image, KYC documents).
+
+### Form Object with File Upload
+
+File properties live in the Form Object alongside other fields:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Livewire\Forms;
+
+use Livewire\Attributes\Validate;
+use Livewire\Form;
+
+final class CoachProfileForm extends Form
+{
+    #[Validate('required|string|max:255')]
+    public string $displayName = '';
+
+    #[Validate('required|string|max:1000')]
+    public string $bio = '';
+
+    #[Validate('nullable|image|mimes:jpg,jpeg,png,webp|max:2048')]
+    public $photo = null; // TemporaryUploadedFile or null — cannot type-hint
+
+    public function toServiceArray(): array
+    {
+        return $this->only(['displayName', 'bio']);
+        // Photo handled separately via storePhoto()
+    }
+}
+```
+
+### Component with File Upload
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Livewire\Coach;
+
+use App\Livewire\Forms\CoachProfileForm;
+use App\Services\CoachProfileService;
+use Illuminate\Support\Facades\Gate;
+use Livewire\Component;
+use Livewire\WithFileUploads;
+
+final class Profile extends Component
+{
+    use WithFileUploads;
+
+    public CoachProfileForm $form;
+
+    public ?string $existingPhotoUrl = null;
+
+    public function mount(): void
+    {
+        $coach = auth()->user()->coachProfile;
+        $this->form->fill($coach->only(['display_name', 'bio']));
+        $this->existingPhotoUrl = $coach->photo_url;
+    }
+
+    public function updatedFormPhoto(): void
+    {
+        $this->form->validateOnly('photo');
+    }
+
+    public function save(CoachProfileService $service): void
+    {
+        Gate::authorize('update', auth()->user()->coachProfile);
+
+        $this->form->validate();
+
+        $service->update(
+            auth()->user()->coachProfile,
+            $this->form->toServiceArray(),
+            $this->form->photo, // Pass the TemporaryUploadedFile (or null)
+        );
+
+        $this->dispatch('notify', type: 'success', message: __('coaches.profile_updated'));
+        $this->redirect(route('coach.dashboard'), navigate: true);
+    }
+
+    public function removePhoto(): void
+    {
+        $this->form->photo = null;
+        $this->existingPhotoUrl = null;
+    }
+
+    public function render(): \Illuminate\Contracts\View\View
+    {
+        return view('livewire.coach.profile');
+    }
+}
+```
+
+### Blade View for File Upload
+
+```blade
+<div>
+    <label class="block text-sm font-medium text-gray-700">{{ __('coaches.label_photo') }}</label>
+
+    {{-- Preview --}}
+    @if ($form->photo)
+        <img src="{{ $form->photo->temporaryUrl() }}" alt="{{ __('coaches.photo_preview') }}"
+             class="mt-2 h-24 w-24 rounded-full object-cover" />
+    @elseif ($existingPhotoUrl)
+        <img src="{{ $existingPhotoUrl }}" alt="{{ __('coaches.photo_current') }}"
+             class="mt-2 h-24 w-24 rounded-full object-cover" />
+    @endif
+
+    {{-- Input --}}
+    <input wire:model="form.photo" type="file" accept="image/jpeg,image/png,image/webp"
+           class="mt-2 block w-full text-sm text-gray-500 file:mr-4 file:rounded-md file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-medium file:text-indigo-700 hover:file:bg-indigo-100" />
+
+    {{-- Loading indicator --}}
+    <div wire:loading wire:target="form.photo" class="mt-2 text-sm text-gray-500">
+        {{ __('common.uploading') }}
+    </div>
+
+    @error('form.photo')
+        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+    @enderror
+</div>
+```
+
+### Service Class Storage Pattern
+
+The **Service** handles storage — never store files in the component or Form:
+
+```php
+// In CoachProfileService:
+public function update(CoachProfile $profile, array $data, ?TemporaryUploadedFile $photo = null): void
+{
+    DB::transaction(function () use ($profile, $data, $photo) {
+        $profile->update($data);
+
+        if ($photo !== null) {
+            // Delete old photo if exists
+            if ($profile->photo_path) {
+                Storage::disk($this->disk())->delete($profile->photo_path);
+            }
+
+            $path = $photo->store('coaches/photos', $this->disk());
+            $profile->update(['photo_path' => $path]);
+        }
+    });
+}
+
+private function disk(): string
+{
+    return app()->environment('production') ? 's3' : 'local';
+}
+```
+
+### File Upload Rules
+
+| Rule | Detail |
+|------|--------|
+| Trait | `use WithFileUploads` on the **component**, not the Form |
+| File property | Declare in the Form Object as `public $photo = null` (untyped — Livewire requirement) |
+| Validation | `#[Validate]` on the Form property: `image\|mimes:jpg,jpeg,png,webp\|max:2048` |
+| Real-time validation | `updatedFormPhoto()` on the component to validate immediately on selection |
+| Preview | Use `$form->photo->temporaryUrl()` — only works for images |
+| Storage | **Service class** calls `$photo->store('path', $disk)` — never in the component |
+| Disk | `local` in dev/test, `s3` in production — resolved by the Service via `app()->environment()` |
+| Max size | 2MB (`max:2048`) for profile photos; 5MB for documents — configurable per Form |
+| Accepted types | Images: `jpg,jpeg,png,webp`. Documents: `pdf,jpg,jpeg,png` |
+| Cleanup | Livewire auto-cleans temp uploads after 24h. Old file deleted by Service before storing new one |
+| Security | Never expose the raw storage path to the client — serve via signed URLs or a controller |
+| Signed URLs (S3) | Use `Storage::temporaryUrl($path, now()->addMinutes(30))` for private files |
+| Public files | Store in `public/` disk prefix only for truly public assets (e.g., session cover images) |
+
+### Temporary URL Security
+
+Never use `temporaryUrl()` on the server side for anything other than the upload preview in Blade. For stored files:
+
+```php
+// In a Resource or accessor:
+public function getPhotoUrlAttribute(): ?string
+{
+    if (! $this->photo_path) {
+        return null;
+    }
+
+    return app()->environment('production')
+        ? Storage::disk('s3')->temporaryUrl($this->photo_path, now()->addMinutes(30))
+        : Storage::disk('local')->url($this->photo_path);
+}
+```
+
 ## Forbidden
 
 - Do NOT put business logic in components — delegate to services
@@ -502,3 +773,6 @@ The main layout listens for the `notify` event and renders the toast. Components
 - Do NOT check roles directly in Blade — use `@can` with policies
 - Do NOT load all records — always paginate lists with `WithPagination`
 - Do NOT use `sleep()` or polling (`wire:poll`) without a documented reason
+- Do NOT put form field properties directly on components — always use a Form Object (`Livewire\Form`)
+- Do NOT store uploaded files in the component or Form — delegate to Service class
+- Do NOT serve stored files by exposing raw storage paths — use signed URLs or a download controller
