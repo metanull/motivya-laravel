@@ -1,0 +1,13 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', function () {
+    return view('welcome');
+});
+
+Route::get('/health', function () {
+    return response()->json(['status' => 'ok']);
+})->name('health');
