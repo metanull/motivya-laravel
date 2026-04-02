@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -28,7 +28,7 @@ jobs:
           coverage: none
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: vendor
           key: composer-${{ hashFiles('composer.lock') }}
@@ -38,12 +38,12 @@ jobs:
         run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
 
       - name: Cache NPM dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: node_modules
           key: npm-${{ hashFiles('package-lock.json') }}
@@ -61,6 +61,11 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_SSH_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
+          script_stop: true
           script: |
-            echo "Deployment placeholder — Docker Compose not yet configured"
-            echo "VPS connection successful"
+            set -e
+            if [ ! -f /opt/motivya/deploy-ready ]; then
+              echo "ERROR: Deployment not configured yet. Create /opt/motivya/deploy-ready when Docker Compose is set up."
+              exit 1
+            fi
+            bash /opt/motivya/src/scripts/deploy.sh
