@@ -28,3 +28,8 @@ Homestead.json
 .env.production
 .phpactor.json
 auth.json
+
+# Server credentials — NEVER commit
+.server-credentials
+scripts/*.pem
+scripts/*.key
