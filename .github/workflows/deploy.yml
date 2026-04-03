@@ -68,18 +68,15 @@ jobs:
           ssh -i ~/.ssh/deploy_key -o ConnectTimeout=30 "${VPS_USER}@${VPS_HOST}" bash -s <<'REMOTE'
             set -e
             ARCHIVE="/tmp/motivya-release.tar.gz"
-            DEPLOY_SCRIPT="/opt/motivya/current/scripts/deploy.sh"
 
-            # First deploy: extract artifact to get deploy.sh
-            if [ ! -f "$DEPLOY_SCRIPT" ]; then
-              echo "[DEPLOY] First deploy — bootstrapping from artifact..."
-              mkdir -p /opt/motivya/releases/bootstrap
-              tar xzf "$ARCHIVE" -C /opt/motivya/releases/bootstrap
-              ln -sfn /opt/motivya/releases/bootstrap /opt/motivya/current
-              DEPLOY_SCRIPT="/opt/motivya/current/scripts/deploy.sh"
-            fi
+            # Always extract to a staging dir to get the latest deploy.sh
+            STAGING="/tmp/motivya-staging-$$"
+            mkdir -p "$STAGING"
+            tar xzf "$ARCHIVE" -C "$STAGING"
 
-            bash "$DEPLOY_SCRIPT" "$ARCHIVE"
+            bash "$STAGING/scripts/deploy.sh" "$ARCHIVE"
+
+            rm -rf "$STAGING"
           REMOTE
 
       - name: Cleanup
