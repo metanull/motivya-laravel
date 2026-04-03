@@ -25,7 +25,7 @@ jobs:
 
     steps:
       - name: Download release artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: release-${{ github.event.workflow_run.head_sha }}
           run-id: ${{ github.event.workflow_run.id }}
@@ -37,6 +37,20 @@ jobs:
           echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Check VPS connectivity
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          nc -z -w 10 "$VPS_HOST" 22 || { echo "::error::Cannot reach ${VPS_HOST}:22 — check VPS_HOST and firewall"; exit 1; }
+
+      - name: Verify SSH authentication
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_SSH_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o ConnectTimeout=10 -o BatchMode=yes "${VPS_USER}@${VPS_HOST}" whoami || \
+            { echo "::error::SSH auth failed — check VPS_SSH_KEY and VPS_SSH_USER secrets"; exit 1; }
 
       - name: Upload release to VPS
         env:
@@ -56,10 +70,11 @@ jobs:
             ARCHIVE="/tmp/motivya-release.tar.gz"
             DEPLOY_SCRIPT="/opt/motivya/current/scripts/deploy.sh"
 
-            # First deploy: extract to get the deploy script
+            # First deploy: bootstrap directory + extract to get deploy.sh
             if [ ! -f "$DEPLOY_SCRIPT" ]; then
               echo "[DEPLOY] First deploy — bootstrapping from artifact..."
-              mkdir -p /opt/motivya/current
+              sudo mkdir -p /opt/motivya/current
+              sudo chown -R "$(id -un):$(id -gn)" /opt/motivya
               tar xzf "$ARCHIVE" -C /opt/motivya/current
             fi
 
