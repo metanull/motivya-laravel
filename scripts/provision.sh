@@ -142,11 +142,30 @@ systemctl start "php${PHP_VERSION}-fpm"
 # =============================================================================
 info "Configuring Nginx for ${DOMAIN}..."
 NGINX_CONF="/etc/nginx/sites-available/motivya"
+SSL_CERT="/etc/letsencrypt/live/${DOMAIN}/fullchain.pem"
+SSL_KEY="/etc/letsencrypt/live/${DOMAIN}/privkey.pem"
 
-cat > "$NGINX_CONF" <<NGINX
+# Check if SSL cert exists to determine config
+if [[ -f "$SSL_CERT" && -f "$SSL_KEY" ]]; then
+    info "SSL certificate found — configuring HTTPS."
+    cat > "$NGINX_CONF" <<NGINX
+# HTTP -> HTTPS redirect
 server {
     listen 80;
-    server_name ${DOMAIN} _;
+    listen [::]:80;
+    server_name ${DOMAIN};
+    return 301 https://${DOMAIN}\$request_uri;
+}
+
+# Motivya Laravel app (HTTPS)
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name ${DOMAIN};
+
+    ssl_certificate     ${SSL_CERT};
+    ssl_certificate_key ${SSL_KEY};
+
     root ${APP_DIR}/current/public;
     index index.php;
 
@@ -175,6 +194,41 @@ server {
     }
 }
 NGINX
+else
+    warn "No SSL certificate found at ${SSL_CERT} — configuring HTTP only."
+    cat > "$NGINX_CONF" <<NGINX
+server {
+    listen 80;
+    server_name ${DOMAIN};
+    root ${APP_DIR}/current/public;
+    index index.php;
+
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+
+    charset utf-8;
+
+    location / {
+        try_files \$uri \$uri/ /index.php?\$query_string;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    error_page 404 /index.php;
+
+    location ~ \.php\$ {
+        fastcgi_pass unix:/run/php/php${PHP_VERSION}-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
+NGINX
+fi
 
 ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/
 rm -f /etc/nginx/sites-enabled/default

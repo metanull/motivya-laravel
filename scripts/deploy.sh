@@ -83,14 +83,29 @@ configure_laravel() {
     if [[ ! -f "${APP_DIR}/shared/.env" ]]; then
         info "Creating .env from .env.example..."
         cp .env.example "${APP_DIR}/shared/.env"
-        php artisan key:generate --force 2>/dev/null || true
+
+        # Production defaults
+        sed -i 's/^APP_ENV=.*/APP_ENV=production/' "${APP_DIR}/shared/.env"
+        sed -i 's/^APP_DEBUG=.*/APP_DEBUG=false/' "${APP_DIR}/shared/.env"
+        sed -i 's|^APP_URL=.*|APP_URL=https://motivya.metanull.eu|' "${APP_DIR}/shared/.env"
+
         # Use SQLite for initial deployment (no MySQL yet)
         sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/' "${APP_DIR}/shared/.env"
-        sed -i "s|^DB_DATABASE=.*|DB_DATABASE=${APP_DIR}/shared/database.sqlite|" "${APP_DIR}/shared/.env"
+        # Uncomment and set DB_DATABASE (may be commented in .env.example)
+        sed -i '/^#.*DB_DATABASE=/d' "${APP_DIR}/shared/.env"
+        sed -i "/^DB_CONNECTION=/a DB_DATABASE=${APP_DIR}/shared/database.sqlite" "${APP_DIR}/shared/.env"
+
+        touch "${APP_DIR}/shared/database.sqlite"
     fi
 
-    # Symlink .env
+    # Symlink .env (must happen before key:generate or artisan commands)
     ln -sfn "${APP_DIR}/shared/.env" "${CURRENT}/.env"
+
+    # Generate key if missing
+    if ! grep -q '^APP_KEY=base64:' "${APP_DIR}/shared/.env"; then
+        info "Generating application key..."
+        php artisan key:generate --force
+    fi
 }
 
 # --- 3. Run migrations -------------------------------------------------------
