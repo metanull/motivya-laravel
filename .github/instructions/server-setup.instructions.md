@@ -49,9 +49,20 @@ These steps are automated by `scripts/provision.sh` but listed here for referenc
 - Set timezone: `timedatectl set-timezone Europe/Brussels`
 - Set locale: `localectl set-locale LANG=fr_BE.UTF-8`
 
-### 2. Security Hardening
+### 2. Security Hardening — Two-Account Model
 
-- Create a non-root deploy user: `deploy` with sudo
+The VPS has exactly two user accounts with distinct roles:
+
+| Account | Purpose | SSH key | sudo | Used by |
+|---------|---------|---------|------|--------|
+| `ubuntu` | System administration (manual only) | `~/.ssh/ubuntu` | Yes | Human operator only |
+| `deploy` | Application deployment | `~/.ssh/motivya_deploy` | **No** | CD pipeline + human |
+
+**Rules:**
+- The `ubuntu` account is NEVER used in GitHub Actions, deploy scripts, or any automation.
+- The `deploy` account is NEVER given sudo access.
+- The `deploy` user owns `/opt/motivya/` and all its contents — no elevation needed for deploys.
+- If something requires root, it belongs in the one-time provisioning script (`scripts/provision.sh`), run manually via the `ubuntu` account.
 - SSH key-only authentication (disable password auth)
 - `PermitRootLogin no` in `/etc/ssh/sshd_config`
 - UFW firewall: allow 22 (SSH), 80 (HTTP), 443 (HTTPS) only
@@ -67,20 +78,29 @@ These steps are automated by `scripts/provision.sh` but listed here for referenc
 
 ### 4. Application Directory
 
+Owned by `deploy:deploy`. No root/sudo operations touch this tree during deploy.
+
 ```
-/opt/motivya/
-├── docker-compose.prod.yml
-├── .env.production          # Secrets — not in Git
-├── .docker/                 # Copied from repo
-│   ├── php/
-│   │   ├── Dockerfile.prod
-│   │   └── php.ini.prod
-│   └── nginx/
-│       └── production.conf  # SSL termination, proxy to app:9000
-├── src/                     # Application code (synced from Git)
-├── storage/                 # Persistent Laravel storage (mounted volume)
-├── backups/                 # DB dumps
-└── certbot/                 # Let's Encrypt certificates (mounted volume)
+/opt/motivya/                     # Owned by deploy:deploy
+├── current -> releases/<ts>/     # Symlink to active release (atomic swap)
+├── releases/                     # Timestamped release directories
+│   ├── 20260403120000/
+│   └── ...
+├── shared/                       # Persists across deployments
+│   ├── .env                      # Production .env (not in Git)
+│   ├── database.sqlite           # SQLite DB (initial; MySQL later)
+│   └── storage/                  # Laravel storage (symlinked into releases)
+│       ├── app/public/
+│       ├── framework/cache/data/
+│       ├── framework/sessions/
+│       ├── framework/views/
+│       └── logs/
+├── .env.production               # Legacy (from client repo setup)
+├── backup-db.sh
+├── backups/
+├── certbot/
+├── src/                          # Legacy (from client repo setup)
+└── static/
 ```
 
 ### 5. SSL Setup
@@ -140,32 +160,37 @@ STRIPE_WEBHOOK_SECRET=<stripe-webhook-secret>
 
 ## Deployment Flow
 
+Deploy is artifact-based — no git, composer, or npm on the VPS.
+
 ```
 Developer pushes to main
         │
         ▼
 GitHub Actions CI (ci.yml)
-  lint → test
+  lint → test → build release artifact (tarball)
         │ (all pass)
         ▼
 GitHub Actions Deploy (deploy.yml)
-  1. Build assets (npm run build)
-  2. SSH into VPS
-  3. Run scripts/deploy.sh on VPS
+  1. Download artifact from CI run
+  2. SSH pre-checks (netcat port 22 + SSH whoami) — fail fast
+  3. SCP release.tar.gz to VPS /tmp/
+  4. SSH: bash /opt/motivya/current/scripts/deploy.sh <tarball>
         │
         ▼
-VPS: scripts/deploy.sh
-  1. git pull origin main
-  2. composer install --no-dev
-  3. php artisan migrate --force
-  4. php artisan config:cache
-  5. php artisan route:cache
-  6. php artisan view:cache
-  7. php artisan event:cache
-  8. docker compose restart app
-  9. php artisan queue:restart
-  10. curl --fail https://motivya.metanull.eu/health
+VPS: scripts/deploy.sh (runs as deploy user, NO sudo)
+  1. Extract to /opt/motivya/releases/<timestamp>/
+  2. Symlink shared storage
+  3. Create/symlink .env
+  4. php artisan migrate --force
+  5. php artisan config:cache, route:cache, view:cache
+  6. Configure Nginx (via sudo for service reload only — see sudoers)
+  7. Swap /opt/motivya/current symlink (atomic)
+  8. Set permissions (www-data for storage)
+  9. Prune old releases (keep last 5)
+  10. Health check (curl localhost)
 ```
+
+**First deploy bootstrap:** The deploy workflow inline-extracts the tarball to `/opt/motivya/current/` if `deploy.sh` doesn't exist yet, then runs `deploy.sh` normally.
 
 ## GitHub Environment Secrets
 
@@ -198,6 +223,9 @@ These are the only secrets needed for deployment. Application secrets (Stripe, D
 
 ## Forbidden
 
+- **NEVER use `sudo` in deploy scripts or CI/CD pipelines.** The `deploy` user owns `/opt/motivya/` — no elevation needed. If a deploy step requires root, the architecture is wrong.
+- **NEVER use the `ubuntu` account in GitHub secrets, workflows, or automated scripts.** It is reserved for manual administration only.
+- **NEVER install packages (apt-get) in deploy scripts.** Runtime dependencies are installed once via `scripts/provision.sh` (run manually as `ubuntu`).
 - Do NOT expose MySQL or Valkey ports to the internet — internal Docker network only
 - Do NOT store production secrets in Git or GitHub Secrets (except SSH key for deploy)
 - Do NOT use `root` for SSH access or Docker operations

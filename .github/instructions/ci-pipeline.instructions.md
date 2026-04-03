@@ -7,30 +7,44 @@ applyTo: ".github/workflows/**"
 
 ## Pipeline Overview
 
-Every push and pull request triggers a multi-stage pipeline. All stages must pass before merge is allowed.
+Three workflow files, each with a distinct role. Do NOT merge them or create additional ones.
 
 ```
-┌─────────┐    ┌──────────┐    ┌─────────┐    ┌──────────┐
-│  Lint   │───▶│   Test   │───▶│  Build  │───▶│  Deploy  │
-└─────────┘    └──────────┘    └─────────┘    └──────────┘
+PR opened/updated               Push to main
+       │                              │
+       ▼                              ▼
+┌─────────────┐                ┌─────────────┐
+│  PR Check   │                │     CI      │
+│ (pr-check)  │                │  (ci.yml)   │
+│ Lint+Test+  │                │ Lint+Test+  │
+│ Build+CodeQL│                │ Build artifact│
+└─────────────┘                └──────┬──────┘
+       │                              │ workflow_run
+  Blocks merge                        ▼
+                               ┌─────────────┐
+                               │   Deploy    │
+                               │(deploy.yml) │
+                               │ SCP artifact│
+                               │ to VPS      │
+                               └─────────────┘
 ```
 
-| Stage | Runs on | Blocks merge | Runs on deploy branch only |
-|-------|---------|-------------|---------------------------|
-| Lint | Every push + PR | Yes | No |
-| Test | Every push + PR | Yes | No |
-| Build | Push to `main` only | — | Yes |
-| Deploy | Push to `main` only | — | Yes |
+| Workflow | Trigger | Purpose | Blocks merge |
+|----------|---------|---------|-------------|
+| PR Check | `pull_request → main` | Gate: Lint, Build check, Test (3 PHP), CodeQL | Yes (required status checks) |
+| CI | `push → main` | Produce release artifact (tarball) | — |
+| Deploy | `workflow_run` (CI success on main) | Download artifact, SCP to VPS, extract | — |
 
 ## Workflow Files
 
 ```
 .github/workflows/
-├── ci.yml          # Lint + Test (every push/PR)
-├── deploy.yml      # Build + Deploy (main only)
+├── pr-check.yml    # PR gate: lint, build check, test matrix, CodeQL
+├── ci.yml          # Main pipeline: lint, test, build release artifact
+├── deploy.yml      # CD: download artifact, SCP to VPS, run deploy.sh
 ```
 
-Keep it to 2 files maximum. Do not create per-stage workflow files.
+Keep it to exactly 3 files. Do not create per-stage workflow files.
 
 ## Stage 1: Lint (`ci.yml`)
 
@@ -156,31 +170,40 @@ pdo_sqlite, bcmath, intl, gd, zip, pcntl, redis
 - `pdo_sqlite` for test DB — not `pdo_mysql`.
 - `redis` (phpredis) for code that references the Redis facade — even though CI uses `array` driver.
 
-## Stage 3: Build (`deploy.yml`)
+## Stage 3: Build Release Artifact (`ci.yml`, main only)
 
-### Docker Image Build
-
-```yaml
-- name: Build Docker image
-  run: |
-    docker build -t motivya-app:${{ github.sha }} -f .docker/php/Dockerfile .
-```
-
-- Tag images with the Git SHA — never `latest` for production.
-- Build from the same `.docker/php/Dockerfile` used in local dev.
-- Do NOT push images to a registry from this step — deploy stage handles that.
-
-### Asset Compilation
+The build job runs after tests pass on main. It produces a self-contained tarball.
 
 ```yaml
+- name: Install Composer dependencies (production)
+  run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+
 - name: Build production assets
   run: |
     npm ci
     npm run build
+
+- name: Create release archive
+  run: |
+    tar czf /tmp/release.tar.gz \
+      --exclude='.git' --exclude='node_modules' --exclude='tests' \
+      --exclude='.github' --exclude='.env' \
+      --exclude='storage/logs/*' --exclude='storage/framework/cache/data/*' \
+      --exclude='storage/framework/sessions/*' --exclude='storage/framework/views/*' \
+      .
+
+- name: Upload release artifact
+  uses: actions/upload-artifact@v7
+  with:
+    name: release-${{ github.sha }}
+    path: /tmp/release.tar.gz
+    retention-days: 7
 ```
 
-- Assets compiled with production Vite config.
-- The `public/build/` output is included in the Docker image or deployment artifact.
+- The archive contains app code + `vendor/` (no-dev) + `public/build/` (compiled assets).
+- No `node_modules`, `.git`, `tests`, or `.github` in the artifact.
+- **No Docker images** — the VPS runs bare PHP-FPM + Nginx (not containers).
+- Artifact is retained for 7 days.
 
 ## Stage 4: Deploy (`deploy.yml`)
 
@@ -188,49 +211,41 @@ pdo_sqlite, bcmath, intl, gd, zip, pcntl, redis
 
 ```yaml
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
 ```
 
-- Deploy only on push to `main` — never on PR.
+- Triggered automatically when CI succeeds on main.
+- Downloads the release artifact using `actions/download-artifact@v7` with `GITHUB_TOKEN`.
 - No manual dispatch unless explicitly requested.
 
 ### Environment
 
 ```yaml
 environment:
-  name: production
-  url: https://motivya.be
+  name: motivya.metanull.eu
+  url: https://motivya.metanull.eu
 ```
 
-- Use GitHub Environments for production secrets.
-- Secrets (`STRIPE_SECRET`, `DB_PASSWORD`, etc.) are stored in the GitHub Environment — never in workflow files.
+- Use the GitHub Environment `motivya.metanull.eu` for deployment secrets.
+- Application secrets (Stripe, DB, etc.) live in `.env.production` on the VPS — never in GitHub.
 
 ### Deploy Steps
 
-The exact deployment target depends on the hosting platform (Laravel Cloud, OVH, etc.). The workflow should:
-
-1. Build production Docker image (or deployment artifact)
-2. Push to container registry (if Docker-based)
-3. Run `php artisan migrate --force` on the production database
-4. Clear and warm caches: `config:cache`, `route:cache`, `view:cache`, `event:cache`
-5. Restart workers: `queue:restart`
-6. Verify health check endpoint responds 200
-
-```yaml
-- name: Post-deploy cache warm
-  run: |
-    php artisan config:cache
-    php artisan route:cache
-    php artisan view:cache
-    php artisan event:cache
-
-- name: Restart queue workers
-  run: php artisan queue:restart
-
-- name: Health check
-  run: curl --fail --silent --max-time 10 ${{ vars.APP_URL }}/health
-```
+1. Download release artifact from CI run
+2. Setup SSH + verify connectivity (netcat port 22) and auth (SSH whoami) — fail fast
+3. SCP tarball to VPS `/tmp/`
+4. SSH: run `scripts/deploy.sh <tarball>` on VPS which:
+   - Extracts to a timestamped release dir (`/opt/motivya/releases/<timestamp>/`)
+   - Symlinks shared storage
+   - Runs migrations, warms caches
+   - Configures Nginx, reloads services
+   - Swaps `/opt/motivya/current` symlink (atomic)
+   - Prunes old releases (keep last 5)
+   - Health check
+5. Cleanup: remove tarball from `/tmp/`
 
 ## Caching in CI
 
@@ -238,7 +253,7 @@ The exact deployment target depends on the hosting platform (Laravel Cloud, OVH,
 
 ```yaml
 - name: Cache Composer dependencies
-  uses: actions/cache@v4
+  uses: actions/cache@v5
   with:
     path: vendor
     key: composer-${{ hashFiles('composer.lock') }}
@@ -249,7 +264,7 @@ The exact deployment target depends on the hosting platform (Laravel Cloud, OVH,
 
 ```yaml
 - name: Cache NPM dependencies
-  uses: actions/cache@v4
+  uses: actions/cache@v5
   with:
     path: node_modules
     key: npm-${{ hashFiles('package-lock.json') }}
@@ -258,19 +273,60 @@ The exact deployment target depends on the hosting platform (Laravel Cloud, OVH,
 
 - Always cache both `vendor/` and `node_modules/`.
 - Key on the lockfile hash — not `composer.json` or `package.json`.
-- Use `actions/cache@v4` — not deprecated versions.
+
+## GitHub Actions Version Policy
+
+**Always use the latest major version of official GitHub Actions.** Outdated versions trigger Node.js deprecation warnings and will eventually break.
+
+| Action | Minimum version |
+|--------|----------------|
+| `actions/checkout` | `@v6` |
+| `actions/cache` | `@v5` |
+| `actions/upload-artifact` | `@v7` |
+| `actions/download-artifact` | `@v7` |
+| `actions/setup-node` | `@v6` |
+| `shivammathur/setup-php` | `@v2` |
+| `github/codeql-action/*` | `@v3` |
+
+When adding or updating an action, check the action's releases page for the latest major version. Never use `@v3` or `@v4` for artifact actions.
+
+## Permissions Block
+
+Every workflow file MUST include a top-level `permissions:` block with least-privilege scopes. CodeQL raised alerts about this — always declare explicitly.
+
+```yaml
+# Example for ci.yml
+permissions:
+  contents: read
+
+# Example for pr-check.yml (needs security-events for CodeQL)
+permissions:
+  contents: read
+  security-events: write
+
+# Example for deploy.yml
+permissions:
+  contents: read
+  actions: read
+```
 
 ## Branch Protection Rules
 
-Configure on the `main` branch:
+Configured on the `main` branch:
 
-- Require status checks to pass: `lint`, `test` (all matrix jobs)
-- Require PR review (at least 1 approval)
+- **Required status checks** (from PR Check workflow): `Lint`, `Build check`, `Test (PHP 8.2)`, `Test (PHP 8.3)`, `Test (PHP 8.4)`, `CodeQL`
+- Strict: branch must be up-to-date before merge
+- Dismiss stale reviews on new push
+- Required conversation resolution
+- Required linear history (squash merge)
+- Enforce for admins
 - Do NOT allow force push
 - Do NOT allow deletion
 
 ## Forbidden
 
+- **NEVER use `sudo` in any workflow step or deploy script.** The deploy user owns its directories — no elevation is needed. If something requires root, it belongs in the one-time provisioning script, not in automation.
+- **NEVER use the `ubuntu` (privileged) VPS account in workflows or scripts.** Only the `deploy` user is used in automation. The `ubuntu` account is for manual admin tasks only.
 - Do NOT provision MySQL, Redis, or any external service in CI — tests use SQLite and array drivers.
 - Do NOT store secrets in workflow files — use GitHub Environments or repository secrets.
 - Do NOT use `continue-on-error: true` on lint or test steps — they must block merge.
@@ -279,3 +335,4 @@ Configure on the `main` branch:
 - Do NOT run deploy steps on PR branches — only on `main`.
 - Do NOT bypass `--force` on production migrations — Laravel requires it outside `local` env.
 - Do NOT add Codecov, SonarQube, or third-party quality tools without a documented decision.
+- Do NOT use outdated GitHub Action versions — see version policy table above.
