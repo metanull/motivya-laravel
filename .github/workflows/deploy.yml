@@ -70,12 +70,13 @@ jobs:
             ARCHIVE="/tmp/motivya-release.tar.gz"
             DEPLOY_SCRIPT="/opt/motivya/current/scripts/deploy.sh"
 
-            # First deploy: bootstrap directory + extract to get deploy.sh
+            # First deploy: extract artifact to get deploy.sh
             if [ ! -f "$DEPLOY_SCRIPT" ]; then
               echo "[DEPLOY] First deploy — bootstrapping from artifact..."
-              sudo mkdir -p /opt/motivya/current
-              sudo chown -R "$(id -un):$(id -gn)" /opt/motivya
-              tar xzf "$ARCHIVE" -C /opt/motivya/current
+              mkdir -p /opt/motivya/releases/bootstrap
+              tar xzf "$ARCHIVE" -C /opt/motivya/releases/bootstrap
+              ln -sfn /opt/motivya/releases/bootstrap /opt/motivya/current
+              DEPLOY_SCRIPT="/opt/motivya/current/scripts/deploy.sh"
             fi
 
             bash "$DEPLOY_SCRIPT" "$ARCHIVE"
