@@ -12,12 +12,16 @@
 #   2. Creates 'deploy' user (non-privileged, no sudo)
 #   3. Hardens SSH (key-only, no root login)
 #   4. Installs PHP-FPM, Nginx, and PHP extensions
-#   5. Configures Nginx vhost for Motivya
-#   6. Sets up UFW firewall (22, 80, 443)
-#   7. Installs Fail2ban and unattended-upgrades
-#   8. Creates the application directory structure (owned by deploy)
-#   9. Sets up shared storage with www-data group permissions
-#   10. Installs Certbot for Let's Encrypt
+#   5. Installs MySQL 8.x and creates application database + user
+#   6. Installs Valkey (Redis-compatible) for cache/sessions/queues
+#   7. Configures Nginx vhost for Motivya
+#   8. Sets up UFW firewall (22, 80, 443)
+#   9. Installs Fail2ban and unattended-upgrades
+#   10. Creates the application directory structure (owned by deploy)
+#   11. Sets up shared storage with www-data group permissions
+#   12. Installs Certbot + auto-renewal timer
+#   13. Creates queue worker systemd service
+#   14. Sets up daily MySQL backup cron
 #
 # The 'deploy' user has NO sudo. All privileged operations belong here.
 #
@@ -30,6 +34,11 @@ DOMAIN="motivya.metanull.eu"
 PHP_VERSION="8.4"
 TIMEZONE="Europe/Brussels"
 LOCALE="fr_BE.UTF-8"
+
+# MySQL (generated on first run, stored in /root/.motivya-db-credentials)
+DB_NAME="motivya"
+DB_USER="motivya"
+DB_CREDENTIALS_FILE="/root/.motivya-db-credentials"
 
 # --- Colors -------------------------------------------------------------------
 RED='\033[0;31m'
@@ -122,6 +131,7 @@ info "Installing PHP ${PHP_VERSION}-FPM, Nginx, and extensions..."
 apt-get install -y -qq \
     nginx \
     "php${PHP_VERSION}-fpm" \
+    "php${PHP_VERSION}-mysql" \
     "php${PHP_VERSION}-sqlite3" \
     "php${PHP_VERSION}-mbstring" \
     "php${PHP_VERSION}-xml" \
@@ -138,7 +148,69 @@ systemctl enable "php${PHP_VERSION}-fpm" nginx
 systemctl start "php${PHP_VERSION}-fpm"
 
 # =============================================================================
-# 5. Configure Nginx vhost
+# 5. Install MySQL
+# =============================================================================
+info "Installing MySQL server..."
+apt-get install -y -qq mysql-server
+
+systemctl enable mysql
+systemctl start mysql
+
+# Generate password once, store in credentials file
+if [[ ! -f "$DB_CREDENTIALS_FILE" ]]; then
+    DB_PASSWORD=$(openssl rand -base64 32 | tr -d '/+=|' | head -c 32)
+    cat > "$DB_CREDENTIALS_FILE" <<CRED
+DB_NAME=${DB_NAME}
+DB_USER=${DB_USER}
+DB_PASSWORD=${DB_PASSWORD}
+CRED
+    chmod 600 "$DB_CREDENTIALS_FILE"
+    info "MySQL credentials saved to ${DB_CREDENTIALS_FILE}"
+else
+    info "Loading existing MySQL credentials from ${DB_CREDENTIALS_FILE}"
+    source "$DB_CREDENTIALS_FILE"
+fi
+
+# Create database and user (idempotent)
+mysql -u root <<SQL
+CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';
+GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';
+FLUSH PRIVILEGES;
+SQL
+info "MySQL database '${DB_NAME}' and user '${DB_USER}' configured."
+
+# Harden: bind to localhost only (already default, enforce it)
+if ! grep -q '^bind-address.*=.*127.0.0.1' /etc/mysql/mysql.conf.d/mysqld.cnf 2>/dev/null; then
+    sed -i 's/^#\?bind-address.*/bind-address = 127.0.0.1/' /etc/mysql/mysql.conf.d/mysqld.cnf
+    systemctl restart mysql
+fi
+
+# =============================================================================
+# 6. Install Valkey (Redis-compatible cache/session/queue backend)
+# =============================================================================
+info "Installing Valkey..."
+apt-get install -y -qq valkey-server
+
+# Bind to localhost only, enable as systemd service
+VALKEY_CONF="/etc/valkey/valkey.conf"
+if [[ -f "$VALKEY_CONF" ]]; then
+    sed -i 's/^bind .*/bind 127.0.0.1 -::1/' "$VALKEY_CONF"
+    # Disable protected-mode since we bind to localhost
+    sed -i 's/^protected-mode .*/protected-mode yes/' "$VALKEY_CONF"
+    # Set max memory (256MB reasonable for cache on this VPS)
+    if ! grep -q '^maxmemory ' "$VALKEY_CONF"; then
+        echo 'maxmemory 256mb' >> "$VALKEY_CONF"
+        echo 'maxmemory-policy allkeys-lru' >> "$VALKEY_CONF"
+    fi
+fi
+
+systemctl enable valkey-server
+systemctl restart valkey-server
+info "Valkey installed and running on localhost:6379."
+
+# =============================================================================
+# 7. Configure Nginx vhost
 # =============================================================================
 info "Configuring Nginx for ${DOMAIN}..."
 NGINX_CONF="/etc/nginx/sites-available/motivya"
@@ -237,7 +309,7 @@ nginx -t && systemctl reload nginx
 info "Nginx configured and reloaded."
 
 # =============================================================================
-# 6. Firewall (UFW)
+# 8. Firewall (UFW)
 # =============================================================================
 info "Configuring UFW firewall..."
 apt-get install -y -qq ufw
@@ -249,7 +321,7 @@ ufw allow 443/tcp comment "HTTPS"
 ufw --force enable
 
 # =============================================================================
-# 7. Fail2ban + unattended-upgrades
+# 9. Fail2ban + unattended-upgrades
 # =============================================================================
 info "Installing Fail2ban..."
 apt-get install -y -qq fail2ban
@@ -271,7 +343,7 @@ apt-get install -y -qq unattended-upgrades
 dpkg-reconfigure -f noninteractive unattended-upgrades
 
 # =============================================================================
-# 8. Application directory structure
+# 10. Application directory structure
 # =============================================================================
 info "Creating application directories at ${APP_DIR}..."
 
@@ -291,7 +363,7 @@ fi
 touch "${APP_DIR}/shared/database.sqlite"
 
 # =============================================================================
-# 9. File ownership and permissions
+# 11. File ownership and permissions
 # =============================================================================
 info "Setting ownership and permissions..."
 
@@ -306,10 +378,92 @@ chmod 664 "${APP_DIR}/shared/database.sqlite"
 find "${APP_DIR}/shared/storage" -type d -exec chmod g+s {} +
 
 # =============================================================================
-# 10. Certbot
+# 12. Certbot + auto-renewal
 # =============================================================================
 info "Installing Certbot..."
 apt-get install -y -qq certbot
+
+# Enable auto-renewal timer (certbot package installs the timer, just ensure it's active)
+if systemctl list-timers | grep -q certbot; then
+    info "Certbot auto-renewal timer already active."
+else
+    systemctl enable --now certbot.timer 2>/dev/null || \
+        info "Certbot timer not found — renewal via cron should be in place."
+fi
+
+# =============================================================================
+# 13. Queue worker systemd service
+# =============================================================================
+info "Creating queue worker systemd service..."
+cat > /etc/systemd/system/motivya-queue.service <<UNIT
+[Unit]
+Description=Motivya Laravel Queue Worker
+After=network.target mysql.service valkey-server.service
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=${APP_DIR}/current
+ExecStart=/usr/bin/php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600 --memory=128
+Restart=always
+RestartSec=5
+StandardOutput=append:${APP_DIR}/shared/storage/logs/queue-worker.log
+StandardError=append:${APP_DIR}/shared/storage/logs/queue-worker.log
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+
+systemctl daemon-reload
+systemctl enable motivya-queue
+# Don't start yet — app may not be deployed
+if [[ -L "${APP_DIR}/current" ]]; then
+    systemctl restart motivya-queue
+    info "Queue worker started."
+else
+    info "Queue worker configured (will start after first deploy)."
+fi
+
+# =============================================================================
+# 14. Daily MySQL backup cron
+# =============================================================================
+info "Setting up daily MySQL backup..."
+BACKUP_SCRIPT="${APP_DIR}/backup-db.sh"
+cat > "$BACKUP_SCRIPT" <<'BEOF'
+#!/usr/bin/env bash
+set -euo pipefail
+BACKUP_DIR="/opt/motivya/backups"
+TIMESTAMP=$(date +%F)
+mysqldump -u motivya "motivya" | gzip > "${BACKUP_DIR}/motivya-${TIMESTAMP}.sql.gz"
+# Keep only last 14 days
+find "$BACKUP_DIR" -name "motivya-*.sql.gz" -mtime +14 -delete
+BEOF
+chmod +x "$BACKUP_SCRIPT"
+chown "${DEPLOY_USER}:www-data" "$BACKUP_SCRIPT"
+
+# MySQL credentials for backup: use .my.cnf for deploy user
+DEPLOY_HOME="/home/${DEPLOY_USER}"
+if [[ -f "$DB_CREDENTIALS_FILE" ]]; then
+    source "$DB_CREDENTIALS_FILE"
+    # .my.cnf for mysqldump (backup cron)
+    cat > "${DEPLOY_HOME}/.my.cnf" <<MYCNF
+[mysqldump]
+user=${DB_USER}
+password=${DB_PASSWORD}
+MYCNF
+    chmod 600 "${DEPLOY_HOME}/.my.cnf"
+    chown "${DEPLOY_USER}:${DEPLOY_USER}" "${DEPLOY_HOME}/.my.cnf"
+
+    # Copy credentials for deploy.sh to read during first deploy
+    cp "$DB_CREDENTIALS_FILE" "${DEPLOY_HOME}/.motivya-db-credentials"
+    chmod 600 "${DEPLOY_HOME}/.motivya-db-credentials"
+    chown "${DEPLOY_USER}:${DEPLOY_USER}" "${DEPLOY_HOME}/.motivya-db-credentials"
+fi
+
+# Cron: 3 AM Brussels time, as deploy user
+echo "0 3 * * * ${DEPLOY_USER} ${BACKUP_SCRIPT}" > /etc/cron.d/motivya-backup
+chmod 644 /etc/cron.d/motivya-backup
+info "Daily MySQL backup configured (3 AM, 14-day retention)."
 
 # =============================================================================
 # Done
@@ -324,8 +478,14 @@ info "  App directory: ${APP_DIR} (owned by ${DEPLOY_USER}:www-data)"
 info "  PHP-FPM:       ${PHP_VERSION}"
 info "  Nginx:         configured for ${DOMAIN}"
 info ""
+info "  MySQL:         ${DB_NAME} (credentials in ${DB_CREDENTIALS_FILE})"
+info "  Valkey:        localhost:6379"
+info "  Queue worker:  motivya-queue.service"
+info "  Backup:        daily at 3 AM (14-day retention)"
+info ""
 info "  Next steps:"
 info "  1. Verify SSH:  ssh -i ~/.ssh/motivya_deploy ${DEPLOY_USER}@<VPS_IP> whoami"
 info "  2. SSL cert:    certbot certonly --standalone -d ${DOMAIN} --agree-tos -m admin@metanull.eu"
-info "  3. Push code to main to trigger first deploy via GitHub Actions."
+info "  3. Update /opt/motivya/shared/.env with MySQL credentials from ${DB_CREDENTIALS_FILE}"
+info "  4. Push code to main to trigger deploy via GitHub Actions."
 info ""
