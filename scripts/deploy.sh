@@ -10,10 +10,12 @@
 # No git, composer, npm, or sudo is required.
 #
 # Prerequisites (handled by provision.sh, run once as root):
-#   - PHP-FPM and Nginx installed and configured
+#   - PHP-FPM, Nginx, MySQL, Valkey installed and configured
 #   - /opt/motivya/ owned by deploy:www-data
 #   - /opt/motivya/shared/storage/ directory tree exists
 #   - Nginx vhost pointing to /opt/motivya/current/public
+#   - MySQL credentials in /root/.motivya-db-credentials
+#   - motivya-queue.service systemd unit installed
 #
 # This script is idempotent — safe to re-run.
 # This script uses NO sudo — all operations are within /opt/motivya/.
@@ -89,13 +91,33 @@ configure_laravel() {
         sed -i 's/^APP_DEBUG=.*/APP_DEBUG=false/' "${APP_DIR}/shared/.env"
         sed -i 's|^APP_URL=.*|APP_URL=https://motivya.metanull.eu|' "${APP_DIR}/shared/.env"
 
-        # Use SQLite for initial deployment (no MySQL yet)
-        sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/' "${APP_DIR}/shared/.env"
-        # Uncomment and set DB_DATABASE (may be commented in .env.example)
-        sed -i '/^#.*DB_DATABASE=/d' "${APP_DIR}/shared/.env"
-        sed -i "/^DB_CONNECTION=/a DB_DATABASE=${APP_DIR}/shared/database.sqlite" "${APP_DIR}/shared/.env"
+        # MySQL (if credentials file exists, written by provision.sh)
+        DB_CRED_FILE="/root/.motivya-db-credentials"
+        DEPLOY_CRED_FILE="/home/deploy/.motivya-db-credentials"
+        if [[ -f "$DEPLOY_CRED_FILE" ]]; then
+            source "$DEPLOY_CRED_FILE"
+            info "Configuring MySQL from credentials file..."
+            sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=mysql/' "${APP_DIR}/shared/.env"
+            sed -i 's/^# DB_HOST=.*/DB_HOST=127.0.0.1/' "${APP_DIR}/shared/.env"
+            sed -i 's/^# DB_PORT=.*/DB_PORT=3306/' "${APP_DIR}/shared/.env"
+            sed -i "s/^# DB_DATABASE=.*/DB_DATABASE=${DB_NAME}/" "${APP_DIR}/shared/.env"
+            sed -i "s/^# DB_USERNAME=.*/DB_USERNAME=${DB_USER}/" "${APP_DIR}/shared/.env"
+            sed -i "s/^# DB_PASSWORD=.*/DB_PASSWORD=${DB_PASSWORD}/" "${APP_DIR}/shared/.env"
+        else
+            warn "No MySQL credentials found at ${DEPLOY_CRED_FILE} — using SQLite."
+            sed -i 's/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/' "${APP_DIR}/shared/.env"
+            sed -i '/^#.*DB_DATABASE=/d' "${APP_DIR}/shared/.env"
+            sed -i "/^DB_CONNECTION=/a DB_DATABASE=${APP_DIR}/shared/database.sqlite" "${APP_DIR}/shared/.env"
+            touch "${APP_DIR}/shared/database.sqlite"
+        fi
 
-        touch "${APP_DIR}/shared/database.sqlite"
+        # Redis/Valkey for cache, sessions, and queues in production
+        if command -v valkey-cli &>/dev/null || command -v redis-cli &>/dev/null; then
+            info "Configuring Redis/Valkey for cache, sessions, and queues..."
+            sed -i 's/^CACHE_STORE=.*/CACHE_STORE=redis/' "${APP_DIR}/shared/.env"
+            sed -i 's/^SESSION_DRIVER=.*/SESSION_DRIVER=redis/' "${APP_DIR}/shared/.env"
+            sed -i 's/^QUEUE_CONNECTION=.*/QUEUE_CONNECTION=redis/' "${APP_DIR}/shared/.env"
+        fi
     fi
 
     # Symlink .env (must happen before key:generate or artisan commands)
@@ -124,7 +146,16 @@ warm_caches() {
     php artisan view:cache
 }
 
-# --- 5. Prune old releases (keep last 5) -------------------------------------
+# --- 5. Restart queue worker -------------------------------------------------
+restart_queue_worker() {
+    # Queue worker runs as www-data via systemd — we can't restart it directly
+    # but we can signal it to restart after deploy via artisan
+    cd "$CURRENT"
+    info "Restarting queue workers..."
+    php artisan queue:restart 2>/dev/null || warn "Queue restart signal sent (worker may not be running yet)."
+}
+
+# --- 6. Prune old releases (keep last 5) -------------------------------------
 prune_releases() {
     local RELEASES_DIR="${APP_DIR}/releases"
     local COUNT
@@ -135,12 +166,12 @@ prune_releases() {
     fi
 }
 
-# --- 6. Health check ----------------------------------------------------------
+# --- 7. Health check ----------------------------------------------------------
 health_check() {
     info "Running health check..."
     sleep 2
     local HTTP_STATUS
-    HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "http://localhost/" || echo "000")
+    HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "http://localhost/health" || echo "000")
 
     if [[ "$HTTP_STATUS" == "200" ]]; then
         info "Health check PASSED (HTTP ${HTTP_STATUS})"
@@ -158,6 +189,7 @@ deploy_release
 configure_laravel
 run_migrations
 warm_caches
+restart_queue_worker
 prune_releases
 health_check
 info "Deployment complete! $(date)"
