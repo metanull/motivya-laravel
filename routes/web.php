@@ -7,7 +7,16 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
-});
+})->name('home');
+
+// Placeholder GET routes for auth pages (views to be implemented in E1-S05 / E1-S09)
+Route::get('/login', function () {
+    return redirect('/');
+})->name('login');
+
+Route::get('/register', function () {
+    return redirect('/');
+})->name('register');
 
 Route::get('/health', function () {
     $checks = ['status' => 'ok'];
@@ -33,3 +42,13 @@ Route::get('/health', function () {
 
     return response()->json($checks, $httpStatus);
 })->name('health');
+
+Route::get('/locale/{locale}', function (string $locale) {
+    $supported = ['fr', 'en', 'nl'];
+
+    if (in_array($locale, $supported, strict: true)) {
+        session(['locale' => $locale]);
+    }
+
+    return redirect()->back(fallback: '/');
+})->name('locale.switch');
