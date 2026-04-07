@@ -45,6 +45,10 @@ Route::get('/health', function () {
     return response()->json($checks, $httpStatus);
 })->name('health');
 
+Route::get('/privacy', function () {
+    return view('pages.privacy');
+})->name('privacy');
+
 Route::get('/locale/{locale}', function (string $locale) {
     $supported = ['fr', 'en', 'nl'];
 

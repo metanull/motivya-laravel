@@ -28,6 +28,7 @@ return [
 
     'footer' => [
         'rights' => 'All rights reserved.',
+        'privacy' => 'Privacy Policy',
     ],
 
     /*
