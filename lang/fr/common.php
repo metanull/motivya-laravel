@@ -28,6 +28,7 @@ return [
 
     'footer' => [
         'rights' => 'Tous droits réservés.',
+        'privacy' => 'Politique de confidentialité',
     ],
 
     /*
