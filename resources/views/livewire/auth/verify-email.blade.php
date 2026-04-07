@@ -9,37 +9,34 @@
             </p>
         </div>
 
-        @if ($resent)
+        @if ($status)
             <div class="rounded-md bg-green-50 p-4 dark:bg-green-900/20">
                 <p class="text-sm text-green-700 dark:text-green-400">
-                    {{ __('auth.verify_resent') }}
+                    {{ $status }}
                 </p>
             </div>
         @endif
 
         <div class="flex items-center justify-between">
-            <button
-                wire:click="resend"
-                wire:loading.attr="disabled"
-                wire:loading.class="opacity-50 cursor-not-allowed"
-                class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-            >
-                <span wire:loading.remove wire:target="resend">{{ __('auth.verify_resend') }}</span>
-                <span wire:loading wire:target="resend" class="inline-flex items-center">
-                    <svg class="mr-2 h-4 w-4 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                    </svg>
+            <form method="POST" action="{{ route('verification.send') }}">
+                @csrf
+                <button
+                    type="submit"
+                    class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                >
                     {{ __('auth.verify_resend') }}
-                </span>
-            </button>
+                </button>
+            </form>
 
-            <button
-                wire:click="logout"
-                class="text-sm font-medium text-gray-600 hover:text-gray-500 dark:text-gray-400 dark:hover:text-gray-300"
-            >
-                {{ __('auth.verify_logout') }}
-            </button>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button
+                    type="submit"
+                    class="text-sm font-medium text-gray-600 hover:text-gray-500 dark:text-gray-400 dark:hover:text-gray-300"
+                >
+                    {{ __('auth.verify_logout') }}
+                </button>
+            </form>
         </div>
     </div>
 </div>

@@ -6,16 +6,21 @@
             </h2>
         </div>
 
-        <form wire:submit="resetPassword" class="space-y-6">
+        <form method="POST" action="{{ route('password.update') }}" class="space-y-6">
+            @csrf
+
+            <input type="hidden" name="token" value="{{ $token }}">
+
             {{-- Email --}}
             <div>
                 <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     {{ __('auth.reset_email') }}
                 </label>
                 <input
-                    wire:model.blur="email"
                     type="email"
                     id="email"
+                    name="email"
+                    value="{{ old('email', $email) }}"
                     autocomplete="email"
                     required
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
@@ -31,9 +36,9 @@
                     {{ __('auth.reset_password') }}
                 </label>
                 <input
-                    wire:model.blur="password"
                     type="password"
                     id="password"
+                    name="password"
                     autocomplete="new-password"
                     required
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
@@ -49,9 +54,9 @@
                     {{ __('auth.reset_password_confirmation') }}
                 </label>
                 <input
-                    wire:model.blur="password_confirmation"
                     type="password"
                     id="password_confirmation"
+                    name="password_confirmation"
                     autocomplete="new-password"
                     required
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
@@ -64,18 +69,9 @@
             {{-- Submit --}}
             <button
                 type="submit"
-                wire:loading.attr="disabled"
-                wire:loading.class="opacity-50 cursor-not-allowed"
                 class="flex w-full justify-center rounded-md bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             >
-                <span wire:loading.remove>{{ __('auth.reset_submit') }}</span>
-                <span wire:loading class="inline-flex items-center">
-                    <svg class="mr-2 h-4 w-4 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                    </svg>
-                    {{ __('auth.reset_submit') }}
-                </span>
+                {{ __('auth.reset_submit') }}
             </button>
         </form>
     </div>

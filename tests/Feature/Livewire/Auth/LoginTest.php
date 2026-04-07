@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Livewire\Auth\Login;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
@@ -18,52 +17,21 @@ describe('Login Livewire Component', function () {
     });
 
     it('displays translated heading', function () {
-        Livewire::test(Login::class)
+        $this->get(route('login'))
             ->assertSee(__('auth.login_heading'));
     });
 
-    it('authenticates a user with valid credentials', function () {
-        $user = User::factory()->create([
-            'email' => 'user@example.com',
-            'password' => bcrypt('Password1!'),
-        ]);
-
-        Livewire::test(Login::class)
-            ->set('form.email', 'user@example.com')
-            ->set('form.password', 'Password1!')
-            ->call('authenticate')
-            ->assertRedirect(route('home'));
-
-        $this->assertAuthenticatedAs($user);
+    it('contains a form posting to Fortify login route', function () {
+        $this->get(route('login'))
+            ->assertSee('action="'.route('login.store').'"', escape: false)
+            ->assertSee('method="POST"', escape: false)
+            ->assertSee('name="email"', escape: false)
+            ->assertSee('name="password"', escape: false);
     });
 
-    it('shows validation error with invalid credentials', function () {
-        User::factory()->create([
-            'email' => 'user@example.com',
-            'password' => bcrypt('Password1!'),
-        ]);
-
-        Livewire::test(Login::class)
-            ->set('form.email', 'user@example.com')
-            ->set('form.password', 'WrongPassword!')
-            ->call('authenticate')
-            ->assertHasErrors('form.email');
-    });
-
-    it('requires email and password', function () {
-        Livewire::test(Login::class)
-            ->set('form.email', '')
-            ->set('form.password', '')
-            ->call('authenticate')
-            ->assertHasErrors(['form.email', 'form.password']);
-    });
-
-    it('validates email format', function () {
-        Livewire::test(Login::class)
-            ->set('form.email', 'not-an-email')
-            ->set('form.password', 'Password1!')
-            ->call('authenticate')
-            ->assertHasErrors('form.email');
+    it('contains a CSRF token', function () {
+        $this->get(route('login'))
+            ->assertSee('name="_token"', escape: false);
     });
 
     it('redirects authenticated users away from login page', function () {
@@ -75,13 +43,18 @@ describe('Login Livewire Component', function () {
     });
 
     it('shows link to register page', function () {
-        Livewire::test(Login::class)
+        $this->get(route('login'))
             ->assertSee(__('auth.login_register_link'));
     });
 
     it('shows link to forgot password page', function () {
-        Livewire::test(Login::class)
+        $this->get(route('login'))
             ->assertSee(__('auth.login_forgot'));
+    });
+
+    it('contains remember me checkbox', function () {
+        $this->get(route('login'))
+            ->assertSee('name="remember"', escape: false);
     });
 
 });

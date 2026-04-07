@@ -9,24 +9,27 @@
             </p>
         </div>
 
-        @if ($linkSent)
+        @if ($status)
             <div class="rounded-md bg-green-50 p-4 dark:bg-green-900/20">
                 <p class="text-sm text-green-700 dark:text-green-400">
-                    {{ __('auth.forgot_link_sent') }}
+                    {{ $status }}
                 </p>
             </div>
         @endif
 
-        <form wire:submit="sendResetLink" class="space-y-6">
+        <form method="POST" action="{{ route('password.email') }}" class="space-y-6">
+            @csrf
+
             {{-- Email --}}
             <div>
                 <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     {{ __('auth.forgot_email') }}
                 </label>
                 <input
-                    wire:model.blur="email"
                     type="email"
                     id="email"
+                    name="email"
+                    value="{{ old('email') }}"
                     autocomplete="email"
                     required
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
@@ -39,18 +42,9 @@
             {{-- Submit --}}
             <button
                 type="submit"
-                wire:loading.attr="disabled"
-                wire:loading.class="opacity-50 cursor-not-allowed"
                 class="flex w-full justify-center rounded-md bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
             >
-                <span wire:loading.remove>{{ __('auth.forgot_submit') }}</span>
-                <span wire:loading class="inline-flex items-center">
-                    <svg class="mr-2 h-4 w-4 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                    </svg>
-                    {{ __('auth.forgot_submit') }}
-                </span>
+                {{ __('auth.forgot_submit') }}
             </button>
         </form>
 
