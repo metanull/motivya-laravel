@@ -36,11 +36,11 @@
         aria-label="{{ __('common.user_menu') }}"
         style="display: none;"
     >
-        {{-- TODO: replace href with route('profile.edit') when E1-S14 profile route is implemented --}}
         <a
-            href="#"
+            href="{{ route('profile.edit') }}"
             class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
             role="menuitem"
+            wire:navigate
         >
             {{ __('common.nav.profile') }}
         </a>

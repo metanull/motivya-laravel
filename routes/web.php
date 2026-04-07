@@ -7,6 +7,7 @@ use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\VerifyEmail;
+use App\Livewire\Profile\Edit as ProfileEdit;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +26,10 @@ Route::middleware('guest')->group(function () {
 Route::get('/email/verify', VerifyEmail::class)
     ->middleware('auth')
     ->name('verification.notice');
+
+Route::get('/profile', ProfileEdit::class)
+    ->middleware('auth')
+    ->name('profile.edit');
 
 Route::get('/health', function () {
     $checks = ['status' => 'ok'];
