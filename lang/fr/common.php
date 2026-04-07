@@ -45,6 +45,7 @@ return [
     'back' => 'Retour',
     'uploading' => 'Téléchargement…',
     'welcome' => 'Bienvenue sur :app',
+    'auth_coming_soon' => 'La connexion et l\'inscription arrivent bientôt.',
 
     /*
     |--------------------------------------------------------------------------

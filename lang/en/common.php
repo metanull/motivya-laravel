@@ -45,6 +45,7 @@ return [
     'back' => 'Back',
     'uploading' => 'Uploading…',
     'welcome' => 'Welcome to :app',
+    'auth_coming_soon' => 'Login and registration are coming soon.',
 
     /*
     |--------------------------------------------------------------------------

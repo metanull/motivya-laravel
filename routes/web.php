@@ -9,13 +9,15 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-// Placeholder GET routes for auth pages (views to be implemented in E1-S05 / E1-S09)
+// Placeholder GET routes for auth pages (views to be implemented in E1-S04)
 Route::get('/login', function () {
-    return redirect('/');
+    return redirect('/')
+        ->with('flash', ['type' => 'info', 'message' => __('common.auth_coming_soon')]);
 })->name('login');
 
 Route::get('/register', function () {
-    return redirect('/');
+    return redirect('/')
+        ->with('flash', ['type' => 'info', 'message' => __('common.auth_coming_soon')]);
 })->name('register');
 
 Route::get('/health', function () {

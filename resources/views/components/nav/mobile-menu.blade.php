@@ -14,16 +14,19 @@
 >
     <div class="space-y-1 border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
         {{-- Main links --}}
+        {{-- TODO: replace href with route('sessions.index') when E2 sessions routes are implemented --}}
         <a href="#"
            class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700">
             {{ __('common.nav.sessions') }}
         </a>
 
         @auth
+            {{-- TODO: replace href with route('athlete.bookings') when E3 booking routes are implemented --}}
             <a href="#"
                class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700">
                 {{ __('common.nav.bookings') }}
             </a>
+            {{-- TODO: replace href with route('profile.edit') when E1-S14 profile route is implemented --}}
             <a href="#"
                class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700">
                 {{ __('common.nav.profile') }}

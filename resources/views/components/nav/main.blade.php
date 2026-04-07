@@ -16,6 +16,7 @@
 
             {{-- Desktop links --}}
             <div class="hidden items-center gap-6 sm:flex">
+                {{-- TODO: replace href with route('sessions.index') when E2 sessions routes are implemented --}}
                 <a
                     href="#"
                     @class([

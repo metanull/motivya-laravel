@@ -45,6 +45,7 @@ return [
     'back' => 'Terug',
     'uploading' => 'Uploaden…',
     'welcome' => 'Welkom bij :app',
+    'auth_coming_soon' => 'Inloggen en registreren komen binnenkort beschikbaar.',
 
     /*
     |--------------------------------------------------------------------------
