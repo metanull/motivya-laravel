@@ -219,6 +219,12 @@ Create the master layout, top navigation, mobile menu, user dropdown, footer, an
 - `lang/fr/common.php`, `lang/en/common.php`, `lang/nl/common.php`
 - `resources/views/welcome.blade.php` (refactored to use layout)
 
+### Deferred items (out of E1-S08 scope)
+
+- `resources/views/partials/flash.blade.php` (server-side flash for non-Livewire pages) — add when needed by a concrete page that does not use Livewire
+- `resources/views/partials/loading.blade.php` (full-page loading spinner) — add when needed by a concrete page
+- Role-based `@can` navigation links — requires policies from E1-S15 and later; current `@auth`/`@else` blocks are intentional until then
+
 ---
 
 ## E1-S09 · Locale detection middleware + switcher
@@ -231,17 +237,17 @@ Detect browser language and allow manual locale switching. Store preference in s
 
 ### Acceptance Criteria
 
-- [ ] `SetLocale` middleware reads locale from: 1) session, 2) authenticated user preference, 3) `Accept-Language` header, 4) fallback `fr`
+- [ ] `SetLocale` middleware reads locale from: 1) authenticated user's `locale` column, 2) session value, 3) `Accept-Language` header, 4) fallback `fr`
 - [ ] Only `fr`, `en`, `nl` are accepted; anything else falls back to `fr`
 - [ ] `GET /locale/{locale}` route sets the session locale and redirects back
-- [ ] `preferred_locale` column added to users table (nullable string)
-- [ ] Middleware registered globally
+- [ ] `locale` column added to users table (string, default `'fr'`)
+- [ ] Middleware registered in the `web` middleware group
 - [ ] Feature test: middleware picks correct locale from header; switch route works
 
 ### Files to create/modify
 
 - `app/Http/Middleware/SetLocale.php`
-- `database/migrations/xxxx_add_preferred_locale_to_users_table.php`
+- `database/migrations/xxxx_add_locale_to_users_table.php`
 - `routes/web.php` (locale switch route)
 - `bootstrap/app.php` (register middleware)
 - `tests/Feature/Middleware/SetLocaleTest.php`
