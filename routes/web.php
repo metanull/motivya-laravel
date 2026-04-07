@@ -2,6 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Livewire\Auth\ForgotPassword;
+use App\Livewire\Auth\Login;
+use App\Livewire\Auth\Register;
+use App\Livewire\Auth\ResetPassword;
+use App\Livewire\Auth\VerifyEmail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
@@ -9,16 +14,17 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-// Placeholder GET routes for auth pages (views to be implemented in E1-S04)
-Route::get('/login', function () {
-    return redirect('/')
-        ->with('flash', ['type' => 'info', 'message' => __('common.auth_coming_soon')]);
-})->name('login');
+// Auth views (Livewire components — Fortify handles POST actions)
+Route::middleware('guest')->group(function () {
+    Route::get('/login', Login::class)->name('login');
+    Route::get('/register', Register::class)->name('register');
+    Route::get('/forgot-password', ForgotPassword::class)->name('password.request');
+    Route::get('/reset-password/{token}', ResetPassword::class)->name('password.reset');
+});
 
-Route::get('/register', function () {
-    return redirect('/')
-        ->with('flash', ['type' => 'info', 'message' => __('common.auth_coming_soon')]);
-})->name('register');
+Route::get('/email/verify', VerifyEmail::class)
+    ->middleware('auth')
+    ->name('verification.notice');
 
 Route::get('/health', function () {
     $checks = ['status' => 'ok'];
