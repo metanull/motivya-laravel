@@ -26,7 +26,9 @@ Motivya is a marketplace for the Brussels sports community. It connects **Coache
 | [Scope](doc/Scope.md) | MVP boundaries and phase breakdown |
 | [Features](doc/Features.md) | Feature matrix by role |
 | [Use Cases](doc/UseCases.md) | Original use cases from the client |
-| [Stories](doc/Stories.md) | Epics and user stories |
+| [Data Model](doc/DataModel.md) | ERD data model |
+| [Stories](doc/Stories.md) | User stories |
+| | Breakout into [Epics and Milestones](doc/stories/README.md) |
 | [Decisions](doc/Decisions.md) | Architecture decision records |
 | [Client Repo](doc/ClientRepo.md) | Relationship with the client's inspiration repo |
 
