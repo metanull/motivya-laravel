@@ -26,6 +26,7 @@ No exceptions — migrations, seeders, config files, tests, service providers, a
 - Use Laravel built-in features over vendor-specific or low-level PHP equivalents
 - Never implement fallback logic or workarounds without explicit approval
 - Never ignore warnings or errors, even pre-existing ones
+- **Never write code that "degrades gracefully" for missing migrations** — all required migrations are assumed to have been run. There is no valid scenario where application code executes against a schema missing its own columns. If a column is needed, the migration must exist; if the migration doesn't exist yet, the code that depends on it belongs in the same story or a later one. Do not use `getAttribute()` with null-coalescing, `Schema::hasColumn()`, or try/catch around column access as a substitute for running migrations.
 
 ## Backed Enums
 
