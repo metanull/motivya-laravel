@@ -57,8 +57,7 @@ final class SetLocale
                     'locale' => $userLocale,
                 ]);
             }
-            // Authenticated user with no locale set — expected before the
-            // locale column migration (E1-S09) is applied. Not an error yet.
+            // Authenticated user with no locale set — fall through to session/header.
         }
 
         // 2. Session value
