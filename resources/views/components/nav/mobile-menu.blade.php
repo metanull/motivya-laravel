@@ -26,9 +26,9 @@
                class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700">
                 {{ __('common.nav.bookings') }}
             </a>
-            {{-- TODO: replace href with route('profile.edit') when E1-S14 profile route is implemented --}}
-            <a href="#"
-               class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700">
+            <a href="{{ route('profile.edit') }}"
+               class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+               wire:navigate>
                 {{ __('common.nav.profile') }}
             </a>
 
