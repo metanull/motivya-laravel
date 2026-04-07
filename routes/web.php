@@ -50,6 +50,11 @@ Route::get('/locale/{locale}', function (string $locale) {
 
     if (in_array($locale, $supported, strict: true)) {
         session(['locale' => $locale]);
+
+        $user = request()->user();
+        if ($user !== null) {
+            $user->update(['locale' => $locale]);
+        }
     }
 
     return redirect()->back(fallback: '/');

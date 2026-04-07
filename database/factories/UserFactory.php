@@ -66,4 +66,9 @@ class UserFactory extends Factory
     {
         return $this->state(['role' => UserRole::Admin->value]);
     }
+
+    public function withLocale(string $locale): static
+    {
+        return $this->state(['locale' => $locale]);
+    }
 }
