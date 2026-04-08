@@ -101,6 +101,7 @@ return [
     'two_factor_submit' => 'Vérifier',
     'two_factor_use_recovery' => 'Utiliser un code de récupération',
     'two_factor_use_code' => 'Utiliser un code d\'authentification',
+    'two_factor_required' => 'Votre r\u00f4le n\u00e9cessite l\'authentification \u00e0 deux facteurs. Veuillez l\'activer avant de continuer.',
 
     // 2FA par e-mail
     'two_factor_email_description' => 'Entrez le code de vérification envoyé à votre adresse e-mail.',

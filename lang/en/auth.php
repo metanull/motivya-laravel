@@ -101,6 +101,7 @@ return [
     'two_factor_submit' => 'Verify',
     'two_factor_use_recovery' => 'Use a recovery code',
     'two_factor_use_code' => 'Use an authentication code',
+    'two_factor_required' => 'Your role requires two-factor authentication. Please enable it before continuing.',
 
     // Email 2FA
     'two_factor_email_description' => 'Enter the verification code sent to your email address.',

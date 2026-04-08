@@ -101,6 +101,7 @@ return [
     'two_factor_submit' => 'Verifiëren',
     'two_factor_use_recovery' => 'Gebruik een herstelcode',
     'two_factor_use_code' => 'Gebruik een authenticatiecode',
+    'two_factor_required' => 'Uw rol vereist tweefactorauthenticatie. Schakel deze in voordat u verdergaat.',
 
     // E-mail 2FA
     'two_factor_email_description' => 'Voer de verificatiecode in die naar uw e-mailadres is gestuurd.',
