@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\TwoFactorMethod;
 use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -28,6 +29,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'role',
         'locale',
+        'two_factor_type',
     ];
 
     /**
@@ -51,6 +53,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
+            'two_factor_type' => TwoFactorMethod::class,
         ];
     }
 }

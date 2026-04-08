@@ -7,66 +7,142 @@
             <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
                 @if ($useRecoveryCode)
                     {{ __('auth.two_factor_recovery_description') }}
+                @elseif ($method === 'email')
+                    {{ __('auth.two_factor_email_description') }}
                 @else
                     {{ __('auth.two_factor_description') }}
                 @endif
             </p>
         </div>
 
-        <form method="POST" action="{{ url('/two-factor-challenge') }}" class="space-y-6">
-            @csrf
-
+        @if ($method === 'email')
+            {{-- Email 2FA --}}
             @if ($useRecoveryCode)
-                {{-- Recovery Code --}}
-                <div>
-                    <label for="recovery_code" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {{ __('auth.two_factor_recovery_code') }}
-                    </label>
-                    <input
-                        type="text"
-                        id="recovery_code"
-                        name="recovery_code"
-                        autocomplete="one-time-code"
-                        required
-                        autofocus
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
-                    />
-                    @error('recovery_code')
-                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                    @enderror
-                </div>
+                <form wire:submit="verifyRecoveryCode" class="space-y-6">
+                    <div>
+                        <label for="recovery_code" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {{ __('auth.two_factor_recovery_code') }}
+                        </label>
+                        <input
+                            type="text"
+                            id="recovery_code"
+                            wire:model="recoveryCode"
+                            autocomplete="one-time-code"
+                            required
+                            autofocus
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
+                        />
+                        @error('recovery_code')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="flex w-full justify-center rounded-md bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    >
+                        {{ __('auth.two_factor_submit') }}
+                    </button>
+                </form>
             @else
-                {{-- TOTP Code --}}
-                <div>
-                    <label for="code" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {{ __('auth.two_factor_code') }}
-                    </label>
-                    <input
-                        type="text"
-                        id="code"
-                        name="code"
-                        inputmode="numeric"
-                        autocomplete="one-time-code"
-                        required
-                        autofocus
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
-                    />
-                    @error('code')
-                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                    @enderror
-                </div>
+                <form wire:submit="verifyEmailCode" class="space-y-6">
+                    <div>
+                        <label for="code" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {{ __('auth.two_factor_email_code') }}
+                        </label>
+                        <input
+                            type="text"
+                            id="code"
+                            wire:model="code"
+                            inputmode="numeric"
+                            autocomplete="one-time-code"
+                            required
+                            autofocus
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
+                        />
+                        @error('code')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    @if ($codeResent)
+                        <p class="text-sm text-green-600 dark:text-green-400">
+                            {{ __('auth.two_factor_email_resent') }}
+                        </p>
+                    @endif
+
+                    <div class="flex items-center justify-between">
+                        <button
+                            type="button"
+                            wire:click="resendCode"
+                            class="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+                        >
+                            {{ __('auth.two_factor_email_resend') }}
+                        </button>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="flex w-full justify-center rounded-md bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    >
+                        {{ __('auth.two_factor_submit') }}
+                    </button>
+                </form>
             @endif
+        @else
+            {{-- TOTP 2FA (Fortify handles POST) --}}
+            <form method="POST" action="{{ url('/two-factor-challenge') }}" class="space-y-6">
+                @csrf
 
-            {{-- Submit --}}
-            <button
-                type="submit"
-                class="flex w-full justify-center rounded-md bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-            >
-                {{ __('auth.two_factor_submit') }}
-            </button>
-        </form>
+                @if ($useRecoveryCode)
+                    <div>
+                        <label for="recovery_code" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {{ __('auth.two_factor_recovery_code') }}
+                        </label>
+                        <input
+                            type="text"
+                            id="recovery_code"
+                            name="recovery_code"
+                            autocomplete="one-time-code"
+                            required
+                            autofocus
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
+                        />
+                        @error('recovery_code')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+                @else
+                    <div>
+                        <label for="code" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {{ __('auth.two_factor_code') }}
+                        </label>
+                        <input
+                            type="text"
+                            id="code"
+                            name="code"
+                            inputmode="numeric"
+                            autocomplete="one-time-code"
+                            required
+                            autofocus
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
+                        />
+                        @error('code')
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                        @enderror
+                    </div>
+                @endif
 
-        {{-- Toggle recovery code / TOTP --}}
+                <button
+                    type="submit"
+                    class="flex w-full justify-center rounded-md bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                >
+                    {{ __('auth.two_factor_submit') }}
+                </button>
+            </form>
+        @endif
+
+        {{-- Toggle recovery code --}}
         <p class="text-center text-sm">
             <button
                 type="button"
