@@ -18,6 +18,9 @@ return [
         'profile' => 'Mon profil',
         'bookings' => 'Mes réservations',
         'logout' => 'Déconnexion',
+        'admin_coach_approval' => 'Validation Coachs',
+        'become_coach' => 'Devenir Coach',
+        'my_sessions' => 'Mes Séances',
     ],
 
     /*

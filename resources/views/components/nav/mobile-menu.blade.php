@@ -21,6 +21,30 @@
         </a>
 
         @auth
+            @can('access-admin-panel')
+                <a href="{{ route('admin.coach-approval') }}"
+                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+                   wire:navigate>
+                    {{ __('common.nav.admin_coach_approval') }}
+                </a>
+            @endcan
+
+            @can('apply-as-coach')
+                <a href="{{ route('coach.apply') }}"
+                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+                   wire:navigate>
+                    {{ __('common.nav.become_coach') }}
+                </a>
+            @endcan
+
+            @if(auth()->user()->role === \App\Enums\UserRole::Coach)
+                {{-- TODO: E2 — replace href with route('coach.sessions.index') --}}
+                <a href="#"
+                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700">
+                    {{ __('common.nav.my_sessions') }}
+                </a>
+            @endif
+
             {{-- TODO: replace href with route('athlete.bookings') when E3 booking routes are implemented --}}
             <a href="#"
                class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700">

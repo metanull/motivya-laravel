@@ -36,6 +36,40 @@
         aria-label="{{ __('common.user_menu') }}"
         style="display: none;"
     >
+        @can('access-admin-panel')
+            <a
+                href="{{ route('admin.coach-approval') }}"
+                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                role="menuitem"
+                wire:navigate
+            >
+                {{ __('common.nav.admin_coach_approval') }}
+            </a>
+            <hr class="my-1 border-gray-200 dark:border-gray-700" />
+        @endcan
+
+        @can('apply-as-coach')
+            <a
+                href="{{ route('coach.apply') }}"
+                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                role="menuitem"
+                wire:navigate
+            >
+                {{ __('common.nav.become_coach') }}
+            </a>
+        @endcan
+
+        @if(auth()->user()->role === \App\Enums\UserRole::Coach)
+            {{-- TODO: E2 — replace href with route('coach.sessions.index') --}}
+            <a
+                href="#"
+                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                role="menuitem"
+            >
+                {{ __('common.nav.my_sessions') }}
+            </a>
+        @endif
+
         <a
             href="{{ route('profile.edit') }}"
             class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
