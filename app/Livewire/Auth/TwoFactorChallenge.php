@@ -65,7 +65,7 @@ final class TwoFactorChallenge extends Component
         Auth::login($user, session('login.remember', false));
         session()->forget(['login.id', 'login.remember', 'login.two_factor_method']);
 
-        $this->redirect(config('fortify.home'));
+        $this->redirect(route('home'));
     }
 
     public function verifyRecoveryCode(): void
@@ -101,7 +101,7 @@ final class TwoFactorChallenge extends Component
         Auth::login($user, session('login.remember', false));
         session()->forget(['login.id', 'login.remember', 'login.two_factor_method']);
 
-        $this->redirect(config('fortify.home'));
+        $this->redirect(route('home'));
     }
 
     public function resendCode(): void
