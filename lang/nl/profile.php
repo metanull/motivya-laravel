@@ -76,6 +76,19 @@ return [
     'twofa_show_codes' => 'Herstelcodes tonen',
     'twofa_hide_codes' => 'Verbergen',
     'twofa_regenerate_codes' => 'Herstelcodes opnieuw genereren',
+    'twofa_method_label' => 'Methode',
+    'twofa_method_totp' => 'Authenticatie-app (TOTP)',
+    'twofa_method_email' => 'E-mailcode',
+    'twofa_email_enable' => 'E-mail 2FA inschakelen',
+    'twofa_email_enabling' => 'Code verzenden…',
+    'twofa_email_description' => 'Er wordt een verificatiecode naar uw e-mailadres gestuurd telkens wanneer u inlogt.',
+    'twofa_email_confirm_description' => 'Voer de verificatiecode in die naar uw e-mail is gestuurd om de configuratie te bevestigen.',
+    'twofa_email_confirm_code' => 'Verificatiecode',
+    'twofa_email_confirm' => 'Bevestigen',
+    'twofa_email_enabled_status' => 'Tweefactorauthenticatie via e-mail is ingeschakeld.',
+    'twofa_email_resend' => 'Code opnieuw versturen',
+    'twofa_email_resent' => 'Er is een nieuwe code gestuurd.',
+    'twofa_totp_enabled_status' => 'Tweefactorauthenticatie via app is ingeschakeld.',
 
     /*
     |--------------------------------------------------------------------------

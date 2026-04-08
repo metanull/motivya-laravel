@@ -76,6 +76,19 @@ return [
     'twofa_show_codes' => 'Afficher les codes de récupération',
     'twofa_hide_codes' => 'Masquer',
     'twofa_regenerate_codes' => 'Régénérer les codes de récupération',
+    'twofa_method_label' => 'Méthode',
+    'twofa_method_totp' => 'Application d\'authentification (TOTP)',
+    'twofa_method_email' => 'Code par e-mail',
+    'twofa_email_enable' => 'Activer la 2FA par e-mail',
+    'twofa_email_enabling' => 'Envoi du code…',
+    'twofa_email_description' => 'Un code de vérification sera envoyé à votre adresse e-mail à chaque connexion.',
+    'twofa_email_confirm_description' => 'Entrez le code de vérification envoyé à votre e-mail pour confirmer la configuration.',
+    'twofa_email_confirm_code' => 'Code de vérification',
+    'twofa_email_confirm' => 'Confirmer',
+    'twofa_email_enabled_status' => 'L\'authentification à deux facteurs par e-mail est activée.',
+    'twofa_email_resend' => 'Renvoyer le code',
+    'twofa_email_resent' => 'Un nouveau code a été envoyé.',
+    'twofa_totp_enabled_status' => 'L\'authentification à deux facteurs par application est activée.',
 
     /*
     |--------------------------------------------------------------------------

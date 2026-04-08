@@ -76,6 +76,19 @@ return [
     'twofa_show_codes' => 'Show Recovery Codes',
     'twofa_hide_codes' => 'Hide',
     'twofa_regenerate_codes' => 'Regenerate Recovery Codes',
+    'twofa_method_label' => 'Method',
+    'twofa_method_totp' => 'Authenticator App (TOTP)',
+    'twofa_method_email' => 'Email Code',
+    'twofa_email_enable' => 'Enable Email 2FA',
+    'twofa_email_enabling' => 'Sending code…',
+    'twofa_email_description' => 'A verification code will be sent to your email address each time you log in.',
+    'twofa_email_confirm_description' => 'Enter the verification code sent to your email to confirm setup.',
+    'twofa_email_confirm_code' => 'Verification code',
+    'twofa_email_confirm' => 'Confirm',
+    'twofa_email_enabled_status' => 'Email-based two-factor authentication is enabled.',
+    'twofa_email_resend' => 'Resend code',
+    'twofa_email_resent' => 'A new code has been sent.',
+    'twofa_totp_enabled_status' => 'Authenticator app two-factor authentication is enabled.',
 
     /*
     |--------------------------------------------------------------------------

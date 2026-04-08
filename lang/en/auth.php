@@ -102,4 +102,13 @@ return [
     'two_factor_use_recovery' => 'Use a recovery code',
     'two_factor_use_code' => 'Use an authentication code',
 
+    // Email 2FA
+    'two_factor_email_description' => 'Enter the verification code sent to your email address.',
+    'two_factor_email_code' => 'Email verification code',
+    'two_factor_email_resend' => 'Resend code',
+    'two_factor_email_resent' => 'A new code has been sent to your email.',
+    'two_factor_email_invalid_code' => 'The code is invalid or has expired.',
+    'two_factor_email_max_attempts' => 'Too many attempts. Please request a new code.',
+    'two_factor_invalid_recovery_code' => 'The recovery code is invalid.',
+
 ];
