@@ -26,3 +26,7 @@ Thumbs.db
 .server-credentials
 scripts/*.pem
 scripts/*.key
+
+# Docker
+.docker/.env.docker
+docker-compose.override.yml
