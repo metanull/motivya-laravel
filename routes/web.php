@@ -44,7 +44,7 @@ Route::get('/coach/apply', CoachApplication::class)
     ->name('coach.apply');
 
 Route::get('/admin/coach-approval', CoachApproval::class)
-    ->middleware(['auth', 'role:admin'])
+    ->middleware(['auth', 'role:admin', '2fa'])
     ->name('admin.coach-approval');
 
 Route::get('/health', function () {

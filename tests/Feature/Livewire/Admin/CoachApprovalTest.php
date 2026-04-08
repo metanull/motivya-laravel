@@ -17,12 +17,22 @@ uses(RefreshDatabase::class);
 
 describe('Admin Coach Approval', function () {
 
-    it('renders the page for admins', function () {
-        $admin = User::factory()->admin()->create();
+    it('renders the page for admins with 2FA enabled', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
 
         $this->actingAs($admin)
             ->get(route('admin.coach-approval'))
             ->assertOk();
+    });
+
+    it('redirects admin without 2FA to profile setup', function () {
+        $admin = User::factory()->admin()->create([
+            'two_factor_confirmed_at' => null,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('admin.coach-approval'))
+            ->assertRedirect(route('profile.edit'));
     });
 
     it('denies access to athletes', function () {

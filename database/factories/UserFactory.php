@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Enums\TwoFactorMethod;
 use App\Enums\UserRole;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -70,5 +71,13 @@ class UserFactory extends Factory
     public function withLocale(string $locale): static
     {
         return $this->state(['locale' => $locale]);
+    }
+
+    public function withTwoFactor(TwoFactorMethod $method = TwoFactorMethod::Email): static
+    {
+        return $this->state([
+            'two_factor_confirmed_at' => now(),
+            'two_factor_type' => $method,
+        ]);
     }
 }
