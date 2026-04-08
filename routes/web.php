@@ -8,6 +8,7 @@ use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\TwoFactorChallenge;
 use App\Livewire\Auth\VerifyEmail;
+use App\Livewire\Coach\Application as CoachApplication;
 use App\Livewire\Profile\Edit as ProfileEdit;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -32,6 +33,10 @@ Route::get('/email/verify', VerifyEmail::class)
 Route::get('/profile', ProfileEdit::class)
     ->middleware('auth')
     ->name('profile.edit');
+
+Route::get('/coach/apply', CoachApplication::class)
+    ->middleware(['auth', 'verified'])
+    ->name('coach.apply');
 
 Route::get('/health', function () {
     $checks = ['status' => 'ok'];

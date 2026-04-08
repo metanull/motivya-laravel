@@ -44,6 +44,8 @@ return [
     'delete' => 'Supprimer',
     'edit' => 'Modifier',
     'back' => 'Retour',
+    'next' => 'Suivant',
+    'previous' => 'Précédent',
     'uploading' => 'Téléchargement…',
     'welcome' => 'Bienvenue sur :app',
     'auth_coming_soon' => 'La connexion et l\'inscription arrivent bientôt.',
