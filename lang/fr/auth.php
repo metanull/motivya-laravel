@@ -112,4 +112,13 @@ return [
     'two_factor_email_max_attempts' => 'Trop de tentatives. Veuillez demander un nouveau code.',
     'two_factor_invalid_recovery_code' => 'Le code de récupération est invalide.',
 
+    // 2FA par e-mail
+    'two_factor_email_description' => 'Entrez le code de vérification envoyé à votre adresse e-mail.',
+    'two_factor_email_code' => 'Code de vérification par e-mail',
+    'two_factor_email_resend' => 'Renvoyer le code',
+    'two_factor_email_resent' => 'Un nouveau code a été envoyé à votre adresse e-mail.',
+    'two_factor_email_invalid_code' => 'Le code est invalide ou a expiré.',
+    'two_factor_email_max_attempts' => 'Trop de tentatives. Veuillez demander un nouveau code.',
+    'two_factor_invalid_recovery_code' => 'Le code de récupération est invalide.',
+
 ];

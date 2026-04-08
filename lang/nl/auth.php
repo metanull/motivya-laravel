@@ -112,4 +112,13 @@ return [
     'two_factor_email_max_attempts' => 'Te veel pogingen. Vraag een nieuwe code aan.',
     'two_factor_invalid_recovery_code' => 'De herstelcode is ongeldig.',
 
+    // E-mail 2FA
+    'two_factor_email_description' => 'Voer de verificatiecode in die naar uw e-mailadres is gestuurd.',
+    'two_factor_email_code' => 'E-mailverificatiecode',
+    'two_factor_email_resend' => 'Code opnieuw versturen',
+    'two_factor_email_resent' => 'Er is een nieuwe code naar uw e-mailadres gestuurd.',
+    'two_factor_email_invalid_code' => 'De code is ongeldig of verlopen.',
+    'two_factor_email_max_attempts' => 'Te veel pogingen. Vraag een nieuwe code aan.',
+    'two_factor_invalid_recovery_code' => 'De herstelcode is ongeldig.',
+
 ];
