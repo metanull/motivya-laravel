@@ -18,6 +18,9 @@ return [
         'profile' => 'My profile',
         'bookings' => 'My bookings',
         'logout' => 'Log out',
+        'admin_coach_approval' => 'Coach Approval',
+        'become_coach' => 'Become a Coach',
+        'my_sessions' => 'My Sessions',
     ],
 
     /*

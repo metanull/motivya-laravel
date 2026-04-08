@@ -18,6 +18,9 @@ return [
         'profile' => 'Mijn profiel',
         'bookings' => 'Mijn boekingen',
         'logout' => 'Uitloggen',
+        'admin_coach_approval' => 'Coach Goedkeuring',
+        'become_coach' => 'Word Coach',
+        'my_sessions' => 'Mijn Sessies',
     ],
 
     /*
