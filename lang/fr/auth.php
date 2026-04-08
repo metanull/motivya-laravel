@@ -101,6 +101,16 @@ return [
     'two_factor_submit' => 'Vérifier',
     'two_factor_use_recovery' => 'Utiliser un code de récupération',
     'two_factor_use_code' => 'Utiliser un code d\'authentification',
+    'two_factor_required' => 'Votre r\u00f4le n\u00e9cessite l\'authentification \u00e0 deux facteurs. Veuillez l\'activer avant de continuer.',
+
+    // 2FA par e-mail
+    'two_factor_email_description' => 'Entrez le code de vérification envoyé à votre adresse e-mail.',
+    'two_factor_email_code' => 'Code de vérification par e-mail',
+    'two_factor_email_resend' => 'Renvoyer le code',
+    'two_factor_email_resent' => 'Un nouveau code a été envoyé à votre adresse e-mail.',
+    'two_factor_email_invalid_code' => 'Le code est invalide ou a expiré.',
+    'two_factor_email_max_attempts' => 'Trop de tentatives. Veuillez demander un nouveau code.',
+    'two_factor_invalid_recovery_code' => 'Le code de récupération est invalide.',
 
     // 2FA par e-mail
     'two_factor_email_description' => 'Entrez le code de vérification envoyé à votre adresse e-mail.',
