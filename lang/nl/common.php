@@ -44,6 +44,8 @@ return [
     'delete' => 'Verwijderen',
     'edit' => 'Bewerken',
     'back' => 'Terug',
+    'next' => 'Volgende',
+    'previous' => 'Vorige',
     'uploading' => 'Uploaden…',
     'welcome' => 'Welkom bij :app',
     'auth_coming_soon' => 'Inloggen en registreren komen binnenkort beschikbaar.',

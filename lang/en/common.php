@@ -44,6 +44,8 @@ return [
     'delete' => 'Delete',
     'edit' => 'Edit',
     'back' => 'Back',
+    'next' => 'Next',
+    'previous' => 'Previous',
     'uploading' => 'Uploading…',
     'welcome' => 'Welcome to :app',
     'auth_coming_soon' => 'Login and registration are coming soon.',
