@@ -8,14 +8,19 @@ applyTo: "routes/api.php,routes/api/**,app/Http/Controllers/Api/**,app/Http/Reso
 
 ### File Layout
 
-Separate API routes by version and domain:
+API routes follow the same directory-based, role-scoped pattern as web routes. See [ADR-015](../../doc/Decisions.md#adr-015-route-file-organization) for rationale.
 
 ```
 routes/
-├── api.php              # Registers version groups only
+├── api.php              # Registers version prefix only
 ├── api/
-│   └── v1.php           # All v1 route definitions
+│   ├── v1.php           # Public + shared authenticated API routes
+│   └── v1/              # Role-scoped API routes (create when first needed)
+│       ├── admin.php    # Admin-only API endpoints
+│       └── coach.php    # Coach-only API endpoints
 ```
+
+**Create role files only when needed** — do not create empty placeholder files.
 
 In `api.php`:
 
@@ -23,28 +28,33 @@ In `api.php`:
 Route::prefix('v1')->group(base_path('routes/api/v1.php'));
 ```
 
-In `v1.php`, group by domain:
+In `v1.php`, define public and shared authenticated routes:
 
 ```php
 // Public (no auth)
 Route::get('sessions', [SessionController::class, 'index']);
 Route::get('sessions/{session}', [SessionController::class, 'show']);
 
-// Authenticated
+// Authenticated (any role)
 Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('bookings', BookingController::class)->except(['index']);
+    Route::get('me', fn (Request $request) => $request->user());
     Route::get('me/bookings', [BookingController::class, 'index']);
-
-    // Coach-only
-    Route::middleware('role:coach')->group(function () {
-        Route::apiResource('sessions', SessionController::class)->except(['index', 'show']);
-    });
-
-    // Admin-only
-    Route::middleware('role:admin')->group(function () {
-        Route::apiResource('users', UserController::class);
-    });
 });
+```
+
+When the first role-specific API route is needed, create `routes/api/v1/{role}.php` and register it in `bootstrap/app.php` via the `then:` callback:
+
+```php
+// In bootstrap/app.php withRouting then: callback
+Route::middleware(['api', 'auth:sanctum', 'role:coach'])
+    ->prefix('api/v1/coach')
+    ->name('api.v1.coach.')
+    ->group(base_path('routes/api/v1/coach.php'));
+
+Route::middleware(['api', 'auth:sanctum', 'role:admin'])
+    ->prefix('api/v1/admin')
+    ->name('api.v1.admin.')
+    ->group(base_path('routes/api/v1/admin.php'));
 ```
 
 ### URL Conventions

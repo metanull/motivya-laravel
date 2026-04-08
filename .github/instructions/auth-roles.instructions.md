@@ -208,33 +208,83 @@ Prefer Policies over Gates for model-specific authorization.
 
 ## Route Organization
 
-| File | Middleware | Roles |
-|------|-----------|-------|
-| `routes/web.php` | `auth` | Public + athlete routes |
-| `routes/coach.php` | `auth`, `role:coach` | Coach dashboard, session CRUD |
-| `routes/admin.php` | `auth`, `role:admin`, `mfa` | Admin panel |
-| `routes/api.php` | `auth:sanctum` | API endpoints with token scoping |
+Routes are organized by **channel** (`web`/`api`) then by **role**, using directories. See [ADR-015](../../doc/Decisions.md#adr-015-route-file-organization) for rationale.
 
-Register additional route files in `bootstrap/app.php`:
+### Directory Layout
+
+```
+routes/
+├── web.php              # Public + shared authenticated (profile, email verify, locale, OAuth)
+├── web/
+│   ├── admin.php        # Admin-only web routes
+│   ├── coach.php        # Coach-only web routes
+│   ├── athlete.php      # Athlete-only web routes (create when first needed)
+│   └── accountant.php   # Accountant-only web routes (create when first needed)
+├── api.php              # Registers version prefix only
+├── api/
+│   ├── v1.php           # Public + shared authenticated API routes
+│   └── v1/              # Role-scoped API routes (create directory when first needed)
+│       ├── admin.php    # Admin-only API (create when first needed)
+│       └── coach.php    # Coach-only API (create when first needed)
+├── console.php
+```
+
+### What belongs in `web.php`
+
+`web.php` contains routes that are **not role-specific**:
+- Public: home, privacy, health, locale switch
+- Guest-only: login, register, password reset, OAuth callbacks
+- Shared authenticated (any role): profile, email verify, logout
+
+Do NOT put role-specific routes in `web.php`. If a route requires `role:X` middleware, it belongs in `routes/web/{role}.php`.
+
+### Middleware by Role File
+
+| File | Group Middleware | Content |
+|------|-----------------|---------|
+| `routes/web.php` | `web` (default) | Public + shared authenticated |
+| `routes/web/admin.php` | `web`, `auth`, `role:admin`, `2fa` | Admin panel, KYC, user management |
+| `routes/web/coach.php` | `web`, `auth`, `role:coach` | Session CRUD, dashboard, payouts |
+| `routes/web/athlete.php` | `web`, `auth`, `role:athlete` | Bookings, payment history |
+| `routes/web/accountant.php` | `web`, `auth`, `role:accountant`, `2fa` | Financial reports, exports |
+| `routes/api/v1.php` | `api` (default) | Public + shared authenticated API |
+| `routes/api/v1/admin.php` | `api`, `auth:sanctum`, `role:admin` | Admin API endpoints |
+| `routes/api/v1/coach.php` | `api`, `auth:sanctum`, `role:coach` | Coach API endpoints |
+
+### Registration in `bootstrap/app.php`
 
 ```php
 ->withRouting(
     web: __DIR__.'/../routes/web.php',
     api: __DIR__.'/../routes/api.php',
     commands: __DIR__.'/../routes/console.php',
+    health: '/up',
     then: function () {
+        Route::middleware(['web', 'auth', 'role:admin', '2fa'])
+            ->prefix('admin')
+            ->name('admin.')
+            ->group(base_path('routes/web/admin.php'));
+
         Route::middleware(['web', 'auth', 'role:coach'])
             ->prefix('coach')
             ->name('coach.')
-            ->group(base_path('routes/coach.php'));
+            ->group(base_path('routes/web/coach.php'));
 
-        Route::middleware(['web', 'auth', 'role:admin', 'mfa'])
-            ->prefix('admin')
-            ->name('admin.')
-            ->group(base_path('routes/admin.php'));
+        // Add when first athlete-only web route is needed:
+        // Route::middleware(['web', 'auth', 'role:athlete'])
+        //     ->prefix('athlete')
+        //     ->name('athlete.')
+        //     ->group(base_path('routes/web/athlete.php'));
     },
 )
 ```
+
+### Rules
+
+- **Create role files only when needed** — do not create empty placeholder files
+- **Route names inherit the group prefix** — a route named `coach-approval` in `web/admin.php` becomes `admin.coach-approval`
+- **No middleware duplication** — never re-declare group middleware on individual routes inside a role file
+- **The coach application form** (`/coach/apply`) stays in `web.php` — it is for athletes applying, not for coaches
 
 ## Sanctum API Tokens
 

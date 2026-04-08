@@ -113,3 +113,30 @@ This file tracks all key technical and business decisions for the Motivya projec
 - **Date**: 2026-01
 - **Decision**: A React 19 PWA for mobile is planned but **not in scope** for this repository. The Laravel API (Sanctum tokens) will support it when ready.
 - **Rationale**: MVP ships with Livewire web UI. Mobile app is a separate project.
+
+## ADR-015: Route File Organization — Directory-Based, Role-Scoped
+
+- **Status**: DECIDED
+- **Date**: 2026-04
+- **Decision**: Organize route files by **channel** (`web`/`api`) then by **role**, using subdirectories. `web.php` and `api/v1.php` contain public and shared authenticated routes. Role-specific routes go in `routes/web/{role}.php` and `routes/api/v1/{role}.php`. Files are created only when the first route for that role is needed — no empty placeholders.
+- **Target layout**:
+  ```
+  routes/
+  ├── web.php                 # Public + shared authenticated (any role)
+  ├── web/
+  │   ├── admin.php           # role:admin + 2fa
+  │   ├── coach.php           # role:coach
+  │   ├── athlete.php         # role:athlete (when needed)
+  │   └── accountant.php      # role:accountant + 2fa (when needed)
+  ├── api.php                 # Version prefix only
+  ├── api/
+  │   ├── v1.php              # Public + shared authenticated API
+  │   └── v1/                 # Role-scoped API (when needed)
+  │       ├── admin.php
+  │       └── coach.php
+  ├── console.php
+  ```
+- **Rationale**: The previous flat-file approach (`admin.php`, `coach.php` alongside `web.php`) was ambiguous — file names didn't indicate whether they were web or API routes. Mixing public and athlete routes in `web.php` was inconsistent with having separate files for other roles. The directory-based approach mirrors the existing `routes/api/v1.php` pattern already in the codebase, scales symmetrically for both channels, and makes `applyTo` patterns in AI instructions natural (`routes/web/**`, `routes/api/**`).
+- **Registration**: Role files are loaded in `bootstrap/app.php` via the `then:` callback with group-level middleware, prefix, and name prefix. Individual routes inside role files must **not** re-declare group middleware.
+- **What stays in `web.php`**: Public pages (home, privacy, health), guest-only auth (login, register, OAuth, password reset), shared authenticated routes used by all roles (profile, email verify, locale switch, logout), and cross-role routes gated by ability (e.g., coach application form accessible to athletes).
+- **Alternatives rejected**: (A) Flat hyphenated files (`web-admin.php`) — unconventional PHP naming, directory gets crowded. (B) Everything in one `web.php` with inline middleware groups — error-prone, caused the missing `2fa` bug (#133). (C) Original E1-S24 proposal (`admin.php`, `coach.php`) — ambiguous channel, inconsistent athlete handling.
