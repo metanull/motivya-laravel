@@ -6,6 +6,8 @@ namespace App\Providers;
 
 use App\Events\CoachApproved;
 use App\Events\CoachRejected;
+use App\Events\NewCoachApplication;
+use App\Listeners\NotifyAdminsOfNewApplication;
 use App\Listeners\SendCoachApprovedNotification;
 use App\Listeners\SendCoachRejectedNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -21,6 +23,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         CoachRejected::class => [
             SendCoachRejectedNotification::class,
+        ],
+        NewCoachApplication::class => [
+            NotifyAdminsOfNewApplication::class,
         ],
     ];
 }

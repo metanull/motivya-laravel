@@ -39,4 +39,16 @@ return [
     'coach_rejected_body' => 'Het spijt ons, uw coachaanvraag op Motivya is niet aanvaard.',
     'coach_rejected_reason' => 'Reden: :reason',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Nieuwe aanvraag (admin)
+    |--------------------------------------------------------------------------
+    */
+
+    'new_coach_application_subject' => 'Nieuwe coachaanvraag',
+    'new_coach_application_body' => ':name (:email) heeft een coachaanvraag ingediend.',
+    'new_coach_application_specialties' => 'Specialiteiten: :specialties.',
+    'new_coach_application_action' => 'Aanvragen bekijken',
+    'new_coach_application_body_short' => 'Er is een nieuwe coachaanvraag ingediend.',
+
 ];
