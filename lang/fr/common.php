@@ -60,4 +60,60 @@ return [
     'user_menu' => 'Menu utilisateur',
     'open_user_menu' => 'Ouvrir le menu utilisateur',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Status Labels
+    |--------------------------------------------------------------------------
+    */
+
+    'status' => [
+        'active' => 'Actif',
+        'inactive' => 'Inactif',
+        'pending' => 'En attente',
+        'confirmed' => 'Confirmé',
+        'cancelled' => 'Annulé',
+        'completed' => 'Terminé',
+        'draft' => 'Brouillon',
+        'published' => 'Publié',
+        'refunded' => 'Remboursé',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Form Labels
+    |--------------------------------------------------------------------------
+    */
+
+    'form' => [
+        'name' => 'Nom',
+        'email' => 'Adresse e-mail',
+        'password' => 'Mot de passe',
+        'password_confirmation' => 'Confirmer le mot de passe',
+        'phone' => 'Numéro de téléphone',
+        'address' => 'Adresse',
+        'city' => 'Ville',
+        'postal_code' => 'Code postal',
+        'country' => 'Pays',
+        'description' => 'Description',
+        'date' => 'Date',
+        'time' => 'Heure',
+        'price' => 'Prix',
+        'select' => 'Sélectionner…',
+        'search' => 'Rechercher…',
+        'no_results' => 'Aucun résultat trouvé.',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Roles
+    |--------------------------------------------------------------------------
+    */
+
+    'roles' => [
+        'admin' => 'Administrateur',
+        'coach' => 'Coach',
+        'athlete' => 'Athlète',
+        'accountant' => 'Comptable',
+    ],
+
 ];
