@@ -39,4 +39,16 @@ return [
     'coach_rejected_body' => 'Nous sommes désolés, votre candidature de coach sur Motivya n\'a pas été retenue.',
     'coach_rejected_reason' => 'Motif : :reason',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Nouvelle candidature (admin)
+    |--------------------------------------------------------------------------
+    */
+
+    'new_coach_application_subject' => 'Nouvelle candidature de coach',
+    'new_coach_application_body' => ':name (:email) a soumis une candidature de coach.',
+    'new_coach_application_specialties' => 'Spécialités : :specialties.',
+    'new_coach_application_action' => 'Voir les candidatures',
+    'new_coach_application_body_short' => 'Une nouvelle candidature de coach a été soumise.',
+
 ];

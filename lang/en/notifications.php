@@ -39,4 +39,16 @@ return [
     'coach_rejected_body' => 'We are sorry, your coach application on Motivya was not accepted.',
     'coach_rejected_reason' => 'Reason: :reason',
 
+    /*
+    |--------------------------------------------------------------------------
+    | New Application (admin)
+    |--------------------------------------------------------------------------
+    */
+
+    'new_coach_application_subject' => 'New coach application',
+    'new_coach_application_body' => ':name (:email) has submitted a coach application.',
+    'new_coach_application_specialties' => 'Specialties: :specialties.',
+    'new_coach_application_action' => 'View applications',
+    'new_coach_application_body_short' => 'A new coach application has been submitted.',
+
 ];
