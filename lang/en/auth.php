@@ -86,4 +86,20 @@ return [
     'verify_resent' => 'A new verification link has been sent to your email address.',
     'verify_logout' => 'Log out',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Two-Factor Authentication
+    |--------------------------------------------------------------------------
+    */
+
+    'two_factor_title' => 'Two-Factor Authentication',
+    'two_factor_heading' => 'Two-Factor Authentication',
+    'two_factor_description' => 'Enter the authentication code from your authenticator app to continue.',
+    'two_factor_recovery_description' => 'Enter one of your emergency recovery codes to continue.',
+    'two_factor_code' => 'Authentication code',
+    'two_factor_recovery_code' => 'Recovery code',
+    'two_factor_submit' => 'Verify',
+    'two_factor_use_recovery' => 'Use a recovery code',
+    'two_factor_use_code' => 'Use an authentication code',
+
 ];

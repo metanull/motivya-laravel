@@ -64,6 +64,18 @@ return [
     'twofa_heading' => 'Tweefactorauthenticatie',
     'twofa_description' => 'Voeg extra beveiliging toe aan uw account met tweefactorauthenticatie.',
     'twofa_not_available' => 'Tweefactorauthenticatie zal beschikbaar zijn in een toekomstige update.',
+    'twofa_enabled_status' => 'Tweefactorauthenticatie is ingeschakeld.',
+    'twofa_enable' => 'Inschakelen',
+    'twofa_enabling' => 'Inschakelen…',
+    'twofa_disable' => 'Uitschakelen',
+    'twofa_scan_instructions' => 'Scan de volgende QR-code met uw authenticatie-app (Google Authenticator, Authy, enz.) en voer vervolgens de verificatiecode in om te bevestigen.',
+    'twofa_confirm_code' => 'Verificatiecode',
+    'twofa_confirm' => 'Bevestigen',
+    'twofa_invalid_code' => 'De opgegeven code is ongeldig.',
+    'twofa_recovery_description' => 'Bewaar deze herstelcodes in een veilige wachtwoordmanager. Ze kunnen worden gebruikt om toegang tot uw account te herstellen als uw authenticatie-apparaat verloren is.',
+    'twofa_show_codes' => 'Herstelcodes tonen',
+    'twofa_hide_codes' => 'Verbergen',
+    'twofa_regenerate_codes' => 'Herstelcodes opnieuw genereren',
 
     /*
     |--------------------------------------------------------------------------

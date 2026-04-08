@@ -77,12 +77,13 @@ describe('Profile Edit Livewire Component', function () {
             ->assertSee('value="john@example.com"', escape: false);
     });
 
-    it('shows the 2FA placeholder section', function () {
+    it('shows the 2FA section with enable option', function () {
         $user = User::factory()->create();
 
         $this->actingAs($user)
             ->get(route('profile.edit'))
-            ->assertSee(__('profile.twofa_not_available'));
+            ->assertSee(__('profile.twofa_heading'))
+            ->assertSee(__('profile.twofa_enable'));
     });
 
 });

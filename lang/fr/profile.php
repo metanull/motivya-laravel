@@ -64,6 +64,18 @@ return [
     'twofa_heading' => 'Authentification à deux facteurs',
     'twofa_description' => 'Ajoutez une sécurité supplémentaire à votre compte en utilisant l\'authentification à deux facteurs.',
     'twofa_not_available' => 'L\'authentification à deux facteurs sera disponible dans une prochaine mise à jour.',
+    'twofa_enabled_status' => 'L\'authentification à deux facteurs est activée.',
+    'twofa_enable' => 'Activer',
+    'twofa_enabling' => 'Activation…',
+    'twofa_disable' => 'Désactiver',
+    'twofa_scan_instructions' => 'Scannez le code QR suivant avec votre application d\'authentification (Google Authenticator, Authy, etc.), puis entrez le code de vérification pour confirmer.',
+    'twofa_confirm_code' => 'Code de vérification',
+    'twofa_confirm' => 'Confirmer',
+    'twofa_invalid_code' => 'Le code fourni est invalide.',
+    'twofa_recovery_description' => 'Conservez ces codes de récupération dans un gestionnaire de mots de passe sécurisé. Ils peuvent être utilisés pour récupérer l\'accès à votre compte si votre dispositif d\'authentification est perdu.',
+    'twofa_show_codes' => 'Afficher les codes de récupération',
+    'twofa_hide_codes' => 'Masquer',
+    'twofa_regenerate_codes' => 'Régénérer les codes de récupération',
 
     /*
     |--------------------------------------------------------------------------

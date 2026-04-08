@@ -6,6 +6,7 @@ use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
+use App\Livewire\Auth\TwoFactorChallenge;
 use App\Livewire\Auth\VerifyEmail;
 use App\Livewire\Profile\Edit as ProfileEdit;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +22,7 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', Register::class)->name('register');
     Route::get('/forgot-password', ForgotPassword::class)->name('password.request');
     Route::get('/reset-password/{token}', ResetPassword::class)->name('password.reset');
+    Route::get('/two-factor-challenge', TwoFactorChallenge::class)->name('two-factor.login');
 });
 
 Route::get('/email/verify', VerifyEmail::class)

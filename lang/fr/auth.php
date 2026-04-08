@@ -86,4 +86,20 @@ return [
     'verify_resent' => 'Un nouveau lien de vérification a été envoyé à votre adresse e-mail.',
     'verify_logout' => 'Se déconnecter',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Authentification à deux facteurs
+    |--------------------------------------------------------------------------
+    */
+
+    'two_factor_title' => 'Authentification à deux facteurs',
+    'two_factor_heading' => 'Authentification à deux facteurs',
+    'two_factor_description' => 'Entrez le code d\'authentification de votre application d\'authentification pour continuer.',
+    'two_factor_recovery_description' => 'Entrez l\'un de vos codes de récupération d\'urgence pour continuer.',
+    'two_factor_code' => 'Code d\'authentification',
+    'two_factor_recovery_code' => 'Code de récupération',
+    'two_factor_submit' => 'Vérifier',
+    'two_factor_use_recovery' => 'Utiliser un code de récupération',
+    'two_factor_use_code' => 'Utiliser un code d\'authentification',
+
 ];
