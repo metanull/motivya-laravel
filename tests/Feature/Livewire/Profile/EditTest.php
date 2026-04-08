@@ -133,6 +133,53 @@ describe('Profile Edit — Locale Preference', function () {
 
 });
 
+describe('Profile Edit — MFA Required Banner', function () {
+
+    it('shows MFA alert banner for admin without 2FA', function () {
+        $admin = User::factory()->admin()->create([
+            'two_factor_confirmed_at' => null,
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->assertSee(__('profile.mfa_required_title'))
+            ->assertSee(__('profile.mfa_required_description'));
+    });
+
+    it('shows MFA alert banner for accountant without 2FA', function () {
+        $accountant = User::factory()->accountant()->create([
+            'two_factor_confirmed_at' => null,
+        ]);
+
+        $this->actingAs($accountant)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->assertSee(__('profile.mfa_required_title'));
+    });
+
+    it('does not show MFA alert banner for admin with 2FA enabled', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+
+        $this->actingAs($admin)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->assertDontSee(__('profile.mfa_required_title'));
+    });
+
+    it('does not show MFA alert banner for athlete', function () {
+        $athlete = User::factory()->athlete()->create([
+            'two_factor_confirmed_at' => null,
+        ]);
+
+        $this->actingAs($athlete)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->assertDontSee(__('profile.mfa_required_title'));
+    });
+
+});
+
 describe('Profile Edit — Fortify Profile Information Update', function () {
 
     it('updates the user name', function () {

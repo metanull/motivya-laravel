@@ -99,4 +99,13 @@ return [
     'delete_heading' => 'Delete Account',
     'delete_description' => 'Once your account is deleted, all of its resources and data will be permanently deleted.',
 
+    /*
+    |--------------------------------------------------------------------------
+    | MFA Required Alert
+    |--------------------------------------------------------------------------
+    */
+
+    'mfa_required_title' => 'Two-factor authentication required',
+    'mfa_required_description' => 'Your role requires two-factor authentication to be enabled. Please set up 2FA below before accessing protected features.',
+
 ];

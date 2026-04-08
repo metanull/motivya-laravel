@@ -98,5 +98,12 @@ return [
 
     'delete_heading' => 'Supprimer le compte',
     'delete_description' => 'Une fois que votre compte est supprimé, toutes ses ressources et données seront définitivement supprimées.',
+    /*
+    |--------------------------------------------------------------------------
+    | MFA Required Alert
+    |--------------------------------------------------------------------------
+    */
 
+    'mfa_required_title' => 'Authentification à deux facteurs requise',
+    'mfa_required_description' => 'Votre rôle nécessite l\'activation de l\'authentification à deux facteurs. Veuillez configurer la 2FA ci-dessous avant d\'accéder aux fonctionnalités protégées.',
 ];

@@ -98,5 +98,12 @@ return [
 
     'delete_heading' => 'Account verwijderen',
     'delete_description' => 'Zodra uw account is verwijderd, worden alle bronnen en gegevens permanent verwijderd.',
+    /*
+    |--------------------------------------------------------------------------
+    | MFA Required Alert
+    |--------------------------------------------------------------------------
+    */
 
+    'mfa_required_title' => 'Tweefactorauthenticatie vereist',
+    'mfa_required_description' => 'Uw rol vereist dat tweefactorauthenticatie is ingeschakeld. Stel hieronder 2FA in voordat u toegang krijgt tot beschermde functies.',
 ];

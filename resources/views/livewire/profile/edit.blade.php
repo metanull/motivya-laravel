@@ -3,6 +3,26 @@
         {{ __('profile.heading') }}
     </h1>
 
+    @if(in_array(auth()->user()->role, [\App\Enums\UserRole::Admin, \App\Enums\UserRole::Accountant]) && auth()->user()->two_factor_confirmed_at === null)
+        <div class="rounded-md border border-amber-300 bg-amber-50 p-4 dark:border-amber-600 dark:bg-amber-900/20">
+            <div class="flex">
+                <div class="shrink-0">
+                    <svg class="h-5 w-5 text-amber-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-amber-800 dark:text-amber-200">
+                        {{ __('profile.mfa_required_title') }}
+                    </h3>
+                    <p class="mt-1 text-sm text-amber-700 dark:text-amber-300">
+                        {{ __('profile.mfa_required_description') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- Personal Information --}}
     <section class="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
         <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
@@ -186,5 +206,11 @@
     </section>
 
     {{-- Two-Factor Authentication --}}
-    <livewire:profile.two-factor-authentication />
+    <div id="two-factor-section">
+        <livewire:profile.two-factor-authentication />
+    </div>
+
+    @if(session('status') === __('auth.two_factor_required'))
+        <script>document.getElementById('two-factor-section')?.scrollIntoView({ behavior: 'smooth' });</script>
+    @endif
 </div>
