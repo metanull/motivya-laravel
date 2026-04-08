@@ -185,19 +185,6 @@
         </form>
     </section>
 
-    {{-- Two-Factor Authentication (placeholder) --}}
-    <section class="rounded-lg bg-white p-6 shadow dark:bg-gray-800">
-        <h2 class="text-lg font-medium text-gray-900 dark:text-gray-100">
-            {{ __('profile.twofa_heading') }}
-        </h2>
-        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
-            {{ __('profile.twofa_description') }}
-        </p>
-
-        <div class="mt-4 rounded-md bg-gray-50 p-4 dark:bg-gray-700">
-            <p class="text-sm text-gray-500 dark:text-gray-400">
-                {{ __('profile.twofa_not_available') }}
-            </p>
-        </div>
-    </section>
+    {{-- Two-Factor Authentication --}}
+    <livewire:profile.two-factor-authentication />
 </div>

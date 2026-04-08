@@ -64,6 +64,18 @@ return [
     'twofa_heading' => 'Two-Factor Authentication',
     'twofa_description' => 'Add additional security to your account using two-factor authentication.',
     'twofa_not_available' => 'Two-factor authentication will be available in a future update.',
+    'twofa_enabled_status' => 'Two-factor authentication is enabled.',
+    'twofa_enable' => 'Enable',
+    'twofa_enabling' => 'Enabling…',
+    'twofa_disable' => 'Disable',
+    'twofa_scan_instructions' => 'Scan the following QR code using your authenticator application (Google Authenticator, Authy, etc.), then enter the verification code to confirm.',
+    'twofa_confirm_code' => 'Verification code',
+    'twofa_confirm' => 'Confirm',
+    'twofa_invalid_code' => 'The provided code is invalid.',
+    'twofa_recovery_description' => 'Store these recovery codes in a secure password manager. They can be used to recover access to your account if your authenticator device is lost.',
+    'twofa_show_codes' => 'Show Recovery Codes',
+    'twofa_hide_codes' => 'Hide',
+    'twofa_regenerate_codes' => 'Regenerate Recovery Codes',
 
     /*
     |--------------------------------------------------------------------------

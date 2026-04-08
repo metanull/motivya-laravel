@@ -86,4 +86,20 @@ return [
     'verify_resent' => 'Er is een nieuwe verificatielink naar uw e-mailadres gestuurd.',
     'verify_logout' => 'Uitloggen',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Tweefactorauthenticatie
+    |--------------------------------------------------------------------------
+    */
+
+    'two_factor_title' => 'Tweefactorauthenticatie',
+    'two_factor_heading' => 'Tweefactorauthenticatie',
+    'two_factor_description' => 'Voer de authenticatiecode van uw authenticatie-app in om door te gaan.',
+    'two_factor_recovery_description' => 'Voer een van uw noodherstelcodes in om door te gaan.',
+    'two_factor_code' => 'Authenticatiecode',
+    'two_factor_recovery_code' => 'Herstelcode',
+    'two_factor_submit' => 'Verifiëren',
+    'two_factor_use_recovery' => 'Gebruik een herstelcode',
+    'two_factor_use_code' => 'Gebruik een authenticatiecode',
+
 ];
