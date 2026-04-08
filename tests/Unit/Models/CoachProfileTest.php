@@ -7,6 +7,7 @@ use App\Enums\UserRole;
 use App\Models\CoachProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 
 uses(RefreshDatabase::class);
 
@@ -58,7 +59,7 @@ describe('CoachProfile', function () {
     it('casts verified_at to datetime', function () {
         $profile = CoachProfile::factory()->approved()->create();
 
-        expect($profile->verified_at)->toBeInstanceOf(\Illuminate\Support\Carbon::class);
+        expect($profile->verified_at)->toBeInstanceOf(Carbon::class);
     });
 
     it('has nullable verified_at for pending profiles', function () {
