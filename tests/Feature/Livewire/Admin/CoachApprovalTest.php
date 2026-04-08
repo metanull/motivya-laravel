@@ -152,4 +152,26 @@ describe('Admin Coach Approval', function () {
             ->assertSet('rejectionReason', '');
     });
 
+    it('denies approve action to non-admin users', function () {
+        $athlete = User::factory()->athlete()->create();
+        $profile = CoachProfile::factory()->pending()->create();
+
+        Livewire::actingAs($athlete)
+            ->test(CoachApproval::class)
+            ->call('approve', $profile->id)
+            ->assertForbidden();
+    });
+
+    it('denies reject action to non-admin users', function () {
+        $athlete = User::factory()->athlete()->create();
+        $profile = CoachProfile::factory()->pending()->create();
+
+        Livewire::actingAs($athlete)
+            ->test(CoachApproval::class)
+            ->call('confirmReject', $profile->id)
+            ->set('rejectionReason', 'Some reason')
+            ->call('reject')
+            ->assertForbidden();
+    });
+
 });

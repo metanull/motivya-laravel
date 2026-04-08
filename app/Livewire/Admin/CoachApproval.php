@@ -8,6 +8,7 @@ use App\Enums\CoachProfileStatus;
 use App\Models\CoachProfile;
 use App\Services\AdminService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -21,6 +22,8 @@ final class CoachApproval extends Component
 
     public function approve(int $profileId, AdminService $service): void
     {
+        Gate::authorize('access-admin-panel');
+
         $coachProfile = CoachProfile::with('user')->findOrFail($profileId);
 
         $service->approveCoach($coachProfile);
@@ -42,6 +45,8 @@ final class CoachApproval extends Component
 
     public function reject(AdminService $service): void
     {
+        Gate::authorize('access-admin-panel');
+
         $this->validate([
             'rejectionReason' => ['required', 'string', 'max:1000'],
         ]);
