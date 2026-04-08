@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Livewire\Coach;
 
-use App\Enums\UserRole;
 use App\Livewire\Forms\CoachApplicationForm;
 use App\Services\CoachApplicationService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
 final class Application extends Component
@@ -19,15 +19,7 @@ final class Application extends Component
 
     public function mount(): void
     {
-        $user = Auth::user();
-
-        if ($user === null || $user->role !== UserRole::Athlete) {
-            abort(403);
-        }
-
-        if ($user->coachProfile !== null) {
-            abort(403);
-        }
+        Gate::authorize('apply-as-coach');
     }
 
     public function nextStep(): void
@@ -50,17 +42,9 @@ final class Application extends Component
     {
         $this->form->validate();
 
-        $user = Auth::user();
+        Gate::authorize('apply-as-coach');
 
-        if ($user === null || $user->role !== UserRole::Athlete) {
-            abort(403);
-        }
-
-        if ($user->coachProfile !== null) {
-            abort(403);
-        }
-
-        $service->apply($user, $this->form->toServiceArray());
+        $service->apply(Auth::user(), $this->form->toServiceArray());
 
         session()->flash('status', __('coach.application_submitted'));
 

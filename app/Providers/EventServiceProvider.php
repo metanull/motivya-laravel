@@ -12,7 +12,7 @@ use App\Listeners\SendCoachApprovedNotification;
 use App\Listeners\SendCoachRejectedNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
-class EventServiceProvider extends ServiceProvider
+final class EventServiceProvider extends ServiceProvider
 {
     /**
      * @var array<class-string, list<class-string>>
