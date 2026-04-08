@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 use App\Enums\UserRole;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 describe('app:create-admin (create mode)', function (): void {
     it('creates a new admin user with all options', function (): void {
