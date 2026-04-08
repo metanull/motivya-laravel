@@ -97,7 +97,8 @@ describe('Admin Coach Approval', function () {
         Event::fake([CoachRejected::class]);
 
         $admin = User::factory()->admin()->create();
-        $profile = CoachProfile::factory()->pending()->create();
+        $applicant = User::factory()->athlete()->create();
+        $profile = CoachProfile::factory()->pending()->create(['user_id' => $applicant->id]);
 
         Livewire::actingAs($admin)
             ->test(CoachApproval::class)

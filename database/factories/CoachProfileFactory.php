@@ -20,7 +20,7 @@ class CoachProfileFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => User::factory()->athlete(),
+            'user_id' => User::factory()->coach(),
             'status' => CoachProfileStatus::Pending,
             'specialties' => [$this->faker->randomElement(['fitness', 'yoga', 'running', 'cycling', 'swimming'])],
             'bio' => $this->faker->paragraph(),
@@ -47,5 +47,15 @@ class CoachProfileFactory extends Factory
     public function rejected(): static
     {
         return $this->state(['status' => CoachProfileStatus::Rejected]);
+    }
+
+    public function vatSubject(): static
+    {
+        return $this->state(['is_vat_subject' => true]);
+    }
+
+    public function nonVatSubject(): static
+    {
+        return $this->state(['is_vat_subject' => false]);
     }
 }
