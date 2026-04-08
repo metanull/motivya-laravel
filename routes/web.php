@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Livewire\Admin\CoachApproval;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
@@ -37,6 +38,10 @@ Route::get('/profile', ProfileEdit::class)
 Route::get('/coach/apply', CoachApplication::class)
     ->middleware(['auth', 'verified'])
     ->name('coach.apply');
+
+Route::get('/admin/coach-approval', CoachApproval::class)
+    ->middleware(['auth', 'role:admin'])
+    ->name('admin.coach-approval');
 
 Route::get('/health', function () {
     $checks = ['status' => 'ok'];
