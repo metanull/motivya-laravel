@@ -14,7 +14,7 @@ Tests still use SQLite `:memory:` — Docker MySQL is for manual dev and integra
 
 | Service | Image | Port | Purpose |
 |---------|-------|------|---------|
-| `app` | Custom PHP 8.2-FPM + Node 20 | 9000 (internal) | PHP-FPM process — not exposed directly |
+| `app` | Custom PHP 8.4-FPM + Node 24 | 9000 (internal) | PHP-FPM process — not exposed directly |
 | `nginx` | `nginx:1.26-alpine` | 8000 | Reverse proxy to `app:9000` — production-parity web server |
 | `mysql` | `mysql:8.0` | 3306 | Production-parity relational DB |
 | `valkey` | `valkey/valkey:8` | 6379 | Cache + queue + session (Redis-compatible) |
@@ -47,16 +47,16 @@ docker-compose.yml          # Main orchestration
 ## Dockerfile Rules (`.docker/php/Dockerfile`)
 
 ```dockerfile
-FROM php:8.2-fpm
+FROM php:8.4-fpm
 
 # Required PHP extensions for Laravel + MySQL + Valkey
 # pdo_mysql, bcmath, intl, gd, zip, redis (phpredis), pcntl, opcache
 ```
 
-- Base image: `php:8.2-fpm` — match the project's PHP 8.2+ requirement.
+- Base image: `php:8.4-fpm` — match production (PHP 8.4).
 - Install extensions via `docker-php-ext-install` or `pecl`: `pdo_mysql`, `bcmath`, `intl`, `gd`, `zip`, `redis` (phpredis for Valkey compatibility), `pcntl`, `opcache`.
 - Install Composer via `COPY --from=composer:latest`.
-- Install Node 20 via `nvm` or `node:20` multi-stage copy — needed for `npm run build`.
+- Install Node 24 via NodeSource apt repository — needed for `npm run build`.
 - Set `WORKDIR /var/www/html`.
 - Do NOT copy application code into the image — use a bind mount in `docker-compose.yml`.
 - Do NOT install Xdebug in the base image — use a separate `docker-compose.override.yml` or build arg.
@@ -220,7 +220,7 @@ docker-compose.override.yml
 | Concern | Production | Docker Dev |
 |---------|-----------|------------|
 | Web server | Nginx | Nginx 1.26-alpine (exact match) |
-| PHP version | 8.2+ | 8.2-fpm (exact match) |
+| PHP version | 8.4 | 8.4-fpm (exact match) |
 | Database | MySQL 8.0 | MySQL 8.0 (exact match) |
 | Cache/Queue | Valkey | Valkey 8 (exact match) |
 | Storage | S3-compatible | Local filesystem (bind mount) |
@@ -237,7 +237,7 @@ After `docker compose up -d`:
 ```bash
 # First-time setup
 docker compose exec app composer install
-docker compose exec app cp .env.example .env
+docker compose exec app test -f .env || docker compose exec app cp .env.example .env
 docker compose exec app php artisan key:generate
 docker compose exec app php artisan migrate
 docker compose exec app npm install && npm run build

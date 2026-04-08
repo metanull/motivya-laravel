@@ -32,7 +32,7 @@ If the user's input is empty or just "docker-scaffold", generate the 5 required 
 ### 1. `.docker/php/Dockerfile`
 
 ```dockerfile
-FROM php:8.2-fpm
+FROM php:8.4-fpm
 ```
 
 Requirements:
@@ -40,7 +40,7 @@ Requirements:
 - Install PHP extensions via `docker-php-ext-install`: `pdo_mysql`, `bcmath`, `intl`, `gd`, `zip`, `pcntl`, `opcache`
 - Install `redis` extension via `pecl` (phpredis — compatible with Valkey)
 - Install Composer: `COPY --from=composer:latest /usr/bin/composer /usr/bin/composer`
-- Install Node 20: `COPY --from=node:20-slim /usr/local/bin/node /usr/local/bin/node` and `COPY --from=node:20-slim /usr/local/lib/node_modules /usr/local/lib/node_modules` with symlink for `npm`
+- Install Node 24: via NodeSource apt repository (`curl -fsSL https://deb.nodesource.com/setup_24.x | bash -` then `apt-get install nodejs`)
 - Set `WORKDIR /var/www/html`
 - Do NOT `COPY` application code — bind mount handles this
 - Do NOT install Xdebug — that goes in `docker-compose.override.yml`
@@ -201,7 +201,7 @@ docker-compose.override.yml
 ```bash
 docker compose up -d
 docker compose exec app composer install
-docker compose exec app cp .env.example .env
+docker compose exec app test -f .env || docker compose exec app cp .env.example .env
 docker compose exec app php artisan key:generate
 docker compose exec app php artisan migrate
 docker compose exec app npm install && npm run build
