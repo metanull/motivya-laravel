@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\SessionStatus;
+use App\Events\SessionCancelled;
 use App\Models\SportSession;
 use App\Models\User;
+use InvalidArgumentException;
 
 final class SessionService
 {
@@ -61,5 +63,35 @@ final class SessionService
         ]);
 
         return $session->refresh();
+    }
+
+    /**
+     * Delete a draft session (hard delete).
+     */
+    public function delete(SportSession $session): void
+    {
+        if ($session->status !== SessionStatus::Draft) {
+            throw new InvalidArgumentException('Only draft sessions can be deleted.');
+        }
+
+        $session->delete();
+    }
+
+    /**
+     * Cancel a published or confirmed session.
+     */
+    public function cancel(SportSession $session): void
+    {
+        if (! in_array($session->status, [SessionStatus::Published, SessionStatus::Confirmed], true)) {
+            throw new InvalidArgumentException('Only published or confirmed sessions can be cancelled.');
+        }
+
+        $wasConfirmed = $session->status === SessionStatus::Confirmed;
+
+        $session->update(['status' => SessionStatus::Cancelled->value]);
+
+        if ($wasConfirmed) {
+            SessionCancelled::dispatch($session);
+        }
     }
 }
