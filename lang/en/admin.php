@@ -26,4 +26,25 @@ return [
     'coach_approved' => 'Coach has been approved successfully.',
     'coach_rejected' => 'Application has been rejected.',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin — Activity Images
+    |--------------------------------------------------------------------------
+    */
+
+    'activity_images_title' => 'Activity Images',
+    'activity_images_heading' => 'Activity Cover Images',
+    'upload_image' => 'Upload New Image',
+    'activity_type_label' => 'Activity Type',
+    'select_activity_type' => 'Select an activity type…',
+    'alt_text_label' => 'Alt Text',
+    'alt_text_placeholder' => 'Describe the image…',
+    'image_file_label' => 'Image File (JPG, PNG, WebP — max 2 MB)',
+    'upload_button' => 'Upload',
+    'existing_images' => 'Existing Images',
+    'no_images' => 'No images uploaded yet.',
+    'confirm_delete_image' => 'Are you sure you want to delete this image?',
+    'image_uploaded' => 'Image uploaded successfully.',
+    'image_deleted' => 'Image deleted successfully.',
+
 ];
