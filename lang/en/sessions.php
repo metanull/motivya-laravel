@@ -97,5 +97,9 @@ return [
     'deleted' => 'Session deleted.',
     'cancelled' => 'Session cancelled.',
     'published' => 'Session published.',
+    'repeat_weekly' => 'Repeat weekly',
+    'number_of_weeks' => 'Number of weeks',
+    'recurring_hint' => 'Creates individual sessions for each week (max 12 weeks).',
+    'recurring_created' => ':count recurring sessions created successfully.',
 
 ];

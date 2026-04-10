@@ -189,6 +189,31 @@
             </div>
         @endif
 
+        {{-- Recurring options --}}
+        <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-600">
+            <div class="flex items-center">
+                <input type="checkbox" wire:model.live="form.isRecurring" id="isRecurring"
+                    class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700">
+                <label for="isRecurring" class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {{ __('sessions.repeat_weekly') }}
+                </label>
+            </div>
+
+            @if ($this->form->isRecurring)
+                <div class="mt-4">
+                    <label for="numberOfWeeks" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {{ __('sessions.number_of_weeks') }}
+                    </label>
+                    <input type="number" wire:model="form.numberOfWeeks" id="numberOfWeeks" min="2" max="12"
+                        class="mt-1 block w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm">
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ __('sessions.recurring_hint') }}</p>
+                    @error('form.numberOfWeeks')
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+            @endif
+        </div>
+
         {{-- Submit --}}
         <div class="flex justify-end gap-3">
             <a href="{{ url()->previous() }}"

@@ -24,9 +24,21 @@ final class Create extends Component
 
         $this->form->validate();
 
-        $session = $service->create(auth()->user(), $this->form->toServiceArray());
+        if ($this->form->isRecurring) {
+            $sessions = $service->createRecurring(
+                auth()->user(),
+                $this->form->toServiceArray(),
+                $this->form->numberOfWeeks,
+            );
+            $session = $sessions->first();
 
-        $this->dispatch('notify', type: 'success', message: __('sessions.created'));
+            $this->dispatch('notify', type: 'success', message: __('sessions.recurring_created', ['count' => $sessions->count()]));
+        } else {
+            $session = $service->create(auth()->user(), $this->form->toServiceArray());
+
+            $this->dispatch('notify', type: 'success', message: __('sessions.created'));
+        }
+
         $this->redirect(route('sessions.show', $session), navigate: true);
     }
 
