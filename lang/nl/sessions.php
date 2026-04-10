@@ -97,5 +97,9 @@ return [
     'deleted' => 'Sessie verwijderd.',
     'cancelled' => 'Sessie geannuleerd.',
     'published' => 'Sessie gepubliceerd.',
+    'repeat_weekly' => 'Wekelijks herhalen',
+    'number_of_weeks' => 'Aantal weken',
+    'recurring_hint' => 'Maakt individuele sessies aan voor elke week (max 12 weken).',
+    'recurring_created' => ':count terugkerende sessies succesvol aangemaakt.',
 
 ];

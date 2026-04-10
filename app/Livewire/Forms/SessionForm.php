@@ -52,6 +52,12 @@ final class SessionForm extends Form
     #[Validate('nullable|integer|exists:activity_images,id')]
     public ?int $coverImageId = null;
 
+    #[Validate('boolean')]
+    public bool $isRecurring = false;
+
+    #[Validate('required_if:isRecurring,true|integer|min:2|max:12')]
+    public int $numberOfWeeks = 2;
+
     /**
      * @return array<string, mixed>
      */

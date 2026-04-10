@@ -97,5 +97,9 @@ return [
     'deleted' => 'Séance supprimée.',
     'cancelled' => 'Séance annulée.',
     'published' => 'Séance publiée.',
+    'repeat_weekly' => 'Répéter chaque semaine',
+    'number_of_weeks' => 'Nombre de semaines',
+    'recurring_hint' => 'Crée des séances individuelles pour chaque semaine (max 12 semaines).',
+    'recurring_created' => ':count séances récurrentes créées avec succès.',
 
 ];

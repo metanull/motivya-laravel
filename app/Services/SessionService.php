@@ -8,6 +8,9 @@ use App\Enums\SessionStatus;
 use App\Events\SessionCancelled;
 use App\Models\SportSession;
 use App\Models\User;
+use Carbon\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
@@ -38,6 +41,48 @@ final class SessionService
             'status' => SessionStatus::Draft->value,
             'current_participants' => 0,
         ]);
+    }
+
+    /**
+     * Create recurring weekly sessions sharing a recurrence group.
+     *
+     * @param  array<string, mixed>  $data
+     * @return Collection<int, SportSession>
+     */
+    public function createRecurring(User $coach, array $data, int $numberOfWeeks): Collection
+    {
+        $groupId = Str::uuid()->toString();
+        $baseDate = Carbon::parse($data['date']);
+
+        $sessions = collect();
+
+        for ($i = 0; $i < $numberOfWeeks; $i++) {
+            $sessionDate = $baseDate->copy()->addWeeks($i);
+
+            $session = SportSession::create([
+                'coach_id' => $coach->id,
+                'activity_type' => $data['activity_type'],
+                'level' => $data['level'],
+                'title' => $data['title'],
+                'description' => $data['description'] ?? null,
+                'location' => $data['location'],
+                'postal_code' => $data['postal_code'],
+                'date' => $sessionDate->format('Y-m-d'),
+                'start_time' => $data['start_time'],
+                'end_time' => $data['end_time'],
+                'price_per_person' => $data['price_per_person'],
+                'min_participants' => $data['min_participants'],
+                'max_participants' => $data['max_participants'],
+                'cover_image_id' => $data['cover_image_id'] ?? null,
+                'status' => SessionStatus::Draft->value,
+                'current_participants' => 0,
+                'recurrence_group_id' => $groupId,
+            ]);
+
+            $sessions->push($session);
+        }
+
+        return $sessions;
     }
 
     /**
