@@ -36,4 +36,30 @@ final class SessionService
             'current_participants' => 0,
         ]);
     }
+
+    /**
+     * Update an existing session.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function update(SportSession $session, array $data): SportSession
+    {
+        $session->update([
+            'activity_type' => $data['activity_type'],
+            'level' => $data['level'],
+            'title' => $data['title'],
+            'description' => $data['description'] ?? null,
+            'location' => $data['location'],
+            'postal_code' => $data['postal_code'],
+            'date' => $data['date'],
+            'start_time' => $data['start_time'],
+            'end_time' => $data['end_time'],
+            'price_per_person' => $data['price_per_person'],
+            'min_participants' => $data['min_participants'],
+            'max_participants' => $data['max_participants'],
+            'cover_image_id' => $data['cover_image_id'] ?? null,
+        ]);
+
+        return $session->refresh();
+    }
 }
