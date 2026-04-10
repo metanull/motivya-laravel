@@ -94,8 +94,8 @@ final class SessionForm extends Form
         $this->location = $session->location;
         $this->postalCode = $session->postal_code;
         $this->date = $session->date->format('Y-m-d');
-        $this->startTime = $session->start_time;
-        $this->endTime = $session->end_time;
+        $this->startTime = substr((string) $session->start_time, 0, 5);
+        $this->endTime = substr((string) $session->end_time, 0, 5);
         $this->priceEuros = number_format($session->price_per_person / 100, 2, '.', '');
         $this->minParticipants = $session->min_participants;
         $this->maxParticipants = $session->max_participants;
