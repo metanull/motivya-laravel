@@ -43,4 +43,23 @@ return [
     'activity_padel' => 'Padel',
     'activity_tennis' => 'Tennis',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Session Detail Page
+    |--------------------------------------------------------------------------
+    */
+
+    'by_coach' => 'Par',
+    'date' => 'Date',
+    'time' => 'Heure',
+    'location' => 'Lieu',
+    'price' => 'Prix',
+    'per_person' => 'par personne',
+    'spots' => 'Places',
+    'spots_remaining' => '{0} Aucune place disponible|{1} :count place disponible|[2,*] :count places disponibles',
+    'description' => 'Description',
+    'share_whatsapp' => 'Partager sur WhatsApp',
+    'copy_link' => 'Copier le lien',
+    'link_copied' => 'Lien copi\u00e9 dans le presse-papiers !',
+
 ];
