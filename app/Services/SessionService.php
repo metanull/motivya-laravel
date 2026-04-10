@@ -8,6 +8,7 @@ use App\Enums\SessionStatus;
 use App\Events\SessionCancelled;
 use App\Models\SportSession;
 use App\Models\User;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
 final class SessionService
@@ -93,5 +94,54 @@ final class SessionService
         if ($wasConfirmed) {
             SessionCancelled::dispatch($session);
         }
+    }
+
+    /**
+     * Publish a draft session (make it visible to athletes).
+     *
+     * @throws ValidationException if required fields are missing
+     * @throws InvalidArgumentException if session is not in draft status
+     */
+    public function publish(SportSession $session): void
+    {
+        if ($session->status !== SessionStatus::Draft) {
+            throw new InvalidArgumentException('Only draft sessions can be published.');
+        }
+
+        $missing = [];
+
+        if (empty($session->title)) {
+            $missing['title'] = [__('validation.required', ['attribute' => __('sessions.title_label')])];
+        }
+        if (empty($session->location)) {
+            $missing['location'] = [__('validation.required', ['attribute' => __('sessions.location_label')])];
+        }
+        if (empty($session->postal_code)) {
+            $missing['postal_code'] = [__('validation.required', ['attribute' => __('sessions.postal_code_label')])];
+        }
+        if ($session->date === null) {
+            $missing['date'] = [__('validation.required', ['attribute' => __('sessions.date_label')])];
+        }
+        if (empty($session->start_time)) {
+            $missing['start_time'] = [__('validation.required', ['attribute' => __('sessions.start_time_label')])];
+        }
+        if (empty($session->end_time)) {
+            $missing['end_time'] = [__('validation.required', ['attribute' => __('sessions.end_time_label')])];
+        }
+        if ($session->price_per_person <= 0) {
+            $missing['price_per_person'] = [__('validation.required', ['attribute' => __('sessions.price_label')])];
+        }
+        if ($session->min_participants < 1) {
+            $missing['min_participants'] = [__('validation.required', ['attribute' => __('sessions.min_participants_label')])];
+        }
+        if ($session->max_participants < 1) {
+            $missing['max_participants'] = [__('validation.required', ['attribute' => __('sessions.max_participants_label')])];
+        }
+
+        if ($missing !== []) {
+            throw ValidationException::withMessages($missing);
+        }
+
+        $session->update(['status' => SessionStatus::Published->value]);
     }
 }
