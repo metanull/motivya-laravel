@@ -66,4 +66,12 @@ class SportSession extends Model
     {
         return $this->belongsTo(User::class, 'coach_id');
     }
+
+    /**
+     * @return BelongsTo<ActivityImage, $this>
+     */
+    public function coverImage(): BelongsTo
+    {
+        return $this->belongsTo(ActivityImage::class, 'cover_image_id');
+    }
 }

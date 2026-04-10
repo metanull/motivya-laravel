@@ -43,4 +43,23 @@ return [
     'activity_padel' => 'Padel',
     'activity_tennis' => 'Tennis',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Session Detail Page
+    |--------------------------------------------------------------------------
+    */
+
+    'by_coach' => 'By',
+    'date' => 'Date',
+    'time' => 'Time',
+    'location' => 'Location',
+    'price' => 'Price',
+    'per_person' => 'per person',
+    'spots' => 'Spots',
+    'spots_remaining' => '{0} No spots remaining|{1} :count spot remaining|[2,*] :count spots remaining',
+    'description' => 'Description',
+    'share_whatsapp' => 'Share on WhatsApp',
+    'copy_link' => 'Copy link',
+    'link_copied' => 'Link copied to clipboard!',
+
 ];
