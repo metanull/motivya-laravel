@@ -62,4 +62,40 @@ return [
     'copy_link' => 'Link kopi\u00ebren',
     'link_copied' => 'Link gekopieerd naar klembord!',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Session Creation / Editing Form
+    |--------------------------------------------------------------------------
+    */
+
+    'create_title' => 'Sessie aanmaken',
+    'create_heading' => 'Nieuwe sessie aanmaken',
+    'edit_title' => 'Sessie bewerken',
+    'edit_heading' => 'Sessie bewerken',
+    'activity_type_label' => 'Type activiteit',
+    'select_activity_type' => 'Selecteer een type activiteit…',
+    'level_label' => 'Niveau',
+    'select_level' => 'Selecteer een niveau…',
+    'title_label' => 'Titel',
+    'title_placeholder' => 'bijv. Ochtendyoga in het park',
+    'description_label' => 'Beschrijving',
+    'description_placeholder' => 'Beschrijf uw sessie…',
+    'location_label' => 'Locatie',
+    'location_placeholder' => 'bijv. Jubelpark',
+    'postal_code_label' => 'Postcode',
+    'date_label' => 'Datum',
+    'start_time_label' => 'Starttijd',
+    'end_time_label' => 'Eindtijd',
+    'price_label' => 'Prijs (EUR)',
+    'min_participants_label' => 'Min. deelnemers',
+    'max_participants_label' => 'Max. deelnemers',
+    'cover_image_label' => 'Omslagafbeelding',
+    'create_button' => 'Sessie aanmaken',
+    'update_button' => 'Bijwerken',
+    'created' => 'Sessie succesvol aangemaakt.',
+    'updated' => 'Sessie succesvol bijgewerkt.',
+    'deleted' => 'Sessie verwijderd.',
+    'cancelled' => 'Sessie geannuleerd.',
+    'published' => 'Sessie gepubliceerd.',
+
 ];

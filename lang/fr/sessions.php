@@ -62,4 +62,40 @@ return [
     'copy_link' => 'Copier le lien',
     'link_copied' => 'Lien copi\u00e9 dans le presse-papiers !',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Session Creation / Editing Form
+    |--------------------------------------------------------------------------
+    */
+
+    'create_title' => 'Créer une séance',
+    'create_heading' => 'Créer une nouvelle séance',
+    'edit_title' => 'Modifier la séance',
+    'edit_heading' => 'Modifier la séance',
+    'activity_type_label' => 'Type d\'activité',
+    'select_activity_type' => 'Sélectionnez un type d\'activité…',
+    'level_label' => 'Niveau',
+    'select_level' => 'Sélectionnez un niveau…',
+    'title_label' => 'Titre',
+    'title_placeholder' => 'ex. Yoga matinal au parc',
+    'description_label' => 'Description',
+    'description_placeholder' => 'Décrivez votre séance…',
+    'location_label' => 'Lieu',
+    'location_placeholder' => 'ex. Parc du Cinquantenaire',
+    'postal_code_label' => 'Code postal',
+    'date_label' => 'Date',
+    'start_time_label' => 'Heure de début',
+    'end_time_label' => 'Heure de fin',
+    'price_label' => 'Prix (EUR)',
+    'min_participants_label' => 'Participants min.',
+    'max_participants_label' => 'Participants max.',
+    'cover_image_label' => 'Image de couverture',
+    'create_button' => 'Créer la séance',
+    'update_button' => 'Mettre à jour',
+    'created' => 'Séance créée avec succès.',
+    'updated' => 'Séance mise à jour avec succès.',
+    'deleted' => 'Séance supprimée.',
+    'cancelled' => 'Séance annulée.',
+    'published' => 'Séance publiée.',
+
 ];
