@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Enums\SessionStatus;
-use App\Enums\UserRole;
 use App\Models\SportSession;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
