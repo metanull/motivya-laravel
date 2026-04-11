@@ -59,16 +59,33 @@
             </a>
         @endcan
 
-        @if(auth()->user()->role === \App\Enums\UserRole::Coach)
-            {{-- TODO: E2 — replace href with route('coach.sessions.index') --}}
+        @can('access-coach-panel')
             <a
-                href="#"
+                href="{{ route('coach.dashboard') }}"
                 class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
                 role="menuitem"
+                wire:navigate
             >
-                {{ __('common.nav.my_sessions') }}
+                {{ __('common.nav.coach_dashboard') }}
             </a>
-        @endif
+            <a
+                href="{{ route('coach.sessions.create') }}"
+                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                role="menuitem"
+                wire:navigate
+            >
+                {{ __('common.nav.create_session') }}
+            </a>
+            <a
+                href="{{ route('coach.profile.edit') }}"
+                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
+                role="menuitem"
+                wire:navigate
+            >
+                {{ __('common.nav.coach_profile') }}
+            </a>
+            <hr class="my-1 border-gray-200 dark:border-gray-700" />
+        @endcan
 
         <a
             href="{{ route('profile.edit') }}"

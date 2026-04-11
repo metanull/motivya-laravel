@@ -14,11 +14,27 @@
 >
     <div class="space-y-1 border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
         {{-- Main links --}}
-        {{-- TODO: replace href with route('sessions.index') when E2 sessions routes are implemented --}}
-        <a href="#"
-           class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700">
-            {{ __('common.nav.sessions') }}
-        </a>
+        @auth
+            @can('access-coach-panel')
+                <a href="{{ route('coach.sessions.create') }}"
+                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+                   wire:navigate>
+                    {{ __('common.nav.sessions') }}
+                </a>
+            @else
+                {{-- TODO: replace href with route('sessions.index') when public session listing is implemented --}}
+                <a href="#"
+                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700">
+                    {{ __('common.nav.sessions') }}
+                </a>
+            @endcan
+        @else
+            {{-- TODO: replace href with route('sessions.index') when public session listing is implemented --}}
+            <a href="#"
+               class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700">
+                {{ __('common.nav.sessions') }}
+            </a>
+        @endauth
 
         @auth
             @can('access-admin-panel')
@@ -37,19 +53,23 @@
                 </a>
             @endcan
 
-            @if(auth()->user()->role === \App\Enums\UserRole::Coach)
-                {{-- TODO: E2 — replace href with route('coach.sessions.index') --}}
-                <a href="#"
-                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700">
-                    {{ __('common.nav.my_sessions') }}
+            @can('access-coach-panel')
+                <a href="{{ route('coach.dashboard') }}"
+                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+                   wire:navigate>
+                    {{ __('common.nav.coach_dashboard') }}
                 </a>
-            @endif
-
-            {{-- TODO: replace href with route('athlete.bookings') when E3 booking routes are implemented --}}
-            <a href="#"
-               class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700">
-                {{ __('common.nav.bookings') }}
-            </a>
+                <a href="{{ route('coach.sessions.create') }}"
+                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+                   wire:navigate>
+                    {{ __('common.nav.create_session') }}
+                </a>
+                <a href="{{ route('coach.profile.edit') }}"
+                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+                   wire:navigate>
+                    {{ __('common.nav.coach_profile') }}
+                </a>
+            @endcan
             <a href="{{ route('profile.edit') }}"
                class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
                wire:navigate>

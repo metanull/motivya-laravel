@@ -21,6 +21,9 @@ return [
         'admin_coach_approval' => 'Coach Goedkeuring',
         'become_coach' => 'Word Coach',
         'my_sessions' => 'Mijn Sessies',
+        'coach_dashboard' => 'Dashboard',
+        'coach_profile' => 'Coach Profiel',
+        'create_session' => 'Sessie aanmaken',
     ],
 
     /*

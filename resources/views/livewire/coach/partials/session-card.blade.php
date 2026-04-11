@@ -57,6 +57,12 @@
 
             @if ($showActions)
                 <div class="flex gap-2">
+                    <a href="{{ route('sessions.show', $session) }}"
+                        class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                        wire:navigate>
+                        {{ __('coach.preview') }}
+                    </a>
+
                     @can('update', $session)
                         <a href="{{ route('coach.sessions.edit', $session) }}"
                             class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"

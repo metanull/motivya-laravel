@@ -21,6 +21,9 @@ return [
         'admin_coach_approval' => 'Validation Coachs',
         'become_coach' => 'Devenir Coach',
         'my_sessions' => 'Mes Séances',
+        'coach_dashboard' => 'Tableau de bord',
+        'coach_profile' => 'Profil Coach',
+        'create_session' => 'Créer une séance',
     ],
 
     /*

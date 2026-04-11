@@ -56,22 +56,42 @@ describe('Role-based navigation links', function () {
             ->assertDontSee(__('common.nav.become_coach'));
     });
 
-    it('shows my-sessions link to coaches', function () {
+    it('shows coach dashboard link to coaches', function () {
         $coach = User::factory()->coach()->create();
 
         $this->actingAs($coach)
             ->get(route('home'))
             ->assertOk()
-            ->assertSee(__('common.nav.my_sessions'));
+            ->assertSee(__('common.nav.coach_dashboard'));
     });
 
-    it('does not show my-sessions link to athletes', function () {
+    it('shows create session link to coaches', function () {
+        $coach = User::factory()->coach()->create();
+
+        $this->actingAs($coach)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee(__('common.nav.create_session'));
+    });
+
+    it('shows coach profile link to coaches', function () {
+        $coach = User::factory()->coach()->create();
+
+        $this->actingAs($coach)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee(__('common.nav.coach_profile'));
+    });
+
+    it('does not show coach-specific links to athletes', function () {
         $athlete = User::factory()->athlete()->create();
 
         $this->actingAs($athlete)
             ->get(route('home'))
             ->assertOk()
-            ->assertDontSee(__('common.nav.my_sessions'));
+            ->assertDontSee(__('common.nav.coach_dashboard'))
+            ->assertDontSee(__('common.nav.create_session'))
+            ->assertDontSee(__('common.nav.coach_profile'));
     });
 
     it('does not show role-specific links to guests', function () {
@@ -79,6 +99,26 @@ describe('Role-based navigation links', function () {
             ->assertOk()
             ->assertDontSee(__('common.nav.admin_coach_approval'))
             ->assertDontSee(__('common.nav.become_coach'))
-            ->assertDontSee(__('common.nav.my_sessions'));
+            ->assertDontSee(__('common.nav.coach_dashboard'))
+            ->assertDontSee(__('common.nav.create_session'))
+            ->assertDontSee(__('common.nav.coach_profile'));
+    });
+
+    it('links sessions to coach session creation for coaches', function () {
+        $coach = User::factory()->coach()->create();
+
+        $this->actingAs($coach)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee(route('coach.sessions.create'));
+    });
+
+    it('does not show bookings link since it is not yet implemented', function () {
+        $athlete = User::factory()->athlete()->create();
+
+        $this->actingAs($athlete)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertDontSee(__('common.nav.bookings'));
     });
 });

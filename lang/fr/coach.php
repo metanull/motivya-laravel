@@ -85,6 +85,7 @@ return [
     'stat_total_bookings' => 'Réservations totales',
     'stat_avg_fill_rate' => 'Taux de remplissage',
     'stat_total_revenue' => 'Revenu total',
+    'preview' => 'Aperçu',
 
     /*
     |--------------------------------------------------------------------------

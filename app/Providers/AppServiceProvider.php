@@ -36,5 +36,9 @@ final class AppServiceProvider extends ServiceProvider
         Gate::define('access-admin-panel', function (User $user): bool {
             return $user->role === UserRole::Admin;
         });
+
+        Gate::define('access-coach-panel', function (User $user): bool {
+            return $user->role === UserRole::Coach;
+        });
     }
 }
