@@ -80,5 +80,10 @@ return [
     'confirm_publish' => 'Weet u zeker dat u deze sessie wilt publiceren?',
     'confirm_cancel' => 'Weet u zeker dat u deze sessie wilt annuleren?',
     'confirm_delete' => 'Weet u zeker dat u dit concept wilt verwijderen?',
+    'stat_total_sessions' => 'Totaal sessies',
+    'stat_sessions_this_month' => 'Deze maand',
+    'stat_total_bookings' => 'Totaal boekingen',
+    'stat_avg_fill_rate' => 'Gem. bezettingsgraad',
+    'stat_total_revenue' => 'Totale omzet',
 
 ];
