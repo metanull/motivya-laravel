@@ -100,6 +100,8 @@ return [
     'repeat_weekly' => 'Wekelijks herhalen',
     'number_of_weeks' => 'Aantal weken',
     'recurring_hint' => 'Maakt individuele sessies aan voor elke week (max 12 weken).',
-    'recurring_created' => ':count terugkerende sessies succesvol aangemaakt.',
-
+    'recurring_created' => ':count terugkerende sessies succesvol aangemaakt.',    'recurring_edit_prompt' => 'Deze sessie maakt deel uit van een terugkerende groep. Wat wilt u bewerken?',
+    'edit_this_only' => 'Alleen deze sessie',
+    'edit_all_future' => 'Alle toekomstige sessies in deze groep',
+    'group_updated' => ':count sessies bijgewerkt.',
 ];
