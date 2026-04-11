@@ -86,4 +86,22 @@ return [
     'stat_avg_fill_rate' => 'Avg Fill Rate',
     'stat_total_revenue' => 'Total Revenue',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Coach Profile
+    |--------------------------------------------------------------------------
+    */
+
+    'profile_title' => 'Coach Profile',
+    'profile_edit_title' => 'Edit Coach Profile',
+    'profile_edit_heading' => 'Edit My Coach Profile',
+    'profile_updated' => 'Profile updated successfully.',
+    'verified_badge' => 'Verified',
+    'upcoming_sessions' => 'Upcoming Sessions',
+    'no_upcoming_public' => 'No upcoming sessions.',
+    'vat_subject_label' => 'VAT Subject',
+    'vat_subject_yes' => 'Yes — VAT registered',
+    'vat_subject_no' => 'No — Small business / Franchise regime',
+    'vat_subject_hint' => 'This field is managed by the platform administrator.',
+
 ];

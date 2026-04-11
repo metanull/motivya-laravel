@@ -86,4 +86,22 @@ return [
     'stat_avg_fill_rate' => 'Gem. bezettingsgraad',
     'stat_total_revenue' => 'Totale omzet',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Coach Profile
+    |--------------------------------------------------------------------------
+    */
+
+    'profile_title' => 'Coachprofiel',
+    'profile_edit_title' => 'Coachprofiel bewerken',
+    'profile_edit_heading' => 'Mijn coachprofiel bewerken',
+    'profile_updated' => 'Profiel succesvol bijgewerkt.',
+    'verified_badge' => 'Geverifieerd',
+    'upcoming_sessions' => 'Aankomende sessies',
+    'no_upcoming_public' => 'Geen aankomende sessies.',
+    'vat_subject_label' => 'BTW-plichtig',
+    'vat_subject_yes' => 'Ja \u2014 BTW-geregistreerd',
+    'vat_subject_no' => 'Nee \u2014 Kleine onderneming / Vrijstellingsregeling',
+    'vat_subject_hint' => 'Dit veld wordt beheerd door de platformbeheerder.',
+
 ];
