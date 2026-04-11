@@ -60,4 +60,25 @@ return [
     'summary_title' => 'Samenvatting van uw aanvraag',
     'submit_application' => 'Mijn aanvraag indienen',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Coach Dashboard
+    |--------------------------------------------------------------------------
+    */
+
+    'dashboard_title' => 'Coach Dashboard',
+    'dashboard_heading' => 'Mijn sessies',
+    'create_session' => 'Nieuwe sessie',
+    'tabs_label' => 'Sessie tabs',
+    'tab_upcoming' => 'Aankomende',
+    'tab_drafts' => 'Concepten',
+    'tab_past' => 'Afgelopen',
+    'no_upcoming' => 'Geen aankomende sessies. Maak er een aan om te beginnen!',
+    'no_drafts' => 'Geen concepten.',
+    'no_past' => 'Nog geen afgelopen sessies.',
+    'publish' => 'Publiceren',
+    'confirm_publish' => 'Weet u zeker dat u deze sessie wilt publiceren?',
+    'confirm_cancel' => 'Weet u zeker dat u deze sessie wilt annuleren?',
+    'confirm_delete' => 'Weet u zeker dat u dit concept wilt verwijderen?',
+
 ];
