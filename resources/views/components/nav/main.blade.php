@@ -17,7 +17,7 @@
             {{-- Desktop links --}}
             <div class="hidden items-center gap-6 sm:flex">
                 @auth
-                    @if(auth()->user()->role === \App\Enums\UserRole::Coach)
+                    @can('access-coach-panel')
                         <a
                             href="{{ route('coach.sessions.create') }}"
                             @class([
@@ -41,7 +41,7 @@
                         >
                             {{ __('common.nav.sessions') }}
                         </a>
-                    @endif
+                    @endcan
                 @else
                     {{-- TODO: replace href with route('sessions.index') when public session listing is implemented --}}
                     <a

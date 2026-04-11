@@ -59,7 +59,7 @@
             </a>
         @endcan
 
-        @if(auth()->user()->role === \App\Enums\UserRole::Coach)
+        @can('access-coach-panel')
             <a
                 href="{{ route('coach.dashboard') }}"
                 class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-700"
@@ -85,7 +85,7 @@
                 {{ __('common.nav.coach_profile') }}
             </a>
             <hr class="my-1 border-gray-200 dark:border-gray-700" />
-        @endif
+        @endcan
 
         <a
             href="{{ route('profile.edit') }}"

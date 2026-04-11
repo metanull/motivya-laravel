@@ -15,7 +15,7 @@
     <div class="space-y-1 border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-700 dark:bg-gray-800">
         {{-- Main links --}}
         @auth
-            @if(auth()->user()->role === \App\Enums\UserRole::Coach)
+            @can('access-coach-panel')
                 <a href="{{ route('coach.sessions.create') }}"
                    class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
                    wire:navigate>
@@ -27,7 +27,7 @@
                    class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700">
                     {{ __('common.nav.sessions') }}
                 </a>
-            @endif
+            @endcan
         @else
             {{-- TODO: replace href with route('sessions.index') when public session listing is implemented --}}
             <a href="#"
@@ -53,7 +53,7 @@
                 </a>
             @endcan
 
-            @if(auth()->user()->role === \App\Enums\UserRole::Coach)
+            @can('access-coach-panel')
                 <a href="{{ route('coach.dashboard') }}"
                    class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
                    wire:navigate>
@@ -69,7 +69,7 @@
                    wire:navigate>
                     {{ __('common.nav.coach_profile') }}
                 </a>
-            @endif
+            @endcan
             <a href="{{ route('profile.edit') }}"
                class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
                wire:navigate>
