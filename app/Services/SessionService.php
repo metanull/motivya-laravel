@@ -112,6 +112,39 @@ final class SessionService
     }
 
     /**
+     * Update all future sessions in a recurrence group.
+     *
+     * Only updates sessions with date >= today that are in draft or published status.
+     *
+     * @param  array<string, mixed>  $data  Fields to update (date/time excluded — each session keeps its own schedule)
+     * @return int Number of sessions updated
+     */
+    public function updateGroup(SportSession $session, array $data): int
+    {
+        if ($session->recurrence_group_id === null) {
+            throw new InvalidArgumentException('Session does not belong to a recurrence group.');
+        }
+
+        $updatableFields = [
+            'activity_type' => $data['activity_type'],
+            'level' => $data['level'],
+            'title' => $data['title'],
+            'description' => $data['description'] ?? null,
+            'location' => $data['location'],
+            'postal_code' => $data['postal_code'],
+            'price_per_person' => $data['price_per_person'],
+            'min_participants' => $data['min_participants'],
+            'max_participants' => $data['max_participants'],
+            'cover_image_id' => $data['cover_image_id'] ?? null,
+        ];
+
+        return SportSession::where('recurrence_group_id', $session->recurrence_group_id)
+            ->where('date', '>=', now()->toDateString())
+            ->whereIn('status', [SessionStatus::Draft, SessionStatus::Published])
+            ->update($updatableFields);
+    }
+
+    /**
      * Delete a draft session (hard delete).
      */
     public function delete(SportSession $session): void

@@ -3,6 +3,27 @@
         {{ __('sessions.edit_heading') }}
     </h1>
 
+    {{-- Recurring session edit scope --}}
+    @if ($isRecurring)
+        <div class="mt-4 rounded-lg border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-800 dark:bg-indigo-900/30">
+            <p class="mb-3 text-sm font-medium text-indigo-800 dark:text-indigo-200">
+                {{ __('sessions.recurring_edit_prompt') }}
+            </p>
+            <div class="flex gap-4">
+                <label class="flex items-center gap-2">
+                    <input type="radio" wire:model="editScope" value="this"
+                        class="text-indigo-600 focus:ring-indigo-500">
+                    <span class="text-sm text-gray-700 dark:text-gray-300">{{ __('sessions.edit_this_only') }}</span>
+                </label>
+                <label class="flex items-center gap-2">
+                    <input type="radio" wire:model="editScope" value="all_future"
+                        class="text-indigo-600 focus:ring-indigo-500">
+                    <span class="text-sm text-gray-700 dark:text-gray-300">{{ __('sessions.edit_all_future') }}</span>
+                </label>
+            </div>
+        </div>
+    @endif
+
     <form wire:submit="save" class="mt-6 space-y-6">
         {{-- Activity type + level --}}
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">

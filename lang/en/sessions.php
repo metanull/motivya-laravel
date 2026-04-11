@@ -101,5 +101,9 @@ return [
     'number_of_weeks' => 'Number of weeks',
     'recurring_hint' => 'Creates individual sessions for each week (max 12 weeks).',
     'recurring_created' => ':count recurring sessions created successfully.',
+    'recurring_edit_prompt' => 'This session is part of a recurring group. What would you like to edit?',
+    'edit_this_only' => 'This session only',
+    'edit_all_future' => 'All future sessions in this group',
+    'group_updated' => ':count sessions updated successfully.',
 
 ];

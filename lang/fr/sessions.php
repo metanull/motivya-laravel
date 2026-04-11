@@ -100,6 +100,8 @@ return [
     'repeat_weekly' => 'Répéter chaque semaine',
     'number_of_weeks' => 'Nombre de semaines',
     'recurring_hint' => 'Crée des séances individuelles pour chaque semaine (max 12 semaines).',
-    'recurring_created' => ':count séances récurrentes créées avec succès.',
-
+    'recurring_created' => ':count séances récurrentes créées avec succès.',    'recurring_edit_prompt' => 'Cette session fait partie d\'un groupe récurrent. Que souhaitez-vous modifier ?',
+    'edit_this_only' => 'Cette session uniquement',
+    'edit_all_future' => 'Toutes les sessions futures de ce groupe',
+    'group_updated' => ':count sessions mises à jour avec succès.',
 ];

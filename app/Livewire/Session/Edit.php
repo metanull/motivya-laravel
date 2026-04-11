@@ -20,12 +20,17 @@ final class Edit extends Component
 
     public SportSession $sportSession;
 
+    public bool $isRecurring = false;
+
+    public string $editScope = 'this';
+
     public function mount(SportSession $sportSession): void
     {
         Gate::authorize('update', $sportSession);
 
         $this->sportSession = $sportSession;
         $this->form->setFromModel($sportSession);
+        $this->isRecurring = $sportSession->recurrence_group_id !== null;
     }
 
     public function save(SessionService $service): void
@@ -34,9 +39,16 @@ final class Edit extends Component
 
         $this->form->validate();
 
-        $service->update($this->sportSession, $this->form->toServiceArray());
+        if ($this->isRecurring && $this->editScope === 'all_future') {
+            $count = $service->updateGroup($this->sportSession, $this->form->toServiceArray());
 
-        $this->dispatch('notify', type: 'success', message: __('sessions.updated'));
+            $this->dispatch('notify', type: 'success', message: __('sessions.group_updated', ['count' => $count]));
+        } else {
+            $service->update($this->sportSession, $this->form->toServiceArray());
+
+            $this->dispatch('notify', type: 'success', message: __('sessions.updated'));
+        }
+
         $this->redirect(route('sessions.show', $this->sportSession), navigate: true);
     }
 

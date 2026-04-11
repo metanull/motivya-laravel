@@ -162,3 +162,134 @@ describe('session editing', function () {
             ->assertHasErrors(['form.title', 'form.location', 'form.postalCode']);
     });
 });
+
+describe('recurring session group editing', function () {
+    it('detects a recurring session and shows edit scope options', function () {
+        $coach = User::factory()->coach()->create();
+        $session = SportSession::factory()->draft()->create([
+            'coach_id' => $coach->id,
+            'recurrence_group_id' => 'abc-123',
+        ]);
+
+        Livewire::actingAs($coach)
+            ->test(Edit::class, ['sportSession' => $session])
+            ->assertSet('isRecurring', true)
+            ->assertSet('editScope', 'this')
+            ->assertSee(__('sessions.recurring_edit_prompt'));
+    });
+
+    it('does not show edit scope for non-recurring sessions', function () {
+        $coach = User::factory()->coach()->create();
+        $session = SportSession::factory()->draft()->create([
+            'coach_id' => $coach->id,
+            'recurrence_group_id' => null,
+        ]);
+
+        Livewire::actingAs($coach)
+            ->test(Edit::class, ['sportSession' => $session])
+            ->assertSet('isRecurring', false)
+            ->assertDontSee(__('sessions.recurring_edit_prompt'));
+    });
+
+    it('updates only this session when edit scope is this', function () {
+        $coach = User::factory()->coach()->create();
+        $groupId = 'test-group-id';
+        $baseDate = now()->addDays(7);
+
+        $session1 = SportSession::factory()->draft()->create([
+            'coach_id' => $coach->id,
+            'recurrence_group_id' => $groupId,
+            'title' => 'Original',
+            'date' => $baseDate,
+        ]);
+        $session2 = SportSession::factory()->draft()->create([
+            'coach_id' => $coach->id,
+            'recurrence_group_id' => $groupId,
+            'title' => 'Original',
+            'date' => $baseDate->copy()->addWeek(),
+        ]);
+
+        Livewire::actingAs($coach)
+            ->test(Edit::class, ['sportSession' => $session1])
+            ->set('editScope', 'this')
+            ->set('form.title', 'Changed Title')
+            ->call('save')
+            ->assertDispatched('notify')
+            ->assertRedirect();
+
+        expect($session1->refresh()->title)->toBe('Changed Title');
+        expect($session2->refresh()->title)->toBe('Original');
+    });
+
+    it('updates all future sessions when edit scope is all_future', function () {
+        $coach = User::factory()->coach()->create();
+        $groupId = 'test-group-id';
+        $baseDate = now()->addDays(7);
+
+        $session1 = SportSession::factory()->draft()->create([
+            'coach_id' => $coach->id,
+            'recurrence_group_id' => $groupId,
+            'title' => 'Original',
+            'date' => $baseDate,
+        ]);
+        $session2 = SportSession::factory()->draft()->create([
+            'coach_id' => $coach->id,
+            'recurrence_group_id' => $groupId,
+            'title' => 'Original',
+            'date' => $baseDate->copy()->addWeek(),
+        ]);
+        $session3 = SportSession::factory()->published()->create([
+            'coach_id' => $coach->id,
+            'recurrence_group_id' => $groupId,
+            'title' => 'Original',
+            'date' => $baseDate->copy()->addWeeks(2),
+        ]);
+
+        Livewire::actingAs($coach)
+            ->test(Edit::class, ['sportSession' => $session1])
+            ->set('editScope', 'all_future')
+            ->set('form.title', 'Group Update')
+            ->call('save')
+            ->assertDispatched('notify')
+            ->assertRedirect();
+
+        expect($session1->refresh()->title)->toBe('Group Update');
+        expect($session2->refresh()->title)->toBe('Group Update');
+        expect($session3->refresh()->title)->toBe('Group Update');
+    });
+
+    it('does not update past or completed/cancelled sessions in group', function () {
+        $coach = User::factory()->coach()->create();
+        $groupId = 'test-group-id';
+
+        $futureSession = SportSession::factory()->draft()->create([
+            'coach_id' => $coach->id,
+            'recurrence_group_id' => $groupId,
+            'title' => 'Original',
+            'date' => now()->addDays(7),
+        ]);
+        $pastSession = SportSession::factory()->completed()->create([
+            'coach_id' => $coach->id,
+            'recurrence_group_id' => $groupId,
+            'title' => 'Original',
+            'date' => now()->subDays(7),
+        ]);
+        $cancelledSession = SportSession::factory()->cancelled()->create([
+            'coach_id' => $coach->id,
+            'recurrence_group_id' => $groupId,
+            'title' => 'Original',
+            'date' => now()->addDays(14),
+        ]);
+
+        Livewire::actingAs($coach)
+            ->test(Edit::class, ['sportSession' => $futureSession])
+            ->set('editScope', 'all_future')
+            ->set('form.title', 'Updated')
+            ->call('save')
+            ->assertDispatched('notify');
+
+        expect($futureSession->refresh()->title)->toBe('Updated');
+        expect($pastSession->refresh()->title)->toBe('Original');
+        expect($cancelledSession->refresh()->title)->toBe('Original');
+    });
+});
