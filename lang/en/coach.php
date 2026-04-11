@@ -80,5 +80,10 @@ return [
     'confirm_publish' => 'Are you sure you want to publish this session?',
     'confirm_cancel' => 'Are you sure you want to cancel this session?',
     'confirm_delete' => 'Are you sure you want to delete this draft?',
+    'stat_total_sessions' => 'Total Sessions',
+    'stat_sessions_this_month' => 'This Month',
+    'stat_total_bookings' => 'Total Bookings',
+    'stat_avg_fill_rate' => 'Avg Fill Rate',
+    'stat_total_revenue' => 'Total Revenue',
 
 ];

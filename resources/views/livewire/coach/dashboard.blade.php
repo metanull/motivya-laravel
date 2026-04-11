@@ -7,6 +7,30 @@
         </a>
     </div>
 
+    {{-- Stats cards --}}
+    <div class="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ __('coach.stat_total_sessions') }}</p>
+            <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{{ $totalSessions }}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ __('coach.stat_sessions_this_month') }}</p>
+            <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{{ $sessionsThisMonth }}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ __('coach.stat_total_bookings') }}</p>
+            <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{{ $totalBookings }}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ __('coach.stat_avg_fill_rate') }}</p>
+            <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{{ $avgFillRate }}%</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ __('coach.stat_total_revenue') }}</p>
+            <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100"><x-money :cents="$totalRevenueCents" /></p>
+        </div>
+    </div>
+
     {{-- Tabs --}}
     <div class="border-b border-gray-200 dark:border-gray-700">
         <nav class="-mb-px flex space-x-8" aria-label="{{ __('coach.tabs_label') }}">

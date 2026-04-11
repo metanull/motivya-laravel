@@ -80,5 +80,10 @@ return [
     'confirm_publish' => 'Êtes-vous sûr de vouloir publier cette séance ?',
     'confirm_cancel' => 'Êtes-vous sûr de vouloir annuler cette séance ?',
     'confirm_delete' => 'Êtes-vous sûr de vouloir supprimer ce brouillon ?',
+    'stat_total_sessions' => 'Séances totales',
+    'stat_sessions_this_month' => 'Ce mois-ci',
+    'stat_total_bookings' => 'Réservations totales',
+    'stat_avg_fill_rate' => 'Taux de remplissage',
+    'stat_total_revenue' => 'Revenu total',
 
 ];

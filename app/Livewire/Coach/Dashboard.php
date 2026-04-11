@@ -9,6 +9,7 @@ use App\Models\SportSession;
 use App\Models\User;
 use App\Services\SessionService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
@@ -71,10 +72,38 @@ final class Dashboard extends Component
             ->limit(20)
             ->get();
 
+        // Stats
+        $allSessions = SportSession::where('coach_id', $coach->id);
+
+        $totalSessions = (clone $allSessions)->count();
+
+        $sessionsThisMonth = (clone $allSessions)
+            ->whereYear('date', now()->year)
+            ->whereMonth('date', now()->month)
+            ->count();
+
+        $totalBookings = (clone $allSessions)->sum('current_participants');
+
+        $avgFillRate = (clone $allSessions)
+            ->where('max_participants', '>', 0)
+            ->select(DB::raw('AVG(current_participants * 100.0 / max_participants) as avg_fill'))
+            ->value('avg_fill');
+        $avgFillRate = $avgFillRate !== null ? round((float) $avgFillRate) : 0;
+
+        $totalRevenueCents = (int) (clone $allSessions)
+            ->whereIn('status', [SessionStatus::Confirmed, SessionStatus::Completed])
+            ->select(DB::raw('SUM(price_per_person * current_participants) as revenue'))
+            ->value('revenue');
+
         return view('livewire.coach.dashboard', [
             'upcoming' => $upcoming,
             'drafts' => $drafts,
             'past' => $past,
+            'totalSessions' => $totalSessions,
+            'sessionsThisMonth' => $sessionsThisMonth,
+            'totalBookings' => (int) $totalBookings,
+            'avgFillRate' => (int) $avgFillRate,
+            'totalRevenueCents' => $totalRevenueCents,
         ])->title(__('coach.dashboard_title'));
     }
 }
