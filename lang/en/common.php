@@ -21,6 +21,9 @@ return [
         'admin_coach_approval' => 'Coach Approval',
         'become_coach' => 'Become a Coach',
         'my_sessions' => 'My Sessions',
+        'coach_dashboard' => 'Dashboard',
+        'coach_profile' => 'Coach Profile',
+        'create_session' => 'Create Session',
     ],
 
     /*

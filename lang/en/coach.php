@@ -85,6 +85,7 @@ return [
     'stat_total_bookings' => 'Total Bookings',
     'stat_avg_fill_rate' => 'Avg Fill Rate',
     'stat_total_revenue' => 'Total Revenue',
+    'preview' => 'Preview',
 
     /*
     |--------------------------------------------------------------------------

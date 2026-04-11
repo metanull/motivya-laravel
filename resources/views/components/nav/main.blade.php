@@ -16,17 +16,45 @@
 
             {{-- Desktop links --}}
             <div class="hidden items-center gap-6 sm:flex">
-                {{-- TODO: replace href with route('sessions.index') when E2 sessions routes are implemented --}}
-                <a
-                    href="#"
-                    @class([
-                        'text-sm font-medium',
-                        'text-indigo-600 dark:text-indigo-400' => request()->routeIs('sessions.*'),
-                        'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white' => ! request()->routeIs('sessions.*'),
-                    ])
-                >
-                    {{ __('common.nav.sessions') }}
-                </a>
+                @auth
+                    @if(auth()->user()->role === \App\Enums\UserRole::Coach)
+                        <a
+                            href="{{ route('coach.sessions.create') }}"
+                            @class([
+                                'text-sm font-medium',
+                                'text-indigo-600 dark:text-indigo-400' => request()->routeIs('coach.sessions.*'),
+                                'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white' => ! request()->routeIs('coach.sessions.*'),
+                            ])
+                            wire:navigate
+                        >
+                            {{ __('common.nav.sessions') }}
+                        </a>
+                    @else
+                        {{-- TODO: replace href with route('sessions.index') when public session listing is implemented --}}
+                        <a
+                            href="#"
+                            @class([
+                                'text-sm font-medium',
+                                'text-indigo-600 dark:text-indigo-400' => request()->routeIs('sessions.*'),
+                                'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white' => ! request()->routeIs('sessions.*'),
+                            ])
+                        >
+                            {{ __('common.nav.sessions') }}
+                        </a>
+                    @endif
+                @else
+                    {{-- TODO: replace href with route('sessions.index') when public session listing is implemented --}}
+                    <a
+                        href="#"
+                        @class([
+                            'text-sm font-medium',
+                            'text-indigo-600 dark:text-indigo-400' => request()->routeIs('sessions.*'),
+                            'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white' => ! request()->routeIs('sessions.*'),
+                        ])
+                    >
+                        {{ __('common.nav.sessions') }}
+                    </a>
+                @endauth
 
                 @auth
                     <x-nav.user-menu />

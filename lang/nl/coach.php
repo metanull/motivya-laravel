@@ -85,6 +85,7 @@ return [
     'stat_total_bookings' => 'Totaal boekingen',
     'stat_avg_fill_rate' => 'Gem. bezettingsgraad',
     'stat_total_revenue' => 'Totale omzet',
+    'preview' => 'Voorbeeld',
 
     /*
     |--------------------------------------------------------------------------
