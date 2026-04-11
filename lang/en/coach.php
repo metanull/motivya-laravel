@@ -60,4 +60,25 @@ return [
     'summary_title' => 'Application summary',
     'submit_application' => 'Submit my application',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Coach Dashboard
+    |--------------------------------------------------------------------------
+    */
+
+    'dashboard_title' => 'Coach Dashboard',
+    'dashboard_heading' => 'My Sessions',
+    'create_session' => 'New Session',
+    'tabs_label' => 'Session tabs',
+    'tab_upcoming' => 'Upcoming',
+    'tab_drafts' => 'Drafts',
+    'tab_past' => 'Past',
+    'no_upcoming' => 'No upcoming sessions. Create one to get started!',
+    'no_drafts' => 'No draft sessions.',
+    'no_past' => 'No past sessions yet.',
+    'publish' => 'Publish',
+    'confirm_publish' => 'Are you sure you want to publish this session?',
+    'confirm_cancel' => 'Are you sure you want to cancel this session?',
+    'confirm_delete' => 'Are you sure you want to delete this draft?',
+
 ];

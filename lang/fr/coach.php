@@ -60,4 +60,25 @@ return [
     'summary_title' => 'Résumé de votre candidature',
     'submit_application' => 'Soumettre ma candidature',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Coach Dashboard
+    |--------------------------------------------------------------------------
+    */
+
+    'dashboard_title' => 'Tableau de bord Coach',
+    'dashboard_heading' => 'Mes séances',
+    'create_session' => 'Nouvelle séance',
+    'tabs_label' => 'Onglets de séances',
+    'tab_upcoming' => 'À venir',
+    'tab_drafts' => 'Brouillons',
+    'tab_past' => 'Passées',
+    'no_upcoming' => 'Aucune séance à venir. Créez-en une pour commencer !',
+    'no_drafts' => 'Aucun brouillon.',
+    'no_past' => 'Aucune séance passée.',
+    'publish' => 'Publier',
+    'confirm_publish' => 'Êtes-vous sûr de vouloir publier cette séance ?',
+    'confirm_cancel' => 'Êtes-vous sûr de vouloir annuler cette séance ?',
+    'confirm_delete' => 'Êtes-vous sûr de vouloir supprimer ce brouillon ?',
+
 ];
