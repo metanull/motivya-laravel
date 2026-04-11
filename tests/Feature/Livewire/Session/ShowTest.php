@@ -110,6 +110,19 @@ describe('session detail page', function () {
             ->assertViewHas('spotsRemaining', 3);
     });
 
+    it('links coach name to coach profile page', function () {
+        $athlete = User::factory()->athlete()->create();
+        $coach = User::factory()->coach()->create(['name' => 'Coach Bob']);
+        $session = SportSession::factory()->published()->create([
+            'coach_id' => $coach->id,
+        ]);
+
+        Livewire::actingAs($athlete)
+            ->test(Show::class, ['sportSession' => $session])
+            ->assertSee('Coach Bob')
+            ->assertSeeHtml(route('coaches.show', $coach));
+    });
+
     it('requires authentication', function () {
         $session = SportSession::factory()->published()->create();
 

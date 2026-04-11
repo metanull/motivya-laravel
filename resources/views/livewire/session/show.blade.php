@@ -32,7 +32,7 @@
 
         <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
             {{ __('sessions.by_coach') }}
-            <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">
+            <a href="{{ route('coaches.show', $sportSession->coach) }}" class="font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400" wire:navigate>
                 {{ $sportSession->coach->name }}
             </a>
         </p>
