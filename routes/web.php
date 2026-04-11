@@ -10,6 +10,7 @@ use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\TwoFactorChallenge;
 use App\Livewire\Auth\VerifyEmail;
 use App\Livewire\Coach\Application as CoachApplication;
+use App\Livewire\Coach\Profile as CoachProfile;
 use App\Livewire\Profile\Edit as ProfileEdit;
 use App\Livewire\Session\Show as SessionShow;
 use Illuminate\Support\Facades\DB;
@@ -46,6 +47,9 @@ Route::get('/coach/apply', CoachApplication::class)
 Route::get('/sessions/{sportSession}', SessionShow::class)
     ->middleware('auth')
     ->name('sessions.show');
+
+Route::get('/coaches/{user}', CoachProfile::class)
+    ->name('coaches.show');
 
 Route::get('/health', function () {
     $checks = ['status' => 'ok'];

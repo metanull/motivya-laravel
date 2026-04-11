@@ -86,4 +86,22 @@ return [
     'stat_avg_fill_rate' => 'Taux de remplissage',
     'stat_total_revenue' => 'Revenu total',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Coach Profile
+    |--------------------------------------------------------------------------
+    */
+
+    'profile_title' => 'Profil Coach',
+    'profile_edit_title' => 'Modifier le profil Coach',
+    'profile_edit_heading' => 'Modifier mon profil Coach',
+    'profile_updated' => 'Profil mis \u00e0 jour avec succ\u00e8s.',
+    'verified_badge' => 'V\u00e9rifi\u00e9',
+    'upcoming_sessions' => 'S\u00e9ances \u00e0 venir',
+    'no_upcoming_public' => 'Aucune s\u00e9ance \u00e0 venir.',
+    'vat_subject_label' => 'Assujetti TVA',
+    'vat_subject_yes' => 'Oui \u2014 Assujetti \u00e0 la TVA',
+    'vat_subject_no' => 'Non \u2014 Petite entreprise / R\u00e9gime de franchise',
+    'vat_subject_hint' => 'Ce champ est g\u00e9r\u00e9 par l\u2019administrateur de la plateforme.',
+
 ];
