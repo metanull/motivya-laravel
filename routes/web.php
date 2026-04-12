@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\StripeWebhookController;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
@@ -94,3 +95,6 @@ Route::get('/locale/{locale}', function (string $locale) {
 
     return redirect()->back(fallback: '/');
 })->name('locale.switch');
+
+Route::post('/stripe/webhook', StripeWebhookController::class)
+    ->name('stripe.webhook');
