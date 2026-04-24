@@ -87,4 +87,12 @@ final class SessionPolicy
 
         return $user->role === UserRole::Coach && $user->id === $session->coach_id;
     }
+
+    /**
+     * Only athletes can favourite sessions.
+     */
+    public function favourite(User $user, SportSession $session): bool
+    {
+        return $user->role === UserRole::Athlete;
+    }
 }
