@@ -31,7 +31,7 @@ final class Book extends Component
 
     public function mount(SportSession $sportSession): void
     {
-        $this->sportSession = $sportSession->loadMissing('coach.coachProfile');
+        $this->sportSession = $sportSession;
 
         $this->syncState();
     }

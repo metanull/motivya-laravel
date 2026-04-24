@@ -60,8 +60,10 @@ describe('payment_intent.succeeded webhook', function () {
 
         $response->assertOk()->assertJson(['status' => 'processed']);
 
-        expect($booking->fresh()->status)->toBe(BookingStatus::Confirmed);
-        expect($booking->fresh()->amount_paid)->toBe(1800);
+        $booking = $booking->fresh();
+
+        expect($booking->status)->toBe(BookingStatus::Confirmed);
+        expect($booking->amount_paid)->toBe(1800);
         expect(ProcessedWebhook::where('stripe_event_id', 'evt_payment_success')->exists())->toBeTrue();
 
         Event::assertDispatched(BookingCreated::class, fn (BookingCreated $event): bool => $event->bookingId === $booking->id);

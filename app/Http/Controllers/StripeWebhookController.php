@@ -113,55 +113,61 @@ final class StripeWebhookController extends Controller
     {
         $booking = $this->findBookingForPaymentIntent($event);
 
-        if ($booking === null || $booking->status !== BookingStatus::PendingPayment) {
+        if ($booking === null) {
+            return;
+        }
+
+        $lockedBooking = Booking::query()
+            ->lockForUpdate()
+            ->find($booking->getKey());
+
+        if ($lockedBooking === null || $lockedBooking->status !== BookingStatus::PendingPayment) {
             return;
         }
 
         $paymentIntent = $event->data->object;
         $amountPaid = $this->integerValue($paymentIntent->amount_received ?? $paymentIntent->amount ?? null);
 
-        $booking->forceFill([
+        $lockedBooking->forceFill([
             'status' => BookingStatus::Confirmed,
-            'amount_paid' => $amountPaid ?? $booking->amount_paid,
+            'amount_paid' => $amountPaid ?? $lockedBooking->amount_paid,
         ])->save();
 
-        BookingCreated::dispatch($booking->getKey());
+        BookingCreated::dispatch($lockedBooking->getKey());
     }
 
     private function handlePaymentIntentFailed(Event $event): void
     {
         $booking = $this->findBookingForPaymentIntent($event);
 
-        if ($booking === null || $booking->status !== BookingStatus::PendingPayment) {
+        if ($booking === null) {
             return;
         }
 
-        DB::transaction(function () use ($booking): void {
-            $lockedBooking = Booking::query()
-                ->lockForUpdate()
-                ->find($booking->getKey());
+        $lockedBooking = Booking::query()
+            ->lockForUpdate()
+            ->find($booking->getKey());
 
-            if ($lockedBooking === null || $lockedBooking->status !== BookingStatus::PendingPayment) {
-                return;
-            }
+        if ($lockedBooking === null || $lockedBooking->status !== BookingStatus::PendingPayment) {
+            return;
+        }
 
-            $lockedSession = $lockedBooking->sportSession()
-                ->lockForUpdate()
-                ->first();
+        $lockedSession = $lockedBooking->sportSession()
+            ->lockForUpdate()
+            ->first();
 
-            if ($lockedSession !== null) {
-                $lockedSession->forceFill([
-                    'current_participants' => max($lockedSession->current_participants - 1, 0),
-                ])->save();
-            }
-
-            $lockedBooking->forceFill([
-                'status' => BookingStatus::Cancelled,
-                'cancelled_at' => now(),
+        if ($lockedSession !== null) {
+            $lockedSession->forceFill([
+                'current_participants' => max($lockedSession->current_participants - 1, 0),
             ])->save();
-        });
+        }
 
-        BookingCancelled::dispatch($booking->getKey(), 'payment_failed');
+        $lockedBooking->forceFill([
+            'status' => BookingStatus::Cancelled,
+            'cancelled_at' => now(),
+        ])->save();
+
+        BookingCancelled::dispatch($lockedBooking->getKey(), 'payment_failed');
     }
 
     private function handleAccountUpdated(Event $event): void
@@ -225,6 +231,9 @@ final class StripeWebhookController extends Controller
             ->first();
     }
 
+    /**
+     * Coerce Stripe payload values that may arrive as integers or numeric strings.
+     */
     private function integerValue(mixed $value): ?int
     {
         if (is_int($value)) {
@@ -238,6 +247,9 @@ final class StripeWebhookController extends Controller
         return null;
     }
 
+    /**
+     * Normalize optional Stripe identifiers and metadata values to non-empty strings.
+     */
     private function stringValue(mixed $value): ?string
     {
         return is_string($value) && $value !== '' ? $value : null;
