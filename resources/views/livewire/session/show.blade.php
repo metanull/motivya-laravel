@@ -87,6 +87,8 @@
         </dl>
     </div>
 
+    <livewire:booking.book :sport-session="$sportSession" />
+
     {{-- Description --}}
     @if ($sportSession->description)
         <div class="mt-6 rounded-lg bg-white p-6 shadow dark:bg-gray-800">
