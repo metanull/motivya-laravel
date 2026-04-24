@@ -104,4 +104,31 @@ return [
     'edit_this_only' => 'Cette session uniquement',
     'edit_all_future' => 'Toutes les sessions futures de ce groupe',
     'group_updated' => ':count sessions mises à jour avec succès.',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Session Discovery Page
+    |--------------------------------------------------------------------------
+    */
+
+    'discovery_title' => 'Trouver des séances',
+    'discovery_heading' => 'Trouver une séance',
+    'discovery_subtitle' => 'Parcourez les prochaines séances près de chez vous.',
+    'all_activities' => 'Toutes les activités',
+    'all_levels' => 'Tous les niveaux',
+    'date_from_label' => 'Du',
+    'date_to_label' => 'Au',
+    'time_from_label' => 'De',
+    'time_to_label' => 'À',
+    'reset_filters' => 'Réinitialiser les filtres',
+    'no_results' => 'Aucune séance trouvée pour ces filtres.',
+    'result_count' => '{0} Aucune séance trouvée|{1} :count séance trouvée|[2,*] :count séances trouvées',
+    'view_session' => 'Voir la séance',
+    'geo_use' => 'Utiliser ma position',
+    'geo_active' => 'Position utilisée (rayon 2 km)',
+    'geo_clear' => 'Effacer',
+    'geo_not_supported' => 'La géolocalisation n\'est pas prise en charge par votre navigateur.',
+    'geo_denied' => 'L\'accès à la position a été refusé. Recherche par code postal utilisée.',
+    'map_title' => 'Séances sur la carte',
+
 ];

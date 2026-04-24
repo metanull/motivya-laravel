@@ -106,4 +106,30 @@ return [
     'edit_all_future' => 'All future sessions in this group',
     'group_updated' => ':count sessions updated successfully.',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Session Discovery Page
+    |--------------------------------------------------------------------------
+    */
+
+    'discovery_title' => 'Find Sessions',
+    'discovery_heading' => 'Find a Session',
+    'discovery_subtitle' => 'Browse upcoming sessions near you.',
+    'all_activities' => 'All activities',
+    'all_levels' => 'All levels',
+    'date_from_label' => 'From',
+    'date_to_label' => 'To',
+    'time_from_label' => 'From',
+    'time_to_label' => 'To',
+    'reset_filters' => 'Reset filters',
+    'no_results' => 'No sessions found for these filters.',
+    'result_count' => '{0} No sessions found|{1} :count session found|[2,*] :count sessions found',
+    'view_session' => 'View session',
+    'geo_use' => 'Use my location',
+    'geo_active' => 'Using your location (2 km radius)',
+    'geo_clear' => 'Clear',
+    'geo_not_supported' => 'Geolocation is not supported by your browser.',
+    'geo_denied' => 'Location access was denied. Using postal code search.',
+    'map_title' => 'Sessions on the map',
+
 ];

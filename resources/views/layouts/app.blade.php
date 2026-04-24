@@ -13,6 +13,7 @@
     @livewireStyles
 
     {{ $head ?? '' }}
+    @stack('head')
 </head>
 <body class="flex min-h-screen flex-col bg-gray-50 text-gray-900 antialiased dark:bg-gray-900 dark:text-gray-100">
 
@@ -26,6 +27,7 @@
     <x-toast />
 
     @livewireScripts
+    @stack('scripts')
 
 </body>
 </html>
