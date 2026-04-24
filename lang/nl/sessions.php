@@ -104,4 +104,31 @@ return [
     'edit_this_only' => 'Alleen deze sessie',
     'edit_all_future' => 'Alle toekomstige sessies in deze groep',
     'group_updated' => ':count sessies bijgewerkt.',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Session Discovery Page
+    |--------------------------------------------------------------------------
+    */
+
+    'discovery_title' => 'Sessies zoeken',
+    'discovery_heading' => 'Een sessie vinden',
+    'discovery_subtitle' => 'Blader door komende sessies bij u in de buurt.',
+    'all_activities' => 'Alle activiteiten',
+    'all_levels' => 'Alle niveaus',
+    'date_from_label' => 'Van',
+    'date_to_label' => 'Tot',
+    'time_from_label' => 'Van',
+    'time_to_label' => 'Tot',
+    'reset_filters' => 'Filters resetten',
+    'no_results' => 'Geen sessies gevonden voor deze filters.',
+    'result_count' => '{0} Geen sessies gevonden|{1} :count sessie gevonden|[2,*] :count sessies gevonden',
+    'view_session' => 'Sessie bekijken',
+    'geo_use' => 'Mijn locatie gebruiken',
+    'geo_active' => 'Locatie actief (2 km straal)',
+    'geo_clear' => 'Wissen',
+    'geo_not_supported' => 'Geolocatie wordt niet ondersteund door uw browser.',
+    'geo_denied' => 'Toegang tot locatie geweigerd. Postcodesearch wordt gebruikt.',
+    'map_title' => 'Sessies op de kaart',
+
 ];

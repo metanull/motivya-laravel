@@ -13,6 +13,7 @@ use App\Livewire\Auth\VerifyEmail;
 use App\Livewire\Coach\Application as CoachApplication;
 use App\Livewire\Coach\Profile as CoachProfile;
 use App\Livewire\Profile\Edit as ProfileEdit;
+use App\Livewire\Session\Index as SessionIndex;
 use App\Livewire\Session\Show as SessionShow;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -44,6 +45,10 @@ Route::get('/profile', ProfileEdit::class)
 Route::get('/coach/apply', CoachApplication::class)
     ->middleware(['auth', 'verified'])
     ->name('coach.apply');
+
+Route::get('/sessions', SessionIndex::class)
+    ->middleware('auth')
+    ->name('sessions.index');
 
 Route::get('/sessions/{sportSession}', SessionShow::class)
     ->middleware('auth')
