@@ -27,20 +27,8 @@ final class PaymentService
 
         $session = $booking->sportSession;
         $athlete = $booking->athlete;
-        $coach = $session?->coach;
+        $coach = $session->coach;
         $coachProfile = $coach?->coachProfile;
-
-        if ($session === null) {
-            throw new InvalidArgumentException('Booking must belong to a session.');
-        }
-
-        if ($athlete === null) {
-            throw new InvalidArgumentException('Booking must belong to an athlete.');
-        }
-
-        if ($coach === null) {
-            throw new InvalidArgumentException('Session must belong to a coach.');
-        }
 
         if (! $this->isNonEmptyString($coachProfile?->stripe_account_id)) {
             throw new InvalidArgumentException('Coach must have a Stripe account identifier before creating a payment intent.');

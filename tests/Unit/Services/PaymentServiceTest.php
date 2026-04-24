@@ -72,13 +72,7 @@ describe('createPaymentIntent', function () {
         $session = SportSession::factory()->published()->for($coach, 'coach')->create();
         $booking = Booking::factory()->for($session, 'sportSession')->create();
 
-        $service = new PaymentService(
-            createPaymentIntentUsing: function (): PaymentIntent {
-                throw new RuntimeException('Stripe should not be called when the coach is missing a Stripe account.');
-            },
-        );
-
-        expect(fn () => $service->createPaymentIntent($booking))
+        expect(fn () => (new PaymentService)->createPaymentIntent($booking))
             ->toThrow(InvalidArgumentException::class, 'Coach must have a Stripe account identifier before creating a payment intent.');
     });
 
@@ -91,13 +85,45 @@ describe('createPaymentIntent', function () {
         $session = SportSession::factory()->published()->for($coach, 'coach')->create();
         $booking = Booking::factory()->for($session, 'sportSession')->create();
 
+        expect(fn () => (new PaymentService)->createPaymentIntent($booking))
+            ->toThrow(RuntimeException::class, 'Coach payout calculation must be configured before creating a payment intent.');
+    });
+
+    it('refuses to create a payment intent when the payout calculator returns a negative amount', function () {
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->approved()->for($coach)->create([
+            'stripe_account_id' => 'acct_coach_123',
+        ]);
+
+        $session = SportSession::factory()->published()->for($coach, 'coach')->create([
+            'price_per_person' => 2750,
+        ]);
+        $booking = Booking::factory()->for($session, 'sportSession')->create();
+
         $service = new PaymentService(
-            createPaymentIntentUsing: function (): PaymentIntent {
-                throw new RuntimeException('Stripe should not be called when the payout calculator is missing.');
-            },
+            calculateCoachPayoutUsing: fn (): int => -1,
         );
 
         expect(fn () => $service->createPaymentIntent($booking))
-            ->toThrow(RuntimeException::class, 'Coach payout calculation must be configured before creating a payment intent.');
+            ->toThrow(InvalidArgumentException::class, 'Coach payout must be between 0 and the booking amount.');
+    });
+
+    it('refuses to create a payment intent when the payout calculator exceeds the booking amount', function () {
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->approved()->for($coach)->create([
+            'stripe_account_id' => 'acct_coach_123',
+        ]);
+
+        $session = SportSession::factory()->published()->for($coach, 'coach')->create([
+            'price_per_person' => 2750,
+        ]);
+        $booking = Booking::factory()->for($session, 'sportSession')->create();
+
+        $service = new PaymentService(
+            calculateCoachPayoutUsing: fn (): int => 2751,
+        );
+
+        expect(fn () => $service->createPaymentIntent($booking))
+            ->toThrow(InvalidArgumentException::class, 'Coach payout must be between 0 and the booking amount.');
     });
 });
