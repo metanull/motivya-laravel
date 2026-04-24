@@ -64,10 +64,10 @@ describe('book', function () {
         expect($session->fresh()->current_participants)->toBe(2)
             ->and($session->fresh()->status)->toBe(SessionStatus::Confirmed);
 
-        Event::assertDispatched(SessionConfirmed::class, function (SessionConfirmed $event) use ($session): bool {
-            return $event->session->is($session->fresh())
-                && $event->session->status === SessionStatus::Confirmed;
-        });
+        Event::assertDispatched(
+            SessionConfirmed::class,
+            fn (SessionConfirmed $event): bool => $event->sessionId === $session->id
+        );
     });
 
     it('throws SessionFullException when the session is full', function () {
@@ -79,7 +79,7 @@ describe('book', function () {
         $athlete = User::factory()->athlete()->create();
 
         expect(fn () => app(BookingService::class)->book($session, $athlete))
-            ->toThrow(SessionFullException::class, 'Session has reached maximum capacity.');
+            ->toThrow(SessionFullException::class);
     });
 
     it('throws SessionNotBookableException for non-bookable session states', function () {
@@ -87,7 +87,7 @@ describe('book', function () {
         $athlete = User::factory()->athlete()->create();
 
         expect(fn () => app(BookingService::class)->book($session, $athlete))
-            ->toThrow(SessionNotBookableException::class, 'Only published or confirmed sessions can be booked.');
+            ->toThrow(SessionNotBookableException::class);
     });
 
     it('throws AlreadyBookedException when the athlete already has a booking', function () {
@@ -101,7 +101,7 @@ describe('book', function () {
         ]);
 
         expect(fn () => app(BookingService::class)->book($session, $athlete))
-            ->toThrow(AlreadyBookedException::class, 'Athlete already has a booking for this session.');
+            ->toThrow(AlreadyBookedException::class);
     });
 
     it('prevents overbooking when two stale session reads compete for the last slot', function () {

@@ -10,6 +10,6 @@ final class SessionFullException extends RuntimeException
 {
     public function __construct()
     {
-        parent::__construct('Session has reached maximum capacity.');
+        parent::__construct(__('bookings.error_session_full'));
     }
 }

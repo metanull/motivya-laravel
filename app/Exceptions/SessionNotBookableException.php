@@ -10,6 +10,6 @@ final class SessionNotBookableException extends RuntimeException
 {
     public function __construct()
     {
-        parent::__construct('Only published or confirmed sessions can be booked.');
+        parent::__construct(__('bookings.error_session_not_bookable'));
     }
 }

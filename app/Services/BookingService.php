@@ -44,16 +44,16 @@ final class BookingService
                 'status' => BookingStatus::PendingPayment->value,
             ]);
 
+            $nextParticipants = $lockedSession->current_participants + 1;
             $shouldDispatchSessionConfirmed = $lockedSession->status === SessionStatus::Published
-                && $lockedSession->current_participants + 1 >= $lockedSession->min_participants;
+                && $nextParticipants >= $lockedSession->min_participants;
 
-            $lockedSession->current_participants++;
-
-            if ($shouldDispatchSessionConfirmed) {
-                $lockedSession->status = SessionStatus::Confirmed;
-            }
-
-            $lockedSession->save();
+            $lockedSession->forceFill([
+                'current_participants' => $nextParticipants,
+                'status' => $shouldDispatchSessionConfirmed
+                    ? SessionStatus::Confirmed
+                    : $lockedSession->status,
+            ])->save();
 
             return [
                 'booking' => $booking,
@@ -61,10 +61,8 @@ final class BookingService
             ];
         });
 
-        $session->refresh();
-
         if ($result['session_confirmed']) {
-            SessionConfirmed::dispatch($session);
+            SessionConfirmed::dispatch($session->getKey());
         }
 
         return $result['booking']->refresh();

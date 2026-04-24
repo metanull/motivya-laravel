@@ -10,6 +10,6 @@ final class AlreadyBookedException extends RuntimeException
 {
     public function __construct()
     {
-        parent::__construct('Athlete already has a booking for this session.');
+        parent::__construct(__('bookings.error_already_booked'));
     }
 }
