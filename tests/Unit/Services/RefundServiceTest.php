@@ -13,7 +13,7 @@ use Stripe\Refund as StripeRefund;
 uses(RefreshDatabase::class);
 
 describe('refund', function () {
-    it('creates a Stripe refund, marks the booking as refunded, and dispatches BookingRefunded', function () {
+    it('creates Stripe refund and marks booking as refunded', function () {
         Event::fake([BookingRefunded::class]);
 
         $payloads = [];

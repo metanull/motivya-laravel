@@ -169,7 +169,7 @@ final class StripeWebhookController extends Controller
             'cancelled_at' => now(),
         ])->save();
 
-        BookingCancelled::dispatch($lockedBooking->getKey(), 'payment_failed');
+        BookingCancelled::dispatch($lockedBooking->getKey(), 'payment_failed', false);
     }
 
     private function handleChargeRefunded(Event $event): void

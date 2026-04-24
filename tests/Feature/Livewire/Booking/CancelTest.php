@@ -35,7 +35,7 @@ describe('booking cancellation widget', function () {
             ->assertSee(__('bookings.cancel_refund_eligible_notice', ['hours' => 48]))
             ->call('confirmCancellation')
             ->assertSee(__('bookings.cancel_confirmation_title'))
-            ->call('cancel')
+            ->call('processCancellation')
             ->assertDispatched('notify');
 
         expect($booking->fresh()->status)->toBe(BookingStatus::Cancelled);
@@ -63,7 +63,7 @@ describe('booking cancellation widget', function () {
             ->test(Cancel::class, ['sportSession' => $session])
             ->assertSee(__('bookings.cancel_refund_ineligible_notice', ['hours' => 24]))
             ->call('confirmCancellation')
-            ->call('cancel')
+            ->call('processCancellation')
             ->assertDispatched('notify');
 
         expect($booking->fresh()->status)->toBe(BookingStatus::Cancelled);

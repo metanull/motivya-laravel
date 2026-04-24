@@ -44,7 +44,7 @@ final class Cancel extends Component
         $this->confirmingCancellation = false;
     }
 
-    public function cancel(BookingService $bookingService): void
+    public function processCancellation(BookingService $bookingService): void
     {
         if ($this->booking === null) {
             return;
