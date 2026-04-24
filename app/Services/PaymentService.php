@@ -97,7 +97,7 @@ final class PaymentService
     protected function calculateCoachPayout(Booking $booking, int $amount): int
     {
         if ($this->calculateCoachPayoutUsing instanceof Closure) {
-            return (int) ($this->calculateCoachPayoutUsing)($booking);
+            return (int) ($this->calculateCoachPayoutUsing)($booking, $amount);
         }
 
         throw new RuntimeException('Coach payout calculation must be configured before creating a payment intent.');
