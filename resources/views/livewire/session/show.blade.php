@@ -88,6 +88,7 @@
     </div>
 
     <livewire:booking.book :sport-session="$sportSession" />
+    <livewire:booking.cancel :sport-session="$sportSession" />
 
     {{-- Description --}}
     @if ($sportSession->description)

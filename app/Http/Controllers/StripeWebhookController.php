@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Enums\BookingStatus;
 use App\Events\BookingCancelled;
 use App\Events\BookingCreated;
+use App\Events\BookingRefunded;
 use App\Events\CoachStripeOnboardingComplete;
 use App\Events\Stripe\AccountUpdated;
 use App\Events\Stripe\ChargeRefunded;
@@ -83,6 +84,7 @@ final class StripeWebhookController extends Controller
         match ($event->type) {
             'payment_intent.succeeded' => $this->handlePaymentIntentSucceeded($event),
             'payment_intent.payment_failed' => $this->handlePaymentIntentFailed($event),
+            'charge.refunded' => $this->handleChargeRefunded($event),
             'account.updated' => $this->handleAccountUpdated($event),
             default => null,
         };
@@ -170,6 +172,30 @@ final class StripeWebhookController extends Controller
         BookingCancelled::dispatch($lockedBooking->getKey(), 'payment_failed');
     }
 
+    private function handleChargeRefunded(Event $event): void
+    {
+        $booking = $this->findBookingForCharge($event);
+
+        if ($booking === null) {
+            return;
+        }
+
+        $lockedBooking = Booking::query()
+            ->lockForUpdate()
+            ->find($booking->getKey());
+
+        if ($lockedBooking === null || $lockedBooking->status === BookingStatus::Refunded) {
+            return;
+        }
+
+        $lockedBooking->forceFill([
+            'status' => BookingStatus::Refunded,
+            'refunded_at' => now(),
+        ])->save();
+
+        BookingRefunded::dispatch($lockedBooking->getKey());
+    }
+
     private function handleAccountUpdated(Event $event): void
     {
         $account = $event->data->object;
@@ -204,8 +230,25 @@ final class StripeWebhookController extends Controller
     private function findBookingForPaymentIntent(Event $event): ?Booking
     {
         $paymentIntent = $event->data->object;
-        $paymentIntentId = $this->stringValue($paymentIntent->id ?? null);
 
+        return $this->findBookingByPaymentIntentOrMetadata(
+            $this->stringValue($paymentIntent->id ?? null),
+            $paymentIntent->metadata ?? null,
+        );
+    }
+
+    private function findBookingForCharge(Event $event): ?Booking
+    {
+        $charge = $event->data->object;
+
+        return $this->findBookingByPaymentIntentOrMetadata(
+            $this->stringValue($charge->payment_intent ?? null),
+            $charge->metadata ?? null,
+        );
+    }
+
+    private function findBookingByPaymentIntentOrMetadata(?string $paymentIntentId, mixed $metadata): ?Booking
+    {
         if ($paymentIntentId !== null) {
             $booking = Booking::query()
                 ->where('stripe_payment_intent_id', $paymentIntentId)
@@ -216,7 +259,6 @@ final class StripeWebhookController extends Controller
             }
         }
 
-        $metadata = $paymentIntent->metadata ?? null;
         $sessionId = $this->integerValue($metadata?->session_id ?? null);
         $athleteId = $this->integerValue($metadata?->athlete_id ?? null);
 

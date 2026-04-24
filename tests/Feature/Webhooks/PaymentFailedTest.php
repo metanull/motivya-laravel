@@ -63,6 +63,11 @@ describe('payment_intent.payment_failed webhook', function () {
         expect($booking->fresh()->cancelled_at)->not->toBeNull();
         expect($session->fresh()->current_participants)->toBe(0);
 
-        Event::assertDispatched(BookingCancelled::class, fn (BookingCancelled $event): bool => $event->bookingId === $booking->id && $event->reason === 'payment_failed');
+        Event::assertDispatched(
+            BookingCancelled::class,
+            fn (BookingCancelled $event): bool => $event->bookingId === $booking->id
+                && $event->reason === 'payment_failed'
+                && $event->refundEligible === false
+        );
     });
 });
