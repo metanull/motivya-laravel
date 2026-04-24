@@ -74,6 +74,10 @@ final class SessionQueryService
         $query->whereNotNull('latitude')
             ->whereNotNull('longitude')
             ->whereRaw("{$haversine} <= CAST(? AS REAL)", [
+                // CAST(? AS REAL) forces the bound parameter to a numeric type.
+                // Without it, SQLite treats bound float values as TEXT, causing
+                // incorrect comparisons (TEXT values are always > REAL in SQLite).
+                // MySQL handles this correctly without the cast.
                 $latitude,
                 $longitude,
                 $latitude,

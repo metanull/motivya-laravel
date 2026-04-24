@@ -38,10 +38,10 @@ final class Index extends Component
     public string $postalCode = '';
 
     /** Latitude from browser geolocation — sent via JS */
-    public float|string $latitude = '';
+    public ?float $latitude = null;
 
     /** Longitude from browser geolocation — sent via JS */
-    public float|string $longitude = '';
+    public ?float $longitude = null;
 
     /** Whether to use geolocation for the search */
     public bool $useGeolocation = false;
@@ -94,8 +94,8 @@ final class Index extends Component
     /** Reset geolocation and fall back to postal-code search. */
     public function clearGeolocation(): void
     {
-        $this->latitude = '';
-        $this->longitude = '';
+        $this->latitude = null;
+        $this->longitude = null;
         $this->useGeolocation = false;
         $this->resetPage();
     }
@@ -109,8 +109,8 @@ final class Index extends Component
         $this->timeFrom = '';
         $this->timeTo = '';
         $this->postalCode = '';
-        $this->latitude = '';
-        $this->longitude = '';
+        $this->latitude = null;
+        $this->longitude = null;
         $this->useGeolocation = false;
         $this->resetPage();
     }
@@ -121,8 +121,8 @@ final class Index extends Component
 
         $filters = $this->buildFilters();
 
-        $sessions = $this->useGeolocation && is_float($this->latitude) && is_float($this->longitude)
-            ? $service->searchByLocation((float) $this->latitude, (float) $this->longitude, $filters)
+        $sessions = $this->useGeolocation && $this->latitude !== null && $this->longitude !== null
+            ? $service->searchByLocation($this->latitude, $this->longitude, $filters)
             : $service->search($filters);
 
         $markers = $service->mapMarkers($filters);

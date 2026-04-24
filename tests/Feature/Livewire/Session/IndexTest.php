@@ -191,8 +191,7 @@ describe('session discovery page', function () {
         Livewire::actingAs($athlete)
             ->test(Index::class)
             ->assertSee('Park Yoga')
-            ->assertSee('Coach Marie')
-            ->assertSee($athlete->name === 'Coach Marie' ? 'Coach Marie' : 'Coach Marie');
+            ->assertSee('Coach Marie');
     });
 
     it('resets filters when resetFilters is called', function () {
@@ -230,8 +229,8 @@ describe('session discovery page', function () {
             ->call('setGeolocation', 50.85, 4.35)
             ->call('clearGeolocation')
             ->assertSet('useGeolocation', false)
-            ->assertSet('latitude', '')
-            ->assertSet('longitude', '');
+            ->assertSet('latitude', null)
+            ->assertSet('longitude', null);
     });
 
     it('shows no-results message when no sessions match filters', function () {

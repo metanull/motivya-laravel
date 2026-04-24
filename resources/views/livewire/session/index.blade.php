@@ -51,7 +51,6 @@
                     <input type="text" wire:model.live="postalCode" id="postalCode"
                         :class="{ 'opacity-50': useGeolocation }"
                         :disabled="useGeolocation"
-                        x-data
                         class="block w-full rounded-l-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
                         placeholder="1000"
                         maxlength="4">
