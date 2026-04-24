@@ -8,13 +8,11 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-final class BookingCancelled implements ShouldQueue
+final class BookingRefunded implements ShouldQueue
 {
     use Dispatchable, SerializesModels;
 
     public function __construct(
         public readonly int $bookingId,
-        public readonly string $reason,
-        public readonly bool $refundEligible = false,
     ) {}
 }

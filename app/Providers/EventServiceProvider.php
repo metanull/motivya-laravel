@@ -7,7 +7,9 @@ namespace App\Providers;
 use App\Events\CoachApproved;
 use App\Events\CoachRejected;
 use App\Events\NewCoachApplication;
+use App\Events\SessionCancelled;
 use App\Listeners\NotifyAdminsOfNewApplication;
+use App\Listeners\RefundAllBookingsOnSessionCancellation;
 use App\Listeners\SendCoachApprovedNotification;
 use App\Listeners\SendCoachRejectedNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -26,6 +28,9 @@ final class EventServiceProvider extends ServiceProvider
         ],
         NewCoachApplication::class => [
             NotifyAdminsOfNewApplication::class,
+        ],
+        SessionCancelled::class => [
+            RefundAllBookingsOnSessionCancellation::class,
         ],
     ];
 }
