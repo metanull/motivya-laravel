@@ -42,7 +42,7 @@ final class PaymentService
             throw new InvalidArgumentException('Session must belong to a coach.');
         }
 
-        if (! is_string($coachProfile?->stripe_account_id) || $coachProfile->stripe_account_id === '') {
+        if (! $this->isNonEmptyString($coachProfile?->stripe_account_id)) {
             throw new InvalidArgumentException('Coach must have a Stripe account identifier before creating a payment intent.');
         }
 
@@ -57,6 +57,7 @@ final class PaymentService
             'amount' => $amount,
             'currency' => 'eur',
             'payment_method_types' => ['bancontact', 'card'],
+            'capture_method' => 'automatic',
             'metadata' => [
                 'session_id' => (string) $session->getKey(),
                 'athlete_id' => (string) $athlete->getKey(),
@@ -68,7 +69,7 @@ final class PaymentService
             ],
         ]);
 
-        if (! is_string($paymentIntent->id) || $paymentIntent->id === '') {
+        if (! $this->isNonEmptyString($paymentIntent->id)) {
             throw new RuntimeException('Stripe did not return a payment intent identifier.');
         }
 
@@ -99,6 +100,11 @@ final class PaymentService
             return (int) ($this->calculateCoachPayoutUsing)($booking);
         }
 
-        return $amount;
+        throw new RuntimeException('Coach payout calculation must be configured before creating a payment intent.');
+    }
+
+    private function isNonEmptyString(mixed $value): bool
+    {
+        return is_string($value) && $value !== '';
     }
 }

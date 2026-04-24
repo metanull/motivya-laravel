@@ -14,6 +14,8 @@ uses(RefreshDatabase::class);
 
 describe('createPaymentIntent', function () {
     it('creates a payment intent and stores its identifier on the booking', function () {
+        $expectedCoachPayout = 1900;
+
         $coach = User::factory()->coach()->create();
         CoachProfile::factory()->approved()->for($coach)->create([
             'stripe_account_id' => 'acct_coach_123',
@@ -29,10 +31,11 @@ describe('createPaymentIntent', function () {
             ->create();
 
         $service = new PaymentService(
-            createPaymentIntentUsing: function (array $payload) use ($session, $athlete, $coach): PaymentIntent {
+            createPaymentIntentUsing: function (array $payload) use ($session, $athlete, $coach, $expectedCoachPayout): PaymentIntent {
                 expect($payload['amount'])->toBe(2750);
                 expect($payload['currency'])->toBe('eur');
                 expect($payload['payment_method_types'])->toBe(['bancontact', 'card']);
+                expect($payload['capture_method'])->toBe('automatic');
                 expect($payload['metadata'])->toBe([
                     'session_id' => (string) $session->id,
                     'athlete_id' => (string) $athlete->id,
@@ -40,15 +43,15 @@ describe('createPaymentIntent', function () {
                 ]);
                 expect($payload['transfer_data'])->toBe([
                     'destination' => 'acct_coach_123',
-                    'amount' => 1900,
+                    'amount' => $expectedCoachPayout,
                 ]);
 
                 return new PaymentIntent(['id' => 'pi_test_123']);
             },
-            calculateCoachPayoutUsing: function (Booking $booking) use ($session): int {
+            calculateCoachPayoutUsing: function (Booking $booking) use ($session, $expectedCoachPayout): int {
                 expect($booking->sportSession->is($session))->toBeTrue();
 
-                return 1900;
+                return $expectedCoachPayout;
             },
         );
 
