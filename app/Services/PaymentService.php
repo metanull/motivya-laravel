@@ -88,7 +88,7 @@ final class PaymentService
             return (int) ($this->calculateCoachPayoutUsing)($booking, $amount);
         }
 
-        throw new RuntimeException('Coach payout calculation must be configured before creating a payment intent.');
+        return $amount;
     }
 
     private function isNonEmptyString(mixed $value): bool

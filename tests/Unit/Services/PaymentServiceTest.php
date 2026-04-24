@@ -76,17 +76,32 @@ describe('createPaymentIntent', function () {
             ->toThrow(InvalidArgumentException::class, 'Coach must have a Stripe account identifier before creating a payment intent.');
     });
 
-    it('refuses to create a payment intent when the payout calculator is not configured', function () {
+    it('defaults the coach payout to the booking amount when the payout calculator is not configured', function () {
         $coach = User::factory()->coach()->create();
         CoachProfile::factory()->approved()->for($coach)->create([
             'stripe_account_id' => 'acct_coach_123',
+            'stripe_onboarding_complete' => true,
         ]);
 
-        $session = SportSession::factory()->published()->for($coach, 'coach')->create();
+        $session = SportSession::factory()->published()->for($coach, 'coach')->create([
+            'price_per_person' => 3200,
+        ]);
         $booking = Booking::factory()->for($session, 'sportSession')->create();
 
-        expect(fn () => (new PaymentService)->createPaymentIntent($booking))
-            ->toThrow(RuntimeException::class, 'Coach payout calculation must be configured before creating a payment intent.');
+        $service = new PaymentService(
+            createPaymentIntentUsing: function (array $payload): PaymentIntent {
+                expect($payload['transfer_data'])->toBe([
+                    'destination' => 'acct_coach_123',
+                    'amount' => 3200,
+                ]);
+
+                return new PaymentIntent(['id' => 'pi_default_payout']);
+            },
+        );
+
+        $paymentIntent = $service->createPaymentIntent($booking);
+
+        expect($paymentIntent->id)->toBe('pi_default_payout');
     });
 
     it('refuses to create a payment intent when the payout calculator returns a negative amount', function () {
