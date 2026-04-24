@@ -73,6 +73,6 @@ describe('StripeConnectService', function () {
         $service = app(StripeConnectService::class);
 
         expect(fn () => $service->createExpressAccount($coach))
-            ->toThrow(\InvalidArgumentException::class, 'Only approved coaches can create a Stripe Express account.');
+            ->toThrow(InvalidArgumentException::class, 'Only approved coaches can create a Stripe Express account.');
     });
 });
