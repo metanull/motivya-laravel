@@ -15,9 +15,9 @@ use Illuminate\Support\Collection;
 
 final class SessionQueryService
 {
-    public const int PER_PAGE = 12;
+    public const PER_PAGE = 12;
 
-    public const float DEFAULT_RADIUS_KM = 2.0;
+    public const DEFAULT_RADIUS_KM = 2.0;
 
     /**
      * Build a base query limited to discoverable sessions (published / confirmed, future dates).
