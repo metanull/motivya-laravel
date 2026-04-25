@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Enums\SessionStatus;
 use App\Events\SessionCancelled;
+use App\Events\SessionCompleted;
 use App\Models\SportSession;
 use App\Models\User;
 use Carbon\Carbon;
@@ -172,6 +173,20 @@ final class SessionService
         if ($wasConfirmed) {
             SessionCancelled::dispatch($session);
         }
+    }
+
+    /**
+     * Mark a confirmed session as completed.
+     */
+    public function complete(SportSession $session): void
+    {
+        if ($session->status !== SessionStatus::Confirmed) {
+            throw new InvalidArgumentException('Only confirmed sessions can be marked as completed.');
+        }
+
+        $session->update(['status' => SessionStatus::Completed->value]);
+
+        SessionCompleted::dispatch($session);
     }
 
     /**

@@ -11,3 +11,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('sessions:send-reminders')->hourly();
+Schedule::command('sessions:cancel-expired')->hourly();
+Schedule::command('sessions:complete-finished')->hourly();
