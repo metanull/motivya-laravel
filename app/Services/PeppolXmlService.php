@@ -15,10 +15,6 @@ use Illuminate\Support\Facades\Storage;
 
 final class PeppolXmlService
 {
-    private const CUSTOMIZATION_ID = 'urn:cen.eu:en16931:2017#compliant#urn:fdc:peppol.eu:2017:poacc:billing:3.0';
-
-    private const PROFILE_ID = 'urn:fdc:peppol.eu:2017:poacc:billing:01:1.0';
-
     private const CURRENCY = 'EUR';
 
     private const UBL_INVOICE_NS = 'urn:oasis:names:specification:ubl:schema:xsd:Invoice-2';
@@ -113,13 +109,14 @@ final class PeppolXmlService
             $errors[] = 'Missing required element: InvoiceLine';
         }
 
-        // CustomizationID must match the PEPPOL BIS 3.0 value
+        // CustomizationID must match the PEPPOL BIS 3.0 value from config
         $customizationNodes = $xpath->query('//cbc:CustomizationID');
 
         if ($customizationNodes !== false && $customizationNodes->length > 0) {
             $value = $customizationNodes->item(0)?->textContent ?? '';
+            $expected = (string) config('peppol.customization_id');
 
-            if ($value !== self::CUSTOMIZATION_ID) {
+            if ($value !== $expected) {
                 $errors[] = "Invalid CustomizationID: {$value}";
             }
         }
@@ -197,8 +194,8 @@ final class PeppolXmlService
         $dom->appendChild($root);
 
         // Mandatory header elements (PEPPOL BIS 3.0 §6.1)
-        $this->cbc($dom, $root, 'CustomizationID', self::CUSTOMIZATION_ID);
-        $this->cbc($dom, $root, 'ProfileID', self::PROFILE_ID);
+        $this->cbc($dom, $root, 'CustomizationID', (string) config('peppol.customization_id'));
+        $this->cbc($dom, $root, 'ProfileID', (string) config('peppol.profile_id'));
         $this->cbc($dom, $root, 'ID', $invoice->invoice_number);
         $this->cbc($dom, $root, 'IssueDate', $issueDate);
         $this->cbc($dom, $root, 'InvoiceTypeCode', $typeCode);
