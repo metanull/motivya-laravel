@@ -51,4 +51,38 @@ return [
     'new_coach_application_action' => 'View applications',
     'new_coach_application_body_short' => 'A new coach application has been submitted.',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Session Reminder
+    |--------------------------------------------------------------------------
+    */
+
+    'session_reminder_subject' => 'Reminder: session tomorrow',
+    'session_reminder_body' => 'Your :activity session is tomorrow at :time.',
+    'view_session' => 'View session',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Booking Confirmation / Cancellation
+    |--------------------------------------------------------------------------
+    */
+
+    'booking_confirmed_subject' => 'Booking confirmed',
+    'booking_confirmed_body' => 'Your booking for :activity on :date at :time is confirmed.',
+    'booking_cancelled_subject' => 'Booking cancelled',
+    'booking_cancelled_body' => 'Your booking for :activity on :date has been cancelled.',
+    'booking_cancelled_refund' => 'You are eligible for a refund.',
+    'view_booking' => 'View my booking',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Session Confirmation / Cancellation
+    |--------------------------------------------------------------------------
+    */
+
+    'session_confirmed_subject' => 'Session confirmed',
+    'session_confirmed_body' => 'The :activity session on :date at :time is confirmed!',
+    'session_cancelled_subject' => 'Session cancelled',
+    'session_cancelled_body' => 'The :activity session on :date has been cancelled.',
+
 ];
