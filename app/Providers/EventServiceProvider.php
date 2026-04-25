@@ -6,12 +6,14 @@ namespace App\Providers;
 
 use App\Events\BookingCancelled;
 use App\Events\BookingCreated;
+use App\Events\BookingRefunded;
 use App\Events\CoachApproved;
 use App\Events\CoachRejected;
 use App\Events\NewCoachApplication;
 use App\Events\SessionCancelled;
 use App\Events\SessionCompleted;
 use App\Events\SessionConfirmed;
+use App\Listeners\GenerateCreditNoteOnRefund;
 use App\Listeners\GenerateInvoiceOnSessionCompletion;
 use App\Listeners\NotifyAdminsOfNewApplication;
 use App\Listeners\RefundAllBookingsOnSessionCancellation;
@@ -53,6 +55,9 @@ final class EventServiceProvider extends ServiceProvider
         ],
         BookingCancelled::class => [
             SendBookingCancelledNotification::class,
+        ],
+        BookingRefunded::class => [
+            GenerateCreditNoteOnRefund::class,
         ],
     ];
 }
