@@ -103,9 +103,13 @@ final class InvoiceService
     public function generateCreditNote(Booking $booking, Invoice $originalInvoice): Invoice
     {
         return DB::transaction(function () use ($booking, $originalInvoice): Invoice {
-            // Idempotency guard: skip if a credit note for this amount against the
-            // same original invoice already exists (protects against duplicate event
-            // delivery due to event auto-discovery double-registration).
+            // Idempotency guard: skip if a credit note matching this booking's amount
+            // against the same original invoice already exists. This protects against
+            // duplicate event delivery caused by the framework's double event registration
+            // (auto-discovery + $listen array). Note: if two bookings for the same session
+            // share an identical amount, only one credit note will be created for that
+            // amount — this is a known limitation that can be resolved in a future story
+            // by adding a booking_id column to the invoices table.
             $existing = Invoice::where('related_invoice_id', $originalInvoice->id)
                 ->where('type', InvoiceType::CreditNote)
                 ->where('revenue_ttc', $booking->amount_paid)
@@ -118,6 +122,9 @@ final class InvoiceService
             $coachProfile = $originalInvoice->coach->coachProfile;
 
             $revenueTtc = $booking->amount_paid;
+            // Estimate Stripe processing fee at the standard 1.5% rate.
+            // The per-transaction fixed fee (€0.25 for Bancontact) is applied
+            // per-booking, not as a session-level deduction, so it is excluded here.
             $stripeFeeCents = (int) round($revenueTtc * 15 / 1000);
 
             $breakdown = $this->payoutService->calculatePayout($coachProfile, $revenueTtc, $stripeFeeCents);

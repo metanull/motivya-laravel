@@ -19,7 +19,15 @@ final class GenerateCreditNoteOnRefund
 
     public function handle(BookingRefunded $event): void
     {
-        $booking = Booking::findOrFail($event->bookingId);
+        $booking = Booking::find($event->bookingId);
+
+        if ($booking === null) {
+            Log::warning('GenerateCreditNoteOnRefund: booking not found; skipping credit note.', [
+                'booking_id' => $event->bookingId,
+            ]);
+
+            return;
+        }
 
         if ($booking->sport_session_id === null) {
             Log::warning('GenerateCreditNoteOnRefund: booking has no session; skipping credit note.', [

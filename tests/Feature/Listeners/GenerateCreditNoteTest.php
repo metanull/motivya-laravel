@@ -121,7 +121,7 @@ describe('GenerateCreditNoteOnRefund', function () {
             'date' => '2026-05-01',
         ]);
 
-        Invoice::factory()->invoice()->issued()->create([
+        $originalInvoice = Invoice::factory()->invoice()->issued()->create([
             'coach_id' => $coach->id,
             'sport_session_id' => $session->id,
             'billing_period_start' => '2026-05-01',
@@ -139,6 +139,13 @@ describe('GenerateCreditNoteOnRefund', function () {
 
         expect($creditNote->xml_path)->not->toBeNull();
         Storage::assertExists($creditNote->xml_path);
+
+        $xml = Storage::get($creditNote->xml_path);
+        expect($xml)
+            ->toContain('<cbc:InvoiceTypeCode>381</cbc:InvoiceTypeCode>')
+            ->toContain('<cac:BillingReference>')
+            ->toContain($originalInvoice->invoice_number)
+            ->toContain('<cbc:ID>S</cbc:ID>');
     });
 
     it('preserves the billing period from the original invoice', function () {
