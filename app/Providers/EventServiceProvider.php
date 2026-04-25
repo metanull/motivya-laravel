@@ -12,6 +12,7 @@ use App\Events\NewCoachApplication;
 use App\Events\SessionCancelled;
 use App\Events\SessionCompleted;
 use App\Events\SessionConfirmed;
+use App\Listeners\GenerateInvoiceOnSessionCompletion;
 use App\Listeners\NotifyAdminsOfNewApplication;
 use App\Listeners\RefundAllBookingsOnSessionCancellation;
 use App\Listeners\SendBookingCancelledNotification;
@@ -44,7 +45,9 @@ final class EventServiceProvider extends ServiceProvider
         SessionConfirmed::class => [
             SendSessionConfirmedNotification::class,
         ],
-        SessionCompleted::class => [],
+        SessionCompleted::class => [
+            GenerateInvoiceOnSessionCompletion::class,
+        ],
         BookingCreated::class => [
             SendBookingConfirmedNotification::class,
         ],
