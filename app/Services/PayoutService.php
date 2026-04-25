@@ -14,7 +14,7 @@ final class PayoutService
      *
      * @var array<string, array{commission_rate: int, subscription_fee: int}>
      */
-    private const array PLANS = [
+    private const PLANS = [
         'freemium' => ['commission_rate' => 30, 'subscription_fee' => 0],
         'active' => ['commission_rate' => 20, 'subscription_fee' => 3900],
         'premium' => ['commission_rate' => 10, 'subscription_fee' => 7900],
