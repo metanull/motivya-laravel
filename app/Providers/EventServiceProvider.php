@@ -10,6 +10,7 @@ use App\Events\CoachApproved;
 use App\Events\CoachRejected;
 use App\Events\NewCoachApplication;
 use App\Events\SessionCancelled;
+use App\Events\SessionCompleted;
 use App\Events\SessionConfirmed;
 use App\Listeners\NotifyAdminsOfNewApplication;
 use App\Listeners\RefundAllBookingsOnSessionCancellation;
@@ -43,6 +44,7 @@ final class EventServiceProvider extends ServiceProvider
         SessionConfirmed::class => [
             SendSessionConfirmedNotification::class,
         ],
+        SessionCompleted::class => [],
         BookingCreated::class => [
             SendBookingConfirmedNotification::class,
         ],
