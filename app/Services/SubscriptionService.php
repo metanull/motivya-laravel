@@ -35,11 +35,14 @@ final class SubscriptionService
             $firstOfMonth = $month->copy()->startOfMonth()->toDateString();
 
             // Sum revenue_ttc from all session invoices for this coach in this month.
+            // Using whereBetween allows the database to leverage indexes on billing_period_start.
             $revenueTtc = (int) Invoice::query()
                 ->where('coach_id', $coach->id)
                 ->where('type', InvoiceType::Invoice->value)
-                ->whereYear('billing_period_start', $month->year)
-                ->whereMonth('billing_period_start', $month->month)
+                ->whereBetween('billing_period_start', [
+                    $month->copy()->startOfMonth()->toDateString(),
+                    $month->copy()->endOfMonth()->toDateString(),
+                ])
                 ->sum('revenue_ttc');
 
             // Estimate Stripe processing fee at the standard 1.5% rate.
@@ -64,7 +67,11 @@ final class SubscriptionService
             );
 
             // Charge subscription fee via Stripe if applicable.
-            if ($breakdown->subscription_fee > 0 && $coach->coachProfile?->stripe_onboarding_complete) {
+            if (
+                $breakdown->subscription_fee > 0
+                && $coach->coachProfile?->stripe_onboarding_complete
+                && $coach->hasDefaultPaymentMethod()
+            ) {
                 $this->chargeSubscriptionFee($coach, $subscription);
             }
 

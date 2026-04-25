@@ -33,7 +33,13 @@ final class ComputeMonthlySubscriptions extends Command
         $monthArg = $this->option('month');
 
         if ($monthArg !== null) {
-            $month = Carbon::createFromFormat('Y-m', (string) $monthArg)->startOfMonth();
+            try {
+                $month = Carbon::createFromFormat('Y-m', (string) $monthArg)->startOfMonth();
+            } catch (\Exception) {
+                $this->error("Invalid month format '{$monthArg}'. Expected YYYY-MM (e.g. 2026-01).");
+
+                return self::FAILURE;
+            }
         } else {
             $month = now()->subMonth()->startOfMonth();
         }

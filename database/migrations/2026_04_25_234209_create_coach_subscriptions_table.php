@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedInteger('revenue_ttc')->default(0);
             $table->string('applied_plan', 10);
             $table->unsignedInteger('subscription_fee')->default(0);
-            $table->unsignedInteger('commission_rate');
+            $table->unsignedInteger('commission_rate')->default(30);
             $table->timestamps();
 
             $table->unique(['coach_id', 'month']);

@@ -380,4 +380,56 @@ describe('subscriptions:compute-monthly', function () {
         expect($subscription)->not->toBeNull()
             ->and($subscription->revenue_ttc)->toBe(30000);
     });
+
+    it('non-VAT-subject coach uses the same plan selection algorithm as a VAT-subject coach', function (): void {
+        Carbon::setTestNow('2026-02-01 02:00:00');
+
+        $coach = User::factory()->coach()->create();
+        $coach->coachProfile()->create([
+            'status' => CoachProfileStatus::Approved->value,
+            'is_vat_subject' => false, // non-subject (franchise regime)
+            'stripe_onboarding_complete' => false,
+            'specialties' => ['yoga'],
+            'bio' => 'Non-subject coach',
+            'experience_level' => 'beginner',
+            'postal_code' => '1060',
+            'country' => 'BE',
+            'enterprise_number' => '0777.888.999',
+        ]);
+
+        $revenue = 30000;
+        Invoice::create([
+            'type' => InvoiceType::Invoice->value,
+            'coach_id' => $coach->id,
+            'sport_session_id' => null,
+            'billing_period_start' => '2026-01-15',
+            'billing_period_end' => '2026-01-15',
+            'revenue_ttc' => $revenue,
+            'revenue_htva' => $revenue, // no VAT for franchise regime
+            'vat_amount' => 0,
+            'stripe_fee' => (int) round($revenue * 15 / 1000),
+            'subscription_fee' => 0,
+            'commission_amount' => (int) round($revenue * 30 / 100),
+            'coach_payout' => $revenue - (int) round($revenue * 30 / 100),
+            'platform_margin' => (int) round($revenue * 30 / 100),
+            'plan_applied' => 'freemium',
+            'tax_category_code' => 'E',
+            'status' => InvoiceStatus::Draft->value,
+        ]);
+
+        $this->artisan('subscriptions:compute-monthly --month=2026-01')->assertSuccessful();
+
+        $subscription = CoachSubscription::where('coach_id', $coach->id)
+            ->where('month', '2026-01-01')
+            ->first();
+
+        // Low revenue → Freemium remains the best plan for both VAT statuses
+        expect($subscription)->not->toBeNull()
+            ->and($subscription->applied_plan)->toBe(SubscriptionPlan::Freemium)
+            ->and($subscription->subscription_fee)->toBe(0);
+    });
+
+    it('rejects an invalid --month format and returns a failure exit code', function (): void {
+        $this->artisan('subscriptions:compute-monthly', ['--month' => 'invalid'])->assertFailed();
+    });
 });
