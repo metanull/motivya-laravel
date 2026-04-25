@@ -122,5 +122,26 @@
             </svg>
             {{ __('sessions.copy_link') }}
         </button>
+
+        @can('favourite', $sportSession)
+                <button
+                    wire:click="toggleFavourite"
+                    type="button"
+                    class="inline-flex items-center gap-2 rounded-md {{ $isFavourited ? 'bg-pink-600 hover:bg-pink-500' : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-600' }} px-4 py-2 text-sm font-semibold shadow-sm">
+                    @if ($isFavourited)
+                        {{-- Filled heart --}}
+                        <svg class="h-5 w-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                        </svg>
+                        <span class="text-white">{{ __('athlete.toggle_favourite_remove') }}</span>
+                    @else
+                        {{-- Outline heart --}}
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                        </svg>
+                        {{ __('athlete.toggle_favourite_add') }}
+                    @endif
+                </button>
+        @endcan
     </div>
 </div>

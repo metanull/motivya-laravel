@@ -9,6 +9,7 @@ use App\Enums\UserRole;
 use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -75,5 +76,13 @@ class User extends Authenticatable implements MustVerifyEmail
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class, 'athlete_id');
+    }
+
+    /**
+     * @return BelongsToMany<SportSession, $this>
+     */
+    public function favouriteSessions(): BelongsToMany
+    {
+        return $this->belongsToMany(SportSession::class, 'favourites')->withTimestamps();
     }
 }
