@@ -8,7 +8,7 @@ use App\Services\VatService;
 describe('VatService', function () {
 
     beforeEach(function () {
-        $this->service = new VatService();
+        $this->service = new VatService;
     });
 
     describe('getVatRate', function () {

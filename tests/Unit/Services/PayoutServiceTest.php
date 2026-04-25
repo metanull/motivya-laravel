@@ -10,7 +10,7 @@ use App\Services\VatService;
 describe('PayoutService', function () {
 
     beforeEach(function () {
-        $this->service = new PayoutService(new VatService());
+        $this->service = new PayoutService(new VatService);
         $this->vatSubjectCoach = new CoachProfile(['is_vat_subject' => true]);
         $this->nonSubjectCoach = new CoachProfile(['is_vat_subject' => false]);
     });

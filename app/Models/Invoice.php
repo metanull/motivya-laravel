@@ -45,11 +45,11 @@ class Invoice extends Model
     protected function casts(): array
     {
         return [
-            'type'                 => InvoiceType::class,
-            'status'               => InvoiceStatus::class,
+            'type' => InvoiceType::class,
+            'status' => InvoiceStatus::class,
             'billing_period_start' => 'date',
-            'billing_period_end'   => 'date',
-            'issued_at'            => 'datetime',
+            'billing_period_end' => 'date',
+            'issued_at' => 'datetime',
         ];
     }
 

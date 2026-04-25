@@ -8,6 +8,7 @@ use App\Models\Invoice;
 use App\Models\SportSession;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 
 uses(RefreshDatabase::class);
 
@@ -108,14 +109,14 @@ describe('Invoice model', function () {
         it('casts billing_period_start and _end as dates', function () {
             $invoice = Invoice::factory()->create();
 
-            expect($invoice->billing_period_start)->toBeInstanceOf(\Illuminate\Support\Carbon::class);
-            expect($invoice->billing_period_end)->toBeInstanceOf(\Illuminate\Support\Carbon::class);
+            expect($invoice->billing_period_start)->toBeInstanceOf(Carbon::class);
+            expect($invoice->billing_period_end)->toBeInstanceOf(Carbon::class);
         });
 
         it('casts issued_at as a datetime', function () {
             $invoice = Invoice::factory()->issued()->create();
 
-            expect($invoice->issued_at)->toBeInstanceOf(\Illuminate\Support\Carbon::class);
+            expect($invoice->issued_at)->toBeInstanceOf(Carbon::class);
         });
 
     });

@@ -6,8 +6,8 @@ namespace App\Enums;
 
 enum InvoiceStatus: string
 {
-    case Draft  = 'draft';
+    case Draft = 'draft';
     case Issued = 'issued';
-    case Sent   = 'sent';
-    case Paid   = 'paid';
+    case Sent = 'sent';
+    case Paid = 'paid';
 }

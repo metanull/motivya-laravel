@@ -30,25 +30,25 @@ class InvoiceFactory extends Factory
         $end = (clone $start)->modify('last day of this month');
 
         return [
-            'type'                 => InvoiceType::Invoice->value,
-            'coach_id'             => User::factory()->coach(),
-            'sport_session_id'     => null,
+            'type' => InvoiceType::Invoice->value,
+            'coach_id' => User::factory()->coach(),
+            'sport_session_id' => null,
             'billing_period_start' => $start->format('Y-m-d'),
-            'billing_period_end'   => $end->format('Y-m-d'),
-            'revenue_ttc'          => $revenueTtc,
-            'revenue_htva'         => $revenueHtva,
-            'vat_amount'           => $vatAmount,
-            'stripe_fee'           => (int) round($revenueTtc * 15 / 1000),
-            'subscription_fee'     => 0,
-            'commission_amount'    => $commissionAmount,
-            'coach_payout'         => $coachPayout,
-            'platform_margin'      => $commissionAmount,
-            'plan_applied'         => 'freemium',
-            'tax_category_code'    => 'S',
-            'xml_path'             => null,
-            'issued_at'            => null,
-            'status'               => InvoiceStatus::Draft->value,
-            'related_invoice_id'   => null,
+            'billing_period_end' => $end->format('Y-m-d'),
+            'revenue_ttc' => $revenueTtc,
+            'revenue_htva' => $revenueHtva,
+            'vat_amount' => $vatAmount,
+            'stripe_fee' => (int) round($revenueTtc * 15 / 1000),
+            'subscription_fee' => 0,
+            'commission_amount' => $commissionAmount,
+            'coach_payout' => $coachPayout,
+            'platform_margin' => $commissionAmount,
+            'plan_applied' => 'freemium',
+            'tax_category_code' => 'S',
+            'xml_path' => null,
+            'issued_at' => null,
+            'status' => InvoiceStatus::Draft->value,
+            'related_invoice_id' => null,
         ];
     }
 
@@ -70,7 +70,7 @@ class InvoiceFactory extends Factory
     public function issued(): static
     {
         return $this->state([
-            'status'    => InvoiceStatus::Issued->value,
+            'status' => InvoiceStatus::Issued->value,
             'issued_at' => now(),
         ]);
     }
@@ -78,7 +78,7 @@ class InvoiceFactory extends Factory
     public function sent(): static
     {
         return $this->state([
-            'status'    => InvoiceStatus::Sent->value,
+            'status' => InvoiceStatus::Sent->value,
             'issued_at' => now(),
         ]);
     }
@@ -86,7 +86,7 @@ class InvoiceFactory extends Factory
     public function paid(): static
     {
         return $this->state([
-            'status'    => InvoiceStatus::Paid->value,
+            'status' => InvoiceStatus::Paid->value,
             'issued_at' => now(),
         ]);
     }
@@ -100,7 +100,7 @@ class InvoiceFactory extends Factory
     {
         return $this->state([
             'tax_category_code' => 'E',
-            'vat_amount'        => 0,
+            'vat_amount' => 0,
         ]);
     }
 }
