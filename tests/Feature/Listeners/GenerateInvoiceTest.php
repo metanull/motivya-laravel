@@ -134,7 +134,7 @@ describe('GenerateInvoiceOnSessionCompletion', function () {
         Storage::assertExists($invoice->xml_path);
     });
 
-    it('does not create an invoice when the session has no confirmed bookings', function () {
+    it('creates an invoice with zero revenue when the session has no confirmed bookings', function () {
         $coach = User::factory()->coach()->create();
         CoachProfile::factory()->vatSubject()->create(['user_id' => $coach->id]);
 
@@ -145,7 +145,7 @@ describe('GenerateInvoiceOnSessionCompletion', function () {
 
         event(new SessionCompleted($session));
 
-        // Invoice should still be created (zero revenue is valid for record keeping)
+        // Invoice should be created (zero revenue is valid for record keeping)
         $this->assertDatabaseCount('invoices', 1);
 
         $invoice = Invoice::first();

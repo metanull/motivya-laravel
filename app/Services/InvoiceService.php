@@ -48,10 +48,12 @@ final class InvoiceService
 
             // Sum all confirmed booking amounts (revenue TTC in cents).
             $revenueTtc = (int) $session->bookings()
-                ->where('status', BookingStatus::Confirmed)
+                ->where('status', BookingStatus::Confirmed->value)
                 ->sum('amount_paid');
 
             // Estimate Stripe processing fee at the standard 1.5% rate.
+            // Note: excludes the per-transaction fixed fee (€0.25 for Bancontact)
+            // as it is applied per-booking, not as a single session-level deduction.
             $stripeFeeCents = (int) round($revenueTtc * 15 / 1000);
 
             // Compute the payout breakdown (picks the best plan automatically).
