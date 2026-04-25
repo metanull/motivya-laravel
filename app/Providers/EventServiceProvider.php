@@ -4,14 +4,21 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Events\BookingCancelled;
+use App\Events\BookingCreated;
 use App\Events\CoachApproved;
 use App\Events\CoachRejected;
 use App\Events\NewCoachApplication;
 use App\Events\SessionCancelled;
+use App\Events\SessionConfirmed;
 use App\Listeners\NotifyAdminsOfNewApplication;
 use App\Listeners\RefundAllBookingsOnSessionCancellation;
+use App\Listeners\SendBookingCancelledNotification;
+use App\Listeners\SendBookingConfirmedNotification;
 use App\Listeners\SendCoachApprovedNotification;
 use App\Listeners\SendCoachRejectedNotification;
+use App\Listeners\SendSessionCancelledNotification;
+use App\Listeners\SendSessionConfirmedNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 final class EventServiceProvider extends ServiceProvider
@@ -31,6 +38,16 @@ final class EventServiceProvider extends ServiceProvider
         ],
         SessionCancelled::class => [
             RefundAllBookingsOnSessionCancellation::class,
+            SendSessionCancelledNotification::class,
+        ],
+        SessionConfirmed::class => [
+            SendSessionConfirmedNotification::class,
+        ],
+        BookingCreated::class => [
+            SendBookingConfirmedNotification::class,
+        ],
+        BookingCancelled::class => [
+            SendBookingCancelledNotification::class,
         ],
     ];
 }

@@ -38,6 +38,7 @@ class SportSession extends Model
         'status',
         'cover_image_id',
         'recurrence_group_id',
+        'reminder_sent_at',
     ];
 
     /**
@@ -57,6 +58,7 @@ class SportSession extends Model
             'latitude' => 'decimal:7',
             'longitude' => 'decimal:7',
             'cover_image_id' => 'integer',
+            'reminder_sent_at' => 'datetime',
         ];
     }
 

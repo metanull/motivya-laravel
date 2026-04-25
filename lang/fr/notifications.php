@@ -51,4 +51,38 @@ return [
     'new_coach_application_action' => 'Voir les candidatures',
     'new_coach_application_body_short' => 'Une nouvelle candidature de coach a été soumise.',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Rappel de séance
+    |--------------------------------------------------------------------------
+    */
+
+    'session_reminder_subject' => 'Rappel : séance demain',
+    'session_reminder_body' => 'Votre séance :activity a lieu demain à :time.',
+    'view_session' => 'Voir la séance',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Confirmation / annulation de réservation
+    |--------------------------------------------------------------------------
+    */
+
+    'booking_confirmed_subject' => 'Réservation confirmée',
+    'booking_confirmed_body' => 'Votre réservation pour :activity le :date à :time est confirmée.',
+    'booking_cancelled_subject' => 'Réservation annulée',
+    'booking_cancelled_body' => 'Votre réservation pour :activity le :date a été annulée.',
+    'booking_cancelled_refund' => 'Vous êtes éligible à un remboursement.',
+    'view_booking' => 'Voir ma réservation',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Confirmation / annulation de séance
+    |--------------------------------------------------------------------------
+    */
+
+    'session_confirmed_subject' => 'Séance confirmée',
+    'session_confirmed_body' => 'La séance :activity du :date à :time est confirmée !',
+    'session_cancelled_subject' => 'Séance annulée',
+    'session_cancelled_body' => 'La séance :activity du :date a été annulée.',
+
 ];

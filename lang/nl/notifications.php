@@ -51,4 +51,38 @@ return [
     'new_coach_application_action' => 'Aanvragen bekijken',
     'new_coach_application_body_short' => 'Er is een nieuwe coachaanvraag ingediend.',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Sessieherinnering
+    |--------------------------------------------------------------------------
+    */
+
+    'session_reminder_subject' => 'Herinnering: sessie morgen',
+    'session_reminder_body' => 'Uw :activity sessie is morgen om :time.',
+    'view_session' => 'Sessie bekijken',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Reserveringsbevestiging / -annulering
+    |--------------------------------------------------------------------------
+    */
+
+    'booking_confirmed_subject' => 'Reservering bevestigd',
+    'booking_confirmed_body' => 'Uw reservering voor :activity op :date om :time is bevestigd.',
+    'booking_cancelled_subject' => 'Reservering geannuleerd',
+    'booking_cancelled_body' => 'Uw reservering voor :activity op :date is geannuleerd.',
+    'booking_cancelled_refund' => 'U komt in aanmerking voor een terugbetaling.',
+    'view_booking' => 'Mijn reservering bekijken',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Sessiebevestiging / -annulering
+    |--------------------------------------------------------------------------
+    */
+
+    'session_confirmed_subject' => 'Sessie bevestigd',
+    'session_confirmed_body' => 'De :activity sessie op :date om :time is bevestigd!',
+    'session_cancelled_subject' => 'Sessie geannuleerd',
+    'session_cancelled_body' => 'De :activity sessie op :date is geannuleerd.',
+
 ];
