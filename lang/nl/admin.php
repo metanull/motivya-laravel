@@ -47,4 +47,25 @@ return [
     'image_uploaded' => 'Afbeelding succesvol geüpload.',
     'image_deleted' => 'Afbeelding succesvol verwijderd.',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin — Database Export
+    |--------------------------------------------------------------------------
+    */
+
+    'data_export_title' => 'Database-export',
+    'data_export_heading' => 'Database-export',
+    'data_export_description' => 'Download volledige CSV-exports van de database voor coaches, sessies en betalingen.',
+
+    'export_coaches_title' => 'Coaches',
+    'export_coaches_description' => 'Alle geregistreerde coaches en hun profielgegevens.',
+
+    'export_sessions_title' => 'Sessies',
+    'export_sessions_description' => 'Alle sporten sessies met coach- en planningsinformatie.',
+
+    'export_payments_title' => 'Betalingen',
+    'export_payments_description' => 'Alle boekingen en betalingstransacties.',
+
+    'export_csv' => 'Exporteren als CSV',
+
 ];

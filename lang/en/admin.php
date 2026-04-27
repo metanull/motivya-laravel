@@ -47,4 +47,25 @@ return [
     'image_uploaded' => 'Image uploaded successfully.',
     'image_deleted' => 'Image deleted successfully.',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin — Database Export
+    |--------------------------------------------------------------------------
+    */
+
+    'data_export_title' => 'Database Export',
+    'data_export_heading' => 'Database Export',
+    'data_export_description' => 'Download full CSV dumps of the database for coaches, sessions, and payments.',
+
+    'export_coaches_title' => 'Coaches',
+    'export_coaches_description' => 'All registered coaches and their profile details.',
+
+    'export_sessions_title' => 'Sessions',
+    'export_sessions_description' => 'All sport sessions with coach and schedule information.',
+
+    'export_payments_title' => 'Payments',
+    'export_payments_description' => 'All bookings and payment transactions.',
+
+    'export_csv' => 'Export CSV',
+
 ];
