@@ -114,17 +114,15 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-                {{-- Revenue TTC --}}
-                @php $expectedRevenueTtc = $invoice->revenue_ttc; @endphp
+                {{-- Revenue TTC (reference value — no formula check) --}}
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td class="px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('accountant.detail_revenue_ttc') }}</td>
                     <td class="px-6 py-3 text-right text-sm text-gray-900 dark:text-gray-100"><x-money :cents="$invoice->revenue_ttc" /></td>
                     <td class="px-6 py-3 text-right text-sm text-gray-500 dark:text-gray-400">—</td>
-                    <td class="px-6 py-3 text-center text-sm">✓</td>
+                    <td class="px-6 py-3 text-center text-sm text-green-600 dark:text-green-400">✓</td>
                 </tr>
 
                 {{-- Revenue HTVA --}}
-                @php $expectedHtva = intdiv($invoice->revenue_ttc * 100 + 60, 121); @endphp
                 <tr class="{{ $this->discrepancies['revenue_htva'] ? 'bg-red-50 dark:bg-red-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700' }}">
                     <td class="px-6 py-3 text-sm font-medium {{ $this->discrepancies['revenue_htva'] ? 'text-red-700 dark:text-red-300' : 'text-gray-700 dark:text-gray-300' }}">
                         {{ __('accountant.detail_revenue_htva') }}
@@ -132,7 +130,7 @@
                     <td class="px-6 py-3 text-right text-sm {{ $this->discrepancies['revenue_htva'] ? 'font-semibold text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100' }}">
                         <x-money :cents="$invoice->revenue_htva" />
                     </td>
-                    <td class="px-6 py-3 text-right text-sm text-gray-500 dark:text-gray-400"><x-money :cents="$expectedHtva" /></td>
+                    <td class="px-6 py-3 text-right text-sm text-gray-500 dark:text-gray-400"><x-money :cents="$this->expectedRevenueHtva" /></td>
                     <td class="px-6 py-3 text-center text-sm">
                         @if ($this->discrepancies['revenue_htva'])
                             <span class="font-bold text-red-600 dark:text-red-400">✗</span>
@@ -142,16 +140,15 @@
                     </td>
                 </tr>
 
-                {{-- VAT Amount --}}
+                {{-- VAT Amount (informational — derived from HTVA × rate, stored separately) --}}
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                     <td class="px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('accountant.detail_vat_amount') }}</td>
                     <td class="px-6 py-3 text-right text-sm text-gray-900 dark:text-gray-100"><x-money :cents="$invoice->vat_amount" /></td>
                     <td class="px-6 py-3 text-right text-sm text-gray-500 dark:text-gray-400">—</td>
-                    <td class="px-6 py-3 text-center text-sm">✓</td>
+                    <td class="px-6 py-3 text-center text-sm text-green-600 dark:text-green-400">✓</td>
                 </tr>
 
                 {{-- Stripe Fee --}}
-                @php $expectedStripeFee = (int) round($invoice->revenue_ttc * 15 / 1000); @endphp
                 <tr class="{{ $this->discrepancies['stripe_fee'] ? 'bg-red-50 dark:bg-red-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700' }}">
                     <td class="px-6 py-3 text-sm font-medium {{ $this->discrepancies['stripe_fee'] ? 'text-red-700 dark:text-red-300' : 'text-gray-700 dark:text-gray-300' }}">
                         {{ __('accountant.detail_stripe_fee') }}
@@ -159,7 +156,7 @@
                     <td class="px-6 py-3 text-right text-sm {{ $this->discrepancies['stripe_fee'] ? 'font-semibold text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100' }}">
                         <x-money :cents="$invoice->stripe_fee" />
                     </td>
-                    <td class="px-6 py-3 text-right text-sm text-gray-500 dark:text-gray-400"><x-money :cents="$expectedStripeFee" /></td>
+                    <td class="px-6 py-3 text-right text-sm text-gray-500 dark:text-gray-400"><x-money :cents="$this->expectedStripeFee" /></td>
                     <td class="px-6 py-3 text-center text-sm">
                         @if ($this->discrepancies['stripe_fee'])
                             <span class="font-bold text-red-600 dark:text-red-400">✗</span>
@@ -192,11 +189,10 @@
                     <td class="px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('accountant.detail_commission_rate') }}</td>
                     <td class="px-6 py-3 text-right text-sm text-gray-900 dark:text-gray-100">—</td>
                     <td class="px-6 py-3 text-right text-sm text-gray-500 dark:text-gray-400">{{ $this->expectedCommissionRate }} %</td>
-                    <td class="px-6 py-3 text-center text-sm">✓</td>
+                    <td class="px-6 py-3 text-center text-sm text-green-600 dark:text-green-400">✓</td>
                 </tr>
 
                 {{-- Commission Amount --}}
-                @php $expectedCommissionAmt = (int) round($expectedHtva * $this->expectedCommissionRate / 100); @endphp
                 <tr class="{{ $this->discrepancies['commission_amount'] ? 'bg-red-50 dark:bg-red-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700' }}">
                     <td class="px-6 py-3 text-sm font-medium {{ $this->discrepancies['commission_amount'] ? 'text-red-700 dark:text-red-300' : 'text-gray-700 dark:text-gray-300' }}">
                         {{ __('accountant.detail_commission_amount') }}
@@ -204,7 +200,7 @@
                     <td class="px-6 py-3 text-right text-sm {{ $this->discrepancies['commission_amount'] ? 'font-semibold text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100' }}">
                         <x-money :cents="$invoice->commission_amount" />
                     </td>
-                    <td class="px-6 py-3 text-right text-sm text-gray-500 dark:text-gray-400"><x-money :cents="$expectedCommissionAmt" /></td>
+                    <td class="px-6 py-3 text-right text-sm text-gray-500 dark:text-gray-400"><x-money :cents="$this->expectedCommissionAmount" /></td>
                     <td class="px-6 py-3 text-center text-sm">
                         @if ($this->discrepancies['commission_amount'])
                             <span class="font-bold text-red-600 dark:text-red-400">✗</span>
@@ -215,7 +211,6 @@
                 </tr>
 
                 {{-- Coach Payout --}}
-                @php $expectedCoachPayout = $expectedHtva - $expectedCommissionAmt - $expectedStripeFee - $this->expectedSubscriptionFee; @endphp
                 <tr class="{{ $this->discrepancies['coach_payout'] ? 'bg-red-50 dark:bg-red-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700' }}">
                     <td class="px-6 py-3 text-sm font-medium {{ $this->discrepancies['coach_payout'] ? 'text-red-700 dark:text-red-300' : 'text-gray-700 dark:text-gray-300' }}">
                         {{ __('accountant.detail_coach_payout') }}
@@ -223,7 +218,7 @@
                     <td class="px-6 py-3 text-right text-sm {{ $this->discrepancies['coach_payout'] ? 'font-semibold text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100' }}">
                         <x-money :cents="$invoice->coach_payout" />
                     </td>
-                    <td class="px-6 py-3 text-right text-sm text-gray-500 dark:text-gray-400"><x-money :cents="$expectedCoachPayout" /></td>
+                    <td class="px-6 py-3 text-right text-sm text-gray-500 dark:text-gray-400"><x-money :cents="$this->expectedCoachPayout" /></td>
                     <td class="px-6 py-3 text-center text-sm">
                         @if ($this->discrepancies['coach_payout'])
                             <span class="font-bold text-red-600 dark:text-red-400">✗</span>
@@ -241,7 +236,7 @@
                     <td class="px-6 py-3 text-right text-sm {{ $this->discrepancies['platform_margin'] ? 'font-semibold text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100' }}">
                         <x-money :cents="$invoice->platform_margin" />
                     </td>
-                    <td class="px-6 py-3 text-right text-sm text-gray-500 dark:text-gray-400"><x-money :cents="$expectedCommissionAmt" /></td>
+                    <td class="px-6 py-3 text-right text-sm text-gray-500 dark:text-gray-400"><x-money :cents="$this->expectedPlatformMargin" /></td>
                     <td class="px-6 py-3 text-center text-sm">
                         @if ($this->discrepancies['platform_margin'])
                             <span class="font-bold text-red-600 dark:text-red-400">✗</span>
