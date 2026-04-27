@@ -105,4 +105,32 @@ return [
     'vat_subject_no' => 'Nee \u2014 Kleine onderneming / Vrijstellingsregeling',
     'vat_subject_hint' => 'Dit veld wordt beheerd door de platformbeheerder.',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Uitbetalingsgeschiedenis
+    |--------------------------------------------------------------------------
+    */
+
+    'payout_history_title' => 'Mijn uitbetalingsgeschiedenis',
+    'payout_history_heading' => 'Mijn uitbetalingsgeschiedenis',
+    'payout_col_number' => 'Nummer',
+    'payout_col_month' => 'Maand',
+    'payout_col_revenue' => 'Omzet (excl. BTW)',
+    'payout_col_commission' => 'Commissie',
+    'payout_col_payout' => 'Uitbetaling',
+    'payout_col_plan' => 'Plan',
+    'payout_col_status' => 'Status',
+    'payout_download_xml' => 'XML downloaden',
+    'payout_no_invoices' => 'Geen facturen gevonden.',
+    'payout_filter_status' => 'Status',
+    'payout_filter_all_statuses' => 'Alle statussen',
+    'payout_filter_reset' => 'Filters resetten',
+    'payout_status_draft' => 'Concept',
+    'payout_status_issued' => 'Uitgegeven',
+    'payout_status_sent' => 'Verzonden',
+    'payout_status_paid' => 'Betaald',
+    'plan_freemium' => 'Freemium',
+    'plan_active' => 'Actief',
+    'plan_premium' => 'Premium',
+
 ];

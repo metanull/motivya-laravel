@@ -105,4 +105,32 @@ return [
     'vat_subject_no' => 'No — Small business / Franchise regime',
     'vat_subject_hint' => 'This field is managed by the platform administrator.',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Payout History
+    |--------------------------------------------------------------------------
+    */
+
+    'payout_history_title' => 'My Payout History',
+    'payout_history_heading' => 'My Payout History',
+    'payout_col_number' => 'Number',
+    'payout_col_month' => 'Month',
+    'payout_col_revenue' => 'Revenue (excl. VAT)',
+    'payout_col_commission' => 'Commission',
+    'payout_col_payout' => 'Payout',
+    'payout_col_plan' => 'Plan',
+    'payout_col_status' => 'Status',
+    'payout_download_xml' => 'Download XML',
+    'payout_no_invoices' => 'No invoices found.',
+    'payout_filter_status' => 'Status',
+    'payout_filter_all_statuses' => 'All statuses',
+    'payout_filter_reset' => 'Reset filters',
+    'payout_status_draft' => 'Draft',
+    'payout_status_issued' => 'Issued',
+    'payout_status_sent' => 'Sent',
+    'payout_status_paid' => 'Paid',
+    'plan_freemium' => 'Freemium',
+    'plan_active' => 'Active',
+    'plan_premium' => 'Premium',
+
 ];
