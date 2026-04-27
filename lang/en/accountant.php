@@ -55,4 +55,7 @@ return [
     'detail_discrepancy_title' => 'Discrepancies detected',
     'detail_discrepancy_description' => 'One or more stored values do not match the expected formula. Rows highlighted in red require review.',
     'detail_view' => 'View',
+    'export_label' => 'Export:',
+    'export_csv' => 'CSV',
+    'export_excel' => 'Excel',
 ];

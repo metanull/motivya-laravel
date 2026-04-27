@@ -55,4 +55,7 @@ return [
     'detail_discrepancy_title' => 'Divergences détectées',
     'detail_discrepancy_description' => 'Une ou plusieurs valeurs stockées ne correspondent pas à la formule attendue. Les lignes surlignées en rouge nécessitent une vérification.',
     'detail_view' => 'Voir',
+    'export_label' => 'Exporter :',
+    'export_csv' => 'CSV',
+    'export_excel' => 'Excel',
 ];

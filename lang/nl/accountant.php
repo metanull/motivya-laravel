@@ -55,4 +55,7 @@ return [
     'detail_discrepancy_title' => 'Afwijkingen gedetecteerd',
     'detail_discrepancy_description' => 'Een of meer opgeslagen waarden komen niet overeen met de verwachte formule. Rijen gemarkeerd in rood vereisen controle.',
     'detail_view' => 'Bekijken',
+    'export_label' => 'Exporteren:',
+    'export_csv' => 'CSV',
+    'export_excel' => 'Excel',
 ];
