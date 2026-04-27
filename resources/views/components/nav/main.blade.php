@@ -30,27 +30,27 @@
                             {{ __('common.nav.sessions') }}
                         </a>
                     @else
-                        {{-- TODO: replace href with route('sessions.index') when public session listing is implemented --}}
                         <a
-                            href="#"
+                            href="{{ route('sessions.index') }}"
                             @class([
                                 'text-sm font-medium',
                                 'text-indigo-600 dark:text-indigo-400' => request()->routeIs('sessions.*'),
                                 'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white' => ! request()->routeIs('sessions.*'),
                             ])
+                            wire:navigate
                         >
                             {{ __('common.nav.sessions') }}
                         </a>
                     @endcan
                 @else
-                    {{-- TODO: replace href with route('sessions.index') when public session listing is implemented --}}
                     <a
-                        href="#"
+                        href="{{ route('sessions.index') }}"
                         @class([
                             'text-sm font-medium',
                             'text-indigo-600 dark:text-indigo-400' => request()->routeIs('sessions.*'),
                             'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white' => ! request()->routeIs('sessions.*'),
                         ])
+                        wire:navigate
                     >
                         {{ __('common.nav.sessions') }}
                     </a>

@@ -13,6 +13,7 @@ final class SessionPolicy
 {
     /**
      * Admin bypass — grants all abilities.
+     * Not invoked for guests (null user), so no null-guard is needed here.
      */
     public function before(User $user, string $ability): ?bool
     {
@@ -24,24 +25,24 @@ final class SessionPolicy
     }
 
     /**
-     * Any authenticated user can view the list of sessions.
+     * Guests and any authenticated user can view the list of sessions.
      */
-    public function viewAny(User $user): bool
+    public function viewAny(?User $user): bool
     {
         return true;
     }
 
     /**
-     * Any authenticated user can view published/confirmed sessions.
+     * Guests and any authenticated user can view published/confirmed sessions.
      * Coaches can also view their own drafts.
      */
-    public function view(User $user, SportSession $session): bool
+    public function view(?User $user, SportSession $session): bool
     {
         if (in_array($session->status, [SessionStatus::Published, SessionStatus::Confirmed], true)) {
             return true;
         }
 
-        return $user->role === UserRole::Coach && $user->id === $session->coach_id;
+        return $user !== null && $user->role === UserRole::Coach && $user->id === $session->coach_id;
     }
 
     /**

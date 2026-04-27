@@ -123,10 +123,27 @@ describe('session detail page', function () {
             ->assertSeeHtml(route('coaches.show', $coach));
     });
 
-    it('requires authentication', function () {
+    it('is accessible as a guest for published sessions', function () {
         $session = SportSession::factory()->published()->create();
 
         $this->get(route('sessions.show', $session))
-            ->assertRedirect(route('login'));
+            ->assertOk();
+    });
+
+    it('renders correctly for a guest viewing a published session', function () {
+        $session = SportSession::factory()->published()->create([
+            'title' => 'Public Yoga Flow',
+        ]);
+
+        Livewire::test(Show::class, ['sportSession' => $session])
+            ->assertOk()
+            ->assertSee('Public Yoga Flow');
+    });
+
+    it('returns 403 for guest accessing a draft session', function () {
+        $session = SportSession::factory()->draft()->create();
+
+        $this->get(route('sessions.show', $session))
+            ->assertForbidden();
     });
 });

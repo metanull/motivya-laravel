@@ -22,16 +22,16 @@
                     {{ __('common.nav.sessions') }}
                 </a>
             @else
-                {{-- TODO: replace href with route('sessions.index') when public session listing is implemented --}}
-                <a href="#"
-                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700">
+                <a href="{{ route('sessions.index') }}"
+                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+                   wire:navigate>
                     {{ __('common.nav.sessions') }}
                 </a>
             @endcan
         @else
-            {{-- TODO: replace href with route('sessions.index') when public session listing is implemented --}}
-            <a href="#"
-               class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700">
+            <a href="{{ route('sessions.index') }}"
+               class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+               wire:navigate>
                 {{ __('common.nav.sessions') }}
             </a>
         @endauth
