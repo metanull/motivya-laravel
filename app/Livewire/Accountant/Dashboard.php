@@ -48,6 +48,27 @@ final class Dashboard extends Component
     }
 
     /**
+     * Trigger a financial export download by navigating to the export route.
+     *
+     * The browser will download the file and stay on the dashboard because the
+     * response has Content-Disposition: attachment.
+     */
+    public function export(string $format = 'csv'): void
+    {
+        Gate::authorize('viewAny', Invoice::class);
+
+        $params = array_filter([
+            'format' => $format,
+            'dateFrom' => $this->dateFrom ?: null,
+            'dateTo' => $this->dateTo ?: null,
+            'coachId' => $this->coachId ?: null,
+            'type' => $this->type ?: null,
+        ]);
+
+        $this->redirect(route('accountant.export', $params), navigate: false);
+    }
+
+    /**
      * @return Collection<int, User>
      */
     #[Computed]

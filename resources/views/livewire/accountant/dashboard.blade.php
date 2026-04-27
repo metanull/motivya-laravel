@@ -84,6 +84,19 @@
         </div>
     </div>
 
+    {{-- Export --}}
+    <div class="mb-6 flex items-center justify-end gap-3">
+        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ __('accountant.export_label') }}</span>
+        <button wire:click="export('csv')"
+            class="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
+            {{ __('accountant.export_csv') }}
+        </button>
+        <button wire:click="export('excel')"
+            class="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
+            {{ __('accountant.export_excel') }}
+        </button>
+    </div>
+
     {{-- Table --}}
     <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
         <div class="overflow-x-auto">
