@@ -47,11 +47,9 @@ Route::get('/coach/apply', CoachApplication::class)
     ->name('coach.apply');
 
 Route::get('/sessions', SessionIndex::class)
-    ->middleware('auth')
     ->name('sessions.index');
 
 Route::get('/sessions/{sportSession}', SessionShow::class)
-    ->middleware('auth')
     ->name('sessions.show');
 
 Route::get('/coaches/{user}', CoachProfile::class)

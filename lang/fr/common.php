@@ -12,6 +12,7 @@ return [
 
     'nav' => [
         'sessions' => 'Séances',
+        'browse_sessions' => 'Parcourir les séances',
         'login' => 'Connexion',
         'register' => 'Inscription',
         'dashboard' => 'Tableau de bord',

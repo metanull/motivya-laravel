@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\SportSession;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Gate;
 
 uses(RefreshDatabase::class);
 
@@ -14,6 +15,10 @@ describe('viewAny', function () {
 
         expect($user->can('viewAny', SportSession::class))->toBeTrue();
     })->with(['coach', 'athlete', 'accountant', 'admin']);
+
+    it('allows guests to list sessions', function () {
+        expect(Gate::forUser(null)->check('viewAny', SportSession::class))->toBeTrue();
+    });
 });
 
 describe('view', function () {
@@ -30,6 +35,24 @@ describe('view', function () {
 
         expect($user->can('view', $session))->toBeTrue();
     })->with(['coach', 'athlete', 'accountant', 'admin']);
+
+    it('allows guests to view published sessions', function () {
+        $session = SportSession::factory()->published()->create();
+
+        expect(Gate::forUser(null)->check('view', $session))->toBeTrue();
+    });
+
+    it('allows guests to view confirmed sessions', function () {
+        $session = SportSession::factory()->confirmed()->create();
+
+        expect(Gate::forUser(null)->check('view', $session))->toBeTrue();
+    });
+
+    it('denies guests from viewing draft sessions', function () {
+        $session = SportSession::factory()->draft()->create();
+
+        expect(Gate::forUser(null)->check('view', $session))->toBeFalse();
+    });
 
     it('allows the owning coach to view their own draft sessions', function () {
         $coach = User::factory()->coach()->create();

@@ -23,9 +23,18 @@ describe('session discovery page', function () {
             ->assertOk();
     });
 
-    it('requires authentication', function () {
+    it('is accessible as a guest', function () {
+        SportSession::factory()->published()->count(3)->create();
+
         $this->get(route('sessions.index'))
-            ->assertRedirect(route('login'));
+            ->assertOk();
+    });
+
+    it('renders the discovery page for a guest', function () {
+        SportSession::factory()->published()->count(3)->create();
+
+        Livewire::test(Index::class)
+            ->assertOk();
     });
 
     it('shows only published and confirmed sessions', function () {

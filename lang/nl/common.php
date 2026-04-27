@@ -12,6 +12,7 @@ return [
 
     'nav' => [
         'sessions' => 'Sessies',
+        'browse_sessions' => 'Sessies bekijken',
         'login' => 'Inloggen',
         'register' => 'Registreren',
         'dashboard' => 'Dashboard',

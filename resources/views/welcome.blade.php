@@ -16,8 +16,16 @@
         {{-- Call to action --}}
         <div class="flex flex-col gap-3 sm:flex-row">
             <a
-                href="{{ route('register') }}"
+                href="{{ route('sessions.index') }}"
                 class="inline-flex h-12 items-center justify-center rounded-md bg-indigo-600 px-6 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                wire:navigate
+            >
+                {{ __('common.nav.browse_sessions') }}
+            </a>
+            @guest
+            <a
+                href="{{ route('register') }}"
+                class="inline-flex h-12 items-center justify-center rounded-md border border-gray-300 bg-white px-6 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
             >
                 {{ __('common.nav.register') }}
             </a>
@@ -27,6 +35,7 @@
             >
                 {{ __('common.nav.login') }}
             </a>
+            @endguest
         </div>
 
     </div>
