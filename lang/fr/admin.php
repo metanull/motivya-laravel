@@ -47,4 +47,25 @@ return [
     'image_uploaded' => 'Image téléchargée avec succès.',
     'image_deleted' => 'Image supprimée avec succès.',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin — Database Export
+    |--------------------------------------------------------------------------
+    */
+
+    'data_export_title' => 'Export de la base de données',
+    'data_export_heading' => 'Export de la base de données',
+    'data_export_description' => 'Téléchargez des exports CSV complets de la base de données pour les coachs, les séances et les paiements.',
+
+    'export_coaches_title' => 'Coachs',
+    'export_coaches_description' => 'Tous les coachs enregistrés et les détails de leur profil.',
+
+    'export_sessions_title' => 'Séances',
+    'export_sessions_description' => 'Toutes les séances sportives avec les informations du coach et du planning.',
+
+    'export_payments_title' => 'Paiements',
+    'export_payments_description' => 'Toutes les réservations et transactions de paiement.',
+
+    'export_csv' => 'Exporter en CSV',
+
 ];
