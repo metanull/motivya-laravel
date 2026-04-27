@@ -105,4 +105,32 @@ return [
     'vat_subject_no' => 'Non \u2014 Petite entreprise / R\u00e9gime de franchise',
     'vat_subject_hint' => 'Ce champ est g\u00e9r\u00e9 par l\u2019administrateur de la plateforme.',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Historique des versements
+    |--------------------------------------------------------------------------
+    */
+
+    'payout_history_title' => 'Mon historique de versements',
+    'payout_history_heading' => 'Mon historique de versements',
+    'payout_col_number' => 'Numéro',
+    'payout_col_month' => 'Mois',
+    'payout_col_revenue' => 'Revenu (HTVA)',
+    'payout_col_commission' => 'Commission',
+    'payout_col_payout' => 'Versement',
+    'payout_col_plan' => 'Plan',
+    'payout_col_status' => 'Statut',
+    'payout_download_xml' => 'Télécharger XML',
+    'payout_no_invoices' => 'Aucune facture trouvée.',
+    'payout_filter_status' => 'Statut',
+    'payout_filter_all_statuses' => 'Tous les statuts',
+    'payout_filter_reset' => 'Réinitialiser les filtres',
+    'payout_status_draft' => 'Brouillon',
+    'payout_status_issued' => 'Émis',
+    'payout_status_sent' => 'Envoyé',
+    'payout_status_paid' => 'Payé',
+    'plan_freemium' => 'Freemium',
+    'plan_active' => 'Actif',
+    'plan_premium' => 'Premium',
+
 ];
