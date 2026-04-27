@@ -8,6 +8,7 @@ use App\Events\BookingCancelled;
 use App\Events\BookingCreated;
 use App\Events\BookingRefunded;
 use App\Events\CoachApproved;
+use App\Events\CoachPayoutProcessed;
 use App\Events\CoachRejected;
 use App\Events\NewCoachApplication;
 use App\Events\SessionCancelled;
@@ -21,6 +22,7 @@ use App\Listeners\SendBookingCancelledNotification;
 use App\Listeners\SendBookingConfirmedNotification;
 use App\Listeners\SendCoachApprovedNotification;
 use App\Listeners\SendCoachRejectedNotification;
+use App\Listeners\SendPayoutNotification;
 use App\Listeners\SendSessionCancelledNotification;
 use App\Listeners\SendSessionConfirmedNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -46,6 +48,9 @@ final class EventServiceProvider extends ServiceProvider
         ],
         SessionConfirmed::class => [
             SendSessionConfirmedNotification::class,
+        ],
+        CoachPayoutProcessed::class => [
+            SendPayoutNotification::class,
         ],
         SessionCompleted::class => [
             GenerateInvoiceOnSessionCompletion::class,

@@ -85,4 +85,15 @@ return [
     'session_cancelled_subject' => 'Séance annulée',
     'session_cancelled_body' => 'La séance :activity du :date a été annulée.',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Paiement du coach
+    |--------------------------------------------------------------------------
+    */
+
+    'payout_processed_subject' => 'Paiement effectué',
+    'payout_processed_body' => 'Un virement de :amount a été effectué sur votre compte.',
+    'payout_processed_invoice' => 'Numéro de facture : :invoice_number',
+    'view_dashboard' => 'Voir le tableau de bord',
+
 ];
