@@ -29,6 +29,11 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->prefix('athlete')
                 ->name('athlete.')
                 ->group(base_path('routes/web/athlete.php'));
+
+            Route::middleware(['web', 'auth', 'role:accountant,admin', '2fa'])
+                ->prefix('accountant')
+                ->name('accountant.')
+                ->group(base_path('routes/web/accountant.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
