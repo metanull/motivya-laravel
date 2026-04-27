@@ -30,3 +30,6 @@ scripts/*.key
 # Docker
 .docker/.env.docker
 docker-compose.override.yml
+
+# Local temp files
+temp*.md
