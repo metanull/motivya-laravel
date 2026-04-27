@@ -85,4 +85,15 @@ return [
     'session_cancelled_subject' => 'Session cancelled',
     'session_cancelled_body' => 'The :activity session on :date has been cancelled.',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Coach Payout
+    |--------------------------------------------------------------------------
+    */
+
+    'payout_processed_subject' => 'Payout processed',
+    'payout_processed_body' => 'A transfer of :amount has been made to your account.',
+    'payout_processed_invoice' => 'Invoice number: :invoice_number',
+    'view_dashboard' => 'View dashboard',
+
 ];

@@ -85,4 +85,15 @@ return [
     'session_cancelled_subject' => 'Sessie geannuleerd',
     'session_cancelled_body' => 'De :activity sessie op :date is geannuleerd.',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Coach uitbetaling
+    |--------------------------------------------------------------------------
+    */
+
+    'payout_processed_subject' => 'Uitbetaling verwerkt',
+    'payout_processed_body' => 'Een overschrijving van :amount is gedaan op uw rekening.',
+    'payout_processed_invoice' => 'Factuurnummer: :invoice_number',
+    'view_dashboard' => 'Dashboard bekijken',
+
 ];
