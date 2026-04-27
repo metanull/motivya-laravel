@@ -188,6 +188,9 @@
                                 </span>
                             </button>
                         </th>
+
+                        {{-- Actions --}}
+                        <th scope="col" class="px-4 py-3"></th>
                     </tr>
                 </thead>
 
@@ -267,10 +270,18 @@
                             <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
                                 {{ $invoice->issued_at?->format('Y-m-d') ?? '—' }}
                             </td>
+
+                            {{-- Detail link --}}
+                            <td class="whitespace-nowrap px-4 py-3 text-sm">
+                                <a href="{{ route('accountant.invoices.show', $invoice) }}"
+                                   class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200">
+                                    {{ __('accountant.detail_view') }}
+                                </a>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10"
+                            <td colspan="11"
                                 class="px-4 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
                                 {{ __('accountant.no_transactions') }}
                             </td>
