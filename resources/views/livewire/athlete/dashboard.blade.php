@@ -80,7 +80,13 @@
                     </div>
                 </div>
             @empty
-                <p class="py-8 text-center text-gray-500 dark:text-gray-400">{{ __('athlete.no_upcoming') }}</p>
+                <div class="py-8 text-center">
+                    <p class="text-gray-500 dark:text-gray-400">{{ __('athlete.no_upcoming') }}</p>
+                    <a href="{{ route('sessions.index') }}" wire:navigate
+                        class="mt-4 inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
+                        {{ __('athlete.no_upcoming_cta') }}
+                    </a>
+                </div>
             @endforelse
         @elseif ($tab === 'past')
             @forelse ($past as $booking)

@@ -151,6 +151,7 @@
                         class="block w-full rounded-md border-gray-300 pl-7 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
                         placeholder="15.00">
                 </div>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ __('sessions.price_hint') }}</p>
                 @error('form.priceEuros')
                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                 @enderror
@@ -162,6 +163,7 @@
                 </label>
                 <input type="number" wire:model="form.minParticipants" id="minParticipants" min="1"
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm">
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ __('sessions.min_participants_hint') }}</p>
                 @error('form.minParticipants')
                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                 @enderror
@@ -173,6 +175,7 @@
                 </label>
                 <input type="number" wire:model="form.maxParticipants" id="maxParticipants" min="1"
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm">
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ __('sessions.max_participants_hint') }}</p>
                 @error('form.maxParticipants')
                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                 @enderror

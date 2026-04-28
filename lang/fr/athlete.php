@@ -16,6 +16,7 @@ return [
     'tab_upcoming' => 'À venir',
     'tab_past' => 'Passées',
     'no_upcoming' => "Vous n'avez aucune réservation à venir.",
+    'no_upcoming_cta' => 'Explorer les séances disponibles',
     'no_past' => "Vous n'avez aucune réservation passée.",
     'quick_link_explore' => 'Explorer les séances',
     'quick_link_favourites' => 'Favoris',
