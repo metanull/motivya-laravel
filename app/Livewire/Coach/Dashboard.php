@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Coach;
 
 use App\Enums\SessionStatus;
+use App\Models\CoachProfile;
 use App\Models\SportSession;
 use App\Models\User;
 use App\Services\SessionService;
@@ -52,7 +53,7 @@ final class Dashboard extends Component
         /** @var User $coach */
         $coach = auth()->user();
 
-        /** @var \App\Models\CoachProfile|null $coachProfile */
+        /** @var CoachProfile|null $coachProfile */
         $coachProfile = $coach->coachProfile;
 
         $upcoming = SportSession::where('coach_id', $coach->id)
