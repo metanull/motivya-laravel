@@ -116,8 +116,8 @@ final class StripeConnectService
             return false;
         }
 
-        $detailsSubmitted = (bool) ($account->details_submitted ?? false);
-        $chargesEnabled = (bool) ($account->charges_enabled ?? false);
+        $detailsSubmitted = $account->details_submitted ?? false;
+        $chargesEnabled = $account->charges_enabled ?? false;
 
         if (! $detailsSubmitted || ! $chargesEnabled) {
             return false;

@@ -29,7 +29,7 @@ final class StripeOnboardingController extends Controller
     {
         $coachProfile = $request->user()?->coachProfile;
 
-        if ($coachProfile !== null && is_string($coachProfile->stripe_account_id) && $coachProfile->stripe_account_id !== '') {
+        if ($coachProfile !== null) {
             $stripeConnectService->syncOnboardingStatus($coachProfile);
         }
 
