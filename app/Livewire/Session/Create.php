@@ -54,10 +54,7 @@ final class Create extends Component
             'activityTypes' => ActivityType::cases(),
             'levels' => SessionLevel::cases(),
             'coverImages' => $coverImages,
-            'stripeReady' => $coachProfile !== null
-                && is_string($coachProfile->stripe_account_id)
-                && $coachProfile->stripe_account_id !== ''
-                && $coachProfile->stripe_onboarding_complete,
+            'stripeReady' => $coachProfile?->isStripeReady() ?? false,
         ])->title(__('sessions.create_title'));
     }
 }
