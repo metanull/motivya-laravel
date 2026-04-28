@@ -1,0 +1,11 @@
+# Motivya local infrastructure configuration (PowerShell)
+#
+# Copy this file to infra.local.ps1 and fill in the real values.
+# infra.local.ps1 is gitignored and must NEVER be committed.
+#
+# Used by: rotate-sshkey.ps1 (dot-sourced automatically when present)
+
+$VpsRemote   = ''   # VPS IP or hostname, e.g. '203.0.113.10'
+$VpsDomain   = ''   # Domain for the SSH key comment, e.g. 'example.com'
+$VpsUsername = 'deploy'
+$VpsKeyname  = 'motivya_deploy'

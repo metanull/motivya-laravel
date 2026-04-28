@@ -1,0 +1,13 @@
+# Motivya local infrastructure configuration
+#
+# Copy this file to infra.local and fill in the real values.
+# infra.local is gitignored and must NEVER be committed.
+#
+# Used by: provision.sh and deploy.sh (source this file before running them,
+#          or export these variables as environment variables).
+
+# The application domain (used for Nginx vhost, APP_URL, SSL cert)
+MOTIVYA_DOMAIN=""          # e.g. motivya.example.com
+
+# Admin email used as the Let's Encrypt contact for the SSL certificate
+MOTIVYA_ADMIN_EMAIL=""     # e.g. admin@example.com

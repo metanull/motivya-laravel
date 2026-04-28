@@ -3,6 +3,8 @@
 .env
 .env.backup
 .env.production
+/scripts/infra.local
+/scripts/infra.local.ps1
 .phpactor.json
 .phpunit.result.cache
 /.fleet
