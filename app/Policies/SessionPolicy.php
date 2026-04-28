@@ -8,6 +8,7 @@ use App\Enums\SessionStatus;
 use App\Enums\UserRole;
 use App\Models\SportSession;
 use App\Models\User;
+use Carbon\Carbon;
 
 final class SessionPolicy
 {
@@ -95,5 +96,26 @@ final class SessionPolicy
     public function favourite(User $user, SportSession $session): bool
     {
         return $user->role === UserRole::Athlete;
+    }
+
+    /**
+     * Accountants (and admins, via before()) may manually complete a confirmed session
+     * whose end time has already passed.
+     */
+    public function manualComplete(User $user, SportSession $session): bool
+    {
+        if ($session->status !== SessionStatus::Confirmed) {
+            return false;
+        }
+
+        $sessionEnd = Carbon::parse(
+            $session->date->format('Y-m-d').' '.$session->end_time,
+        );
+
+        if ($sessionEnd->gt(now())) {
+            return false;
+        }
+
+        return $user->role === UserRole::Accountant;
     }
 }

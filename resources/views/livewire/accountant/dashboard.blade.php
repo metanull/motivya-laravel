@@ -4,6 +4,9 @@
         <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ __('accountant.dashboard_heading') }}</h1>
     </div>
 
+    {{-- Stuck sessions queue --}}
+    <livewire:accountant.stuck-sessions-queue />
+
     {{-- Filters --}}
     <div class="mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
