@@ -131,4 +131,14 @@ return [
     'geo_denied' => 'Toegang tot locatie geweigerd. Postcodesearch wordt gebruikt.',
     'map_title' => 'Sessies op de kaart',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Beschikbaarheid betaling
+    |--------------------------------------------------------------------------
+    */
+
+    'stripe_not_ready_heading' => 'Betalingsinstelling onvolledig',
+    'stripe_not_ready_body' => 'U kunt deze sessie opslaan, maar sporters kunnen deze pas boeken als u uw Stripe-betalingsinstelling heeft voltooid.',
+    'stripe_not_ready_action' => 'Stripe-betalingen instellen →',
+
 ];

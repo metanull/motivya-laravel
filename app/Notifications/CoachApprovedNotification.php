@@ -37,7 +37,8 @@ class CoachApprovedNotification extends Notification implements ShouldQueue
             ->line(__('notifications.coach_approved_specialties', [
                 'specialties' => implode(', ', $profile->specialties ?? []),
             ]))
-            ->action(__('notifications.coach_approved_action'), url('/'))
+            ->action(__('notifications.coach_approved_action'), route('coach.stripe.onboard'))
+            ->line(__('notifications.coach_approved_stripe_hint'))
             ->line(__('notifications.thanks'));
     }
 

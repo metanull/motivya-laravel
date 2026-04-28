@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/dashboard', CoachDashboard::class)->name('dashboard');
 Route::get('/profile/edit', CoachProfileEdit::class)->name('profile.edit');
+Route::get('/stripe/onboard', [StripeOnboardingController::class, 'start'])->name('stripe.onboard');
 Route::get('/stripe/return', [StripeOnboardingController::class, 'handleReturn'])->name('stripe.return');
 Route::get('/stripe/refresh', [StripeOnboardingController::class, 'refresh'])->name('stripe.refresh');
 Route::get('/sessions/create', SessionCreate::class)->name('sessions.create');

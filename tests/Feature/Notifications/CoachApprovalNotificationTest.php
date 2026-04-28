@@ -88,6 +88,15 @@ describe('Coach Approval Notifications', function () {
         expect($mail->subject)->toBe(__('notifications.coach_approved_subject'));
     });
 
+    it('approved notification mail action url points to stripe onboarding', function () {
+        $profile = CoachProfile::factory()->approved()->create();
+
+        $notification = new CoachApprovedNotification($profile->id);
+        $mail = $notification->toMail($profile->user);
+
+        expect($mail->actionUrl)->toBe(route('coach.stripe.onboard'));
+    });
+
     it('rejected notification mail contains rejection reason', function () {
         $profile = CoachProfile::factory()->pending()->create();
         $reason = 'Missing documentation';

@@ -131,4 +131,14 @@ return [
     'geo_denied' => 'L\'accès à la position a été refusé. Recherche par code postal utilisée.',
     'map_title' => 'Séances sur la carte',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Disponibilité de paiement
+    |--------------------------------------------------------------------------
+    */
+
+    'stripe_not_ready_heading' => 'Configuration des paiements incomplète',
+    'stripe_not_ready_body' => 'Vous pouvez enregistrer cette séance, mais les sportifs ne pourront pas la réserver tant que vous n\'avez pas complété votre configuration de paiement Stripe.',
+    'stripe_not_ready_action' => 'Configurer les paiements Stripe →',
+
 ];

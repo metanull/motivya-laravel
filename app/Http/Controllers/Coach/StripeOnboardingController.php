@@ -11,6 +11,20 @@ use Illuminate\Http\Request;
 
 final class StripeOnboardingController extends Controller
 {
+    /**
+     * Begin Stripe Express onboarding: create the account (if needed) and redirect to Stripe.
+     */
+    public function start(Request $request, StripeConnectService $stripeConnectService): RedirectResponse
+    {
+        $coachProfile = $request->user()?->coachProfile;
+
+        abort_if($coachProfile === null, 403);
+
+        $stripeConnectService->createExpressAccount($coachProfile);
+
+        return redirect()->away($stripeConnectService->generateOnboardingLink($coachProfile));
+    }
+
     public function handleReturn(): RedirectResponse
     {
         return redirect()->route('coach.dashboard');

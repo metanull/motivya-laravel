@@ -86,6 +86,10 @@ return [
     'stat_avg_fill_rate' => 'Gem. bezettingsgraad',
     'stat_total_revenue' => 'Totale omzet',
     'preview' => 'Voorbeeld',
+    'stripe_setup_required_heading' => 'Betalingsinstelling vereist',
+    'stripe_setup_required_body' => 'Om boekingen te accepteren en betalingen te ontvangen, moet u uw Stripe-account verbinden. Uw sessies zijn niet boekbaar totdat deze stap is voltooid.',
+    'stripe_setup_start' => 'Stripe-account verbinden',
+    'stripe_setup_continue' => 'Stripe-instelling voortzetten',
 
     /*
     |--------------------------------------------------------------------------

@@ -86,6 +86,10 @@ return [
     'stat_avg_fill_rate' => 'Taux de remplissage',
     'stat_total_revenue' => 'Revenu total',
     'preview' => 'Aperçu',
+    'stripe_setup_required_heading' => 'Configuration des paiements requise',
+    'stripe_setup_required_body' => 'Pour accepter des réservations et recevoir des paiements, vous devez connecter votre compte Stripe. Vos séances ne seront pas réservables tant que cette étape n\'est pas complétée.',
+    'stripe_setup_start' => 'Connecter le compte Stripe',
+    'stripe_setup_continue' => 'Continuer la configuration Stripe',
 
     /*
     |--------------------------------------------------------------------------

@@ -33,7 +33,8 @@ return [
     'coach_approved_subject' => 'Uw coachaanvraag is goedgekeurd!',
     'coach_approved_body' => 'Gefeliciteerd! Uw coachaanvraag op Motivya is goedgekeurd.',
     'coach_approved_specialties' => 'Uw specialiteiten: :specialties.',
-    'coach_approved_action' => 'Ga naar mijn dashboard',
+    'coach_approved_action' => 'Betalingen instellen en aan de slag',
+    'coach_approved_stripe_hint' => 'Om boekingen te accepteren en betalingen te ontvangen, moet u uw Stripe-account verbinden. Klik op de knop hierboven om te beginnen — het duurt slechts een paar minuten.',
 
     'coach_rejected_subject' => 'Uw coachaanvraag is niet aanvaard',
     'coach_rejected_body' => 'Het spijt ons, uw coachaanvraag op Motivya is niet aanvaard.',

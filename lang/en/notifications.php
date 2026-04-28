@@ -33,7 +33,8 @@ return [
     'coach_approved_subject' => 'Your coach application has been approved!',
     'coach_approved_body' => 'Congratulations! Your coach application on Motivya has been approved.',
     'coach_approved_specialties' => 'Your specialties: :specialties.',
-    'coach_approved_action' => 'Go to my dashboard',
+    'coach_approved_action' => 'Set up payments and get started',
+    'coach_approved_stripe_hint' => 'To accept bookings and receive payments, you need to connect your Stripe account. Click the button above to get started — it only takes a few minutes.',
 
     'coach_rejected_subject' => 'Your coach application was not accepted',
     'coach_rejected_body' => 'We are sorry, your coach application on Motivya was not accepted.',

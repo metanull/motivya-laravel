@@ -33,7 +33,8 @@ return [
     'coach_approved_subject' => 'Votre candidature de coach a été approuvée !',
     'coach_approved_body' => 'Félicitations ! Votre candidature de coach sur Motivya a été approuvée.',
     'coach_approved_specialties' => 'Vos spécialités : :specialties.',
-    'coach_approved_action' => 'Accéder à mon tableau de bord',
+    'coach_approved_action' => 'Configurer les paiements et démarrer',
+    'coach_approved_stripe_hint' => 'Pour accepter des réservations et recevoir des paiements, vous devez connecter votre compte Stripe. Cliquez sur le bouton ci-dessus pour commencer — cela ne prend que quelques minutes.',
 
     'coach_rejected_subject' => 'Votre candidature de coach n\'a pas été retenue',
     'coach_rejected_body' => 'Nous sommes désolés, votre candidature de coach sur Motivya n\'a pas été retenue.',

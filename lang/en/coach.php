@@ -86,6 +86,10 @@ return [
     'stat_avg_fill_rate' => 'Avg Fill Rate',
     'stat_total_revenue' => 'Total Revenue',
     'preview' => 'Preview',
+    'stripe_setup_required_heading' => 'Payment setup required',
+    'stripe_setup_required_body' => 'To accept bookings and receive payments, you need to connect your Stripe account. Your sessions will not be bookable until this step is completed.',
+    'stripe_setup_start' => 'Connect Stripe account',
+    'stripe_setup_continue' => 'Continue Stripe setup',
 
     /*
     |--------------------------------------------------------------------------
