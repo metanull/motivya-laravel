@@ -10,21 +10,37 @@
 .PARAMETER keyname
     The base name of the SSH key (without .pub extension).
 .EXAMPLE
-    .\rotate-sshkey.ps1 -remote '51.75.246.163' -domain 'metanull.eu' -username 'deploy' -keyname 'motivya_deploy'
+    # Load values from scripts/infra.local.ps1 (gitignored) then run:
+    . .\infra.local.ps1
+    .\rotate-sshkey.ps1 -remote $VpsRemote -domain $VpsDomain -username $VpsUsername -keyname $VpsKeyname
 #>
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory)]
+    [Parameter(Mandatory = $false)]
     [string]$remote,
-    [Parameter(Mandatory)]
+    [Parameter(Mandatory = $false)]
 	[string]$domain,
-    [Parameter(Mandatory)]
+    [Parameter(Mandatory = $false)]
 	[string]$username,
-    [Parameter(Mandatory)]
+    [Parameter(Mandatory = $false)]
 	[string]$keyname
 )
 Begin {
     $ErrorActionPreference = 'Stop'
+
+    # Auto-load local infra config if present and params not already provided.
+    $infraLocal = Join-Path $PSScriptRoot 'infra.local.ps1'
+    if (Test-Path $infraLocal) {
+        . $infraLocal
+        if ([string]::IsNullOrEmpty($remote))   { $remote   = $VpsRemote }
+        if ([string]::IsNullOrEmpty($domain))   { $domain   = $VpsDomain }
+        if ([string]::IsNullOrEmpty($username)) { $username = $VpsUsername }
+        if ([string]::IsNullOrEmpty($keyname))  { $keyname  = $VpsKeyname }
+    }
+    if ([string]::IsNullOrEmpty($remote))   { throw 'Parameter -remote is required. Set \$VpsRemote in scripts/infra.local.ps1 or pass -remote explicitly.' }
+    if ([string]::IsNullOrEmpty($domain))   { throw 'Parameter -domain is required. Set \$VpsDomain in scripts/infra.local.ps1 or pass -domain explicitly.' }
+    if ([string]::IsNullOrEmpty($username)) { throw 'Parameter -username is required. Set \$VpsUsername in scripts/infra.local.ps1 or pass -username explicitly.' }
+    if ([string]::IsNullOrEmpty($keyname))  { throw 'Parameter -keyname is required. Set \$VpsKeyname in scripts/infra.local.ps1 or pass -keyname explicitly.' }
 
 	Function Get-SshKeyPath {
 		param(
