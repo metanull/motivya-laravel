@@ -25,8 +25,14 @@ final class StripeOnboardingController extends Controller
         return redirect()->away($stripeConnectService->generateOnboardingLink($coachProfile));
     }
 
-    public function handleReturn(): RedirectResponse
+    public function handleReturn(Request $request, StripeConnectService $stripeConnectService): RedirectResponse
     {
+        $coachProfile = $request->user()?->coachProfile;
+
+        if ($coachProfile !== null) {
+            $stripeConnectService->syncOnboardingStatus($coachProfile);
+        }
+
         return redirect()->route('coach.dashboard');
     }
 
@@ -35,6 +41,10 @@ final class StripeOnboardingController extends Controller
         $coachProfile = $request->user()?->coachProfile;
 
         abort_if($coachProfile === null || ! is_string($coachProfile->stripe_account_id) || $coachProfile->stripe_account_id === '', 404);
+
+        if ($stripeConnectService->syncOnboardingStatus($coachProfile)) {
+            return redirect()->route('coach.dashboard');
+        }
 
         return redirect()->away($stripeConnectService->generateOnboardingLink($coachProfile));
     }

@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Enums\CoachProfileStatus;
+use App\Events\CoachStripeOnboardingComplete;
 use App\Models\CoachProfile;
 use Closure;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use RuntimeException;
 use Stripe\Account;
@@ -18,6 +20,7 @@ final class StripeConnectService
     public function __construct(
         private readonly ?Closure $createAccountUsing = null,
         private readonly ?Closure $createAccountLinkUsing = null,
+        private readonly ?Closure $retrieveAccountUsing = null,
     ) {}
 
     /**
@@ -86,6 +89,50 @@ final class StripeConnectService
     }
 
     /**
+     * Sync the coach's Stripe onboarding status by retrieving the connected account from Stripe.
+     *
+     * Sets stripe_onboarding_complete = true when Stripe reports details_submitted and charges_enabled.
+     * Returns true if the profile is now marked as onboarding-complete.
+     */
+    public function syncOnboardingStatus(CoachProfile $coach): bool
+    {
+        if (! is_string($coach->stripe_account_id) || $coach->stripe_account_id === '') {
+            return false;
+        }
+
+        if ($coach->stripe_onboarding_complete) {
+            return true;
+        }
+
+        try {
+            $account = $this->retrieveStripeAccount($coach->stripe_account_id);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to retrieve Stripe account status during onboarding sync.', [
+                'coach_profile_id' => $coach->id,
+                'stripe_account_id' => $coach->stripe_account_id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return false;
+        }
+
+        $detailsSubmitted = $account->details_submitted ?? false;
+        $chargesEnabled = $account->charges_enabled ?? false;
+
+        if (! $detailsSubmitted || ! $chargesEnabled) {
+            return false;
+        }
+
+        $coach->forceFill([
+            'stripe_onboarding_complete' => true,
+        ])->save();
+
+        CoachStripeOnboardingComplete::dispatch($coach->getKey());
+
+        return true;
+    }
+
+    /**
      * @param  array<string, mixed>  $payload
      */
     protected function createStripeAccount(array $payload): object
@@ -111,5 +158,16 @@ final class StripeConnectService
         Stripe::setApiKey((string) config('services.stripe.secret'));
 
         return AccountLink::create($payload);
+    }
+
+    protected function retrieveStripeAccount(string $accountId): object
+    {
+        if ($this->retrieveAccountUsing instanceof Closure) {
+            return ($this->retrieveAccountUsing)($accountId);
+        }
+
+        Stripe::setApiKey((string) config('services.stripe.secret'));
+
+        return Account::retrieve($accountId);
     }
 }
