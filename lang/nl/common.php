@@ -55,6 +55,10 @@ return [
     'previous' => 'Vorige',
     'uploading' => 'Uploaden…',
     'welcome' => 'Welkom bij :app',
+    'welcome_subtitle' => 'De Brusselse sportsmarktplaats — vind een coach, boek een sessie, beweeg.',
+    'welcome_for_coaches' => 'Bent u coach? Maak sessies aan, beheer boekingen en ontvang betalingen moeiteloos.',
+    'welcome_for_athletes' => 'Bent u sporter? Ontdek sessies bij u in de buurt en boek in een paar klikken.',
+    'welcome_become_coach' => 'Word Coach',
     'auth_coming_soon' => 'Inloggen en registreren komen binnenkort beschikbaar.',
 
     /*

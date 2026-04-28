@@ -53,4 +53,12 @@ class BookingFactory extends Factory
             'refunded_at' => now(),
         ]);
     }
+
+    public function withExpiredPayment(): static
+    {
+        return $this->state([
+            'status' => BookingStatus::PendingPayment->value,
+            'payment_expires_at' => now()->subMinutes(5),
+        ]);
+    }
 }

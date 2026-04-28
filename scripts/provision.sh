@@ -27,10 +27,15 @@
 #
 set -euo pipefail
 
+# --- Optional: source local infra config (gitignored, never committed) ------
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+[[ -f "${SCRIPT_DIR}/infra.local" ]] && source "${SCRIPT_DIR}/infra.local"
+
 # --- Configuration -----------------------------------------------------------
 DEPLOY_USER="deploy"
 APP_DIR="/opt/motivya"
-DOMAIN="motivya.metanull.eu"
+DOMAIN="${MOTIVYA_DOMAIN:?ERROR: Set MOTIVYA_DOMAIN in scripts/infra.local or export it as an env var}"
+ADMIN_EMAIL="${MOTIVYA_ADMIN_EMAIL:?ERROR: Set MOTIVYA_ADMIN_EMAIL in scripts/infra.local or export it as an env var}"
 PHP_VERSION="8.4"
 TIMEZONE="Europe/Brussels"
 LOCALE="fr_BE.UTF-8"
@@ -485,7 +490,7 @@ info "  Backup:        daily at 3 AM (14-day retention)"
 info ""
 info "  Next steps:"
 info "  1. Verify SSH:  ssh -i ~/.ssh/motivya_deploy ${DEPLOY_USER}@<VPS_IP> whoami"
-info "  2. SSL cert:    certbot certonly --standalone -d ${DOMAIN} --agree-tos -m admin@metanull.eu"
+info "  2. SSL cert:    certbot certonly --standalone -d ${DOMAIN} --agree-tos -m ${ADMIN_EMAIL}"
 info "  3. Update /opt/motivya/shared/.env with MySQL credentials from ${DB_CREDENTIALS_FILE}"
 info "  4. Push code to main to trigger deploy via GitHub Actions."
 info ""

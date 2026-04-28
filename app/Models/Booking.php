@@ -23,6 +23,7 @@ class Booking extends Model
         'amount_paid',
         'cancelled_at',
         'refunded_at',
+        'payment_expires_at',
     ];
 
     /**
@@ -35,7 +36,14 @@ class Booking extends Model
             'amount_paid' => 'integer',
             'cancelled_at' => 'datetime',
             'refunded_at' => 'datetime',
+            'payment_expires_at' => 'datetime',
         ];
+    }
+
+    public function isPaymentExpired(): bool
+    {
+        return $this->payment_expires_at !== null
+            && $this->payment_expires_at->isPast();
     }
 
     /**

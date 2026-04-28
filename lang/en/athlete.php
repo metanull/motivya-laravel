@@ -16,6 +16,7 @@ return [
     'tab_upcoming' => 'Upcoming',
     'tab_past' => 'Past',
     'no_upcoming' => 'You have no upcoming bookings.',
+    'no_upcoming_cta' => 'Explore available sessions',
     'no_past' => 'You have no past bookings.',
     'quick_link_explore' => 'Explore Sessions',
     'quick_link_favourites' => 'Favourites',

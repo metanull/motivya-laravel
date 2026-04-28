@@ -87,7 +87,13 @@
             @forelse ($drafts as $session)
                 @include('livewire.coach.partials.session-card', ['session' => $session, 'showActions' => true])
             @empty
-                <p class="py-8 text-center text-gray-500 dark:text-gray-400">{{ __('coach.no_drafts') }}</p>
+                <div class="py-8 text-center">
+                    <p class="text-gray-500 dark:text-gray-400">{{ __('coach.no_drafts') }}</p>
+                    <a href="{{ route('coach.sessions.create') }}" wire:navigate
+                        class="mt-4 inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
+                        {{ __('coach.no_drafts_cta') }}
+                    </a>
+                </div>
             @endforelse
         @elseif ($tab === 'past')
             @forelse ($past as $session)
