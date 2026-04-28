@@ -42,7 +42,23 @@ describe('book', function () {
         Event::assertNotDispatched(SessionConfirmed::class);
     });
 
-    it('confirms a published session and dispatches the event when the threshold is reached', function () {
+    it('sets payment_expires_at on the booking', function () {
+        $now = now();
+
+        $session = SportSession::factory()->published()->create([
+            'min_participants' => 2,
+            'max_participants' => 5,
+            'current_participants' => 0,
+        ]);
+        $athlete = User::factory()->athlete()->create();
+
+        $booking = app(BookingService::class)->book($session, $athlete);
+
+        expect($booking->payment_expires_at)->not->toBeNull();
+        expect($booking->payment_expires_at->isAfter($now->addMinutes(29)))->toBeTrue();
+    });
+
+    it('does not confirm the session even when the booking threshold is reached', function () {
         Event::fake([SessionConfirmed::class]);
 
         $session = SportSession::factory()->published()->create([
@@ -61,13 +77,11 @@ describe('book', function () {
         $booking = app(BookingService::class)->book($session, $athlete);
 
         expect($booking->status)->toBe(BookingStatus::PendingPayment);
-        expect($session->fresh()->current_participants)->toBe(2)
-            ->and($session->fresh()->status)->toBe(SessionStatus::Confirmed);
+        expect($session->fresh()->current_participants)->toBe(2);
+        // Session stays Published — confirmation only happens on payment via webhook
+        expect($session->fresh()->status)->toBe(SessionStatus::Published);
 
-        Event::assertDispatched(
-            SessionConfirmed::class,
-            fn (SessionConfirmed $event): bool => $event->sessionId === $session->id
-        );
+        Event::assertNotDispatched(SessionConfirmed::class);
     });
 
     it('throws SessionFullException when the session is full', function () {

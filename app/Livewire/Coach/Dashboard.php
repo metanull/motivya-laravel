@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Coach;
 
+use App\Enums\BookingStatus;
 use App\Enums\SessionStatus;
 use App\Models\CoachProfile;
 use App\Models\SportSession;
@@ -86,7 +87,11 @@ final class Dashboard extends Component
             ->whereMonth('date', now()->month)
             ->count();
 
-        $totalBookings = (clone $allSessions)->sum('current_participants');
+        $totalBookings = (int) DB::table('bookings')
+            ->join('sport_sessions', 'bookings.sport_session_id', '=', 'sport_sessions.id')
+            ->where('sport_sessions.coach_id', $coach->id)
+            ->where('bookings.status', BookingStatus::Confirmed->value)
+            ->count();
 
         $avgFillRate = (clone $allSessions)
             ->where('max_participants', '>', 0)
@@ -94,10 +99,11 @@ final class Dashboard extends Component
             ->value('avg_fill');
         $avgFillRate = $avgFillRate !== null ? round((float) $avgFillRate) : 0;
 
-        $totalRevenueCents = (int) (clone $allSessions)
-            ->whereIn('status', [SessionStatus::Confirmed, SessionStatus::Completed])
-            ->select(DB::raw('SUM(price_per_person * current_participants) as revenue'))
-            ->value('revenue');
+        $totalRevenueCents = (int) DB::table('bookings')
+            ->join('sport_sessions', 'bookings.sport_session_id', '=', 'sport_sessions.id')
+            ->where('sport_sessions.coach_id', $coach->id)
+            ->where('bookings.status', BookingStatus::Confirmed->value)
+            ->sum('bookings.amount_paid');
 
         return view('livewire.coach.dashboard', [
             'coachProfile' => $coachProfile,

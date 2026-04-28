@@ -5,10 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Enums\BookingStatus;
+use App\Enums\SessionStatus;
 use App\Events\BookingCancelled;
 use App\Events\BookingCreated;
 use App\Events\BookingRefunded;
 use App\Events\CoachStripeOnboardingComplete;
+use App\Events\SessionConfirmed;
 use App\Events\Stripe\AccountUpdated;
 use App\Events\Stripe\ChargeRefunded;
 use App\Events\Stripe\PaymentIntentFailed;
@@ -16,6 +18,7 @@ use App\Events\Stripe\PaymentIntentSucceeded;
 use App\Models\Booking;
 use App\Models\CoachProfile;
 use App\Models\ProcessedWebhook;
+use App\Models\SportSession;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -127,6 +130,11 @@ final class StripeWebhookController extends Controller
             return;
         }
 
+        // Do not confirm payments for expired holds.
+        if ($lockedBooking->isPaymentExpired()) {
+            return;
+        }
+
         $paymentIntent = $event->data->object;
         $amountPaid = $this->integerValue($paymentIntent->amount_received ?? $paymentIntent->amount ?? null);
 
@@ -134,6 +142,22 @@ final class StripeWebhookController extends Controller
             'status' => BookingStatus::Confirmed,
             'amount_paid' => $amountPaid ?? $lockedBooking->amount_paid,
         ])->save();
+
+        // Check whether the session should now be confirmed based on paid booking count.
+        $lockedSession = SportSession::query()
+            ->lockForUpdate()
+            ->find($lockedBooking->sport_session_id);
+
+        if ($lockedSession !== null && $lockedSession->status === SessionStatus::Published) {
+            $confirmedBookings = $lockedSession->bookings()
+                ->where('status', BookingStatus::Confirmed->value)
+                ->count();
+
+            if ($confirmedBookings >= $lockedSession->min_participants) {
+                $lockedSession->forceFill(['status' => SessionStatus::Confirmed])->save();
+                SessionConfirmed::dispatch($lockedSession->getKey());
+            }
+        }
 
         BookingCreated::dispatch($lockedBooking->getKey());
     }
