@@ -11,17 +11,27 @@
             </h1>
         </div>
 
-        {{-- Type badge --}}
-        <div>
-            @if ($invoice->type === \App\Enums\InvoiceType::Invoice)
-                <span class="inline-flex items-center rounded-full bg-indigo-100 px-3 py-1 text-sm font-medium text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
-                    {{ __('accountant.type_invoice') }}
-                </span>
-            @else
-                <span class="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-sm font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-200">
-                    {{ __('accountant.type_credit_note') }}
-                </span>
+        <div class="flex items-center gap-3">
+            {{-- XML download --}}
+            @if ($invoice->xml_path !== null)
+                <a href="{{ route('accountant.invoices.xml', $invoice) }}"
+                   class="inline-flex items-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600">
+                    {{ __('accountant.detail_download_xml') }}
+                </a>
             @endif
+
+            {{-- Type badge --}}
+            <div>
+                @if ($invoice->type === \App\Enums\InvoiceType::Invoice)
+                    <span class="inline-flex items-center rounded-full bg-indigo-100 px-3 py-1 text-sm font-medium text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200">
+                        {{ __('accountant.type_invoice') }}
+                    </span>
+                @else
+                    <span class="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-sm font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                        {{ __('accountant.type_credit_note') }}
+                    </span>
+                @endif
+            </div>
         </div>
     </div>
 

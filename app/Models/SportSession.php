@@ -85,4 +85,12 @@ class SportSession extends Model
     {
         return $this->hasMany(Booking::class, 'sport_session_id');
     }
+
+    /**
+     * @return HasMany<Invoice, $this>
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class, 'sport_session_id');
+    }
 }
