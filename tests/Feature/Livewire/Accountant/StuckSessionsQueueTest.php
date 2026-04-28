@@ -8,7 +8,6 @@ use App\Models\CoachProfile;
 use App\Models\Invoice;
 use App\Models\SportSession;
 use App\Models\User;
-use App\Services\SessionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
@@ -198,7 +197,7 @@ describe('StuckSessionsQueue', function () {
         expect(Invoice::where('sport_session_id', $session->id)->count())->toBe(1);
     });
 
-    it('does not duplicate invoices when completing a session that already has an invoice (idempotency)', function () {
+    it('does not duplicate invoices when an invoice already exists for the session (idempotency)', function () {
         $accountant = User::factory()->accountant()->withTwoFactor()->create();
         $coach = User::factory()->coach()->create();
         CoachProfile::factory()->vatSubject()->create(['user_id' => $coach->id]);
@@ -209,14 +208,19 @@ describe('StuckSessionsQueue', function () {
             'end_time' => '11:00:00',
         ]);
 
-        // Complete once
+        // Pre-create an invoice for this session (simulates a partial prior run
+        // where the invoice was created but the session status was not updated).
+        Invoice::factory()->create([
+            'sport_session_id' => $session->id,
+            'coach_id' => $coach->id,
+        ]);
+
+        // Completing the session fires SessionCompleted → GenerateInvoiceOnSessionCompletion.
+        // The idempotency guard in InvoiceService must prevent a second invoice being created.
         Livewire::actingAs($accountant)
             ->test(StuckSessionsQueue::class)
             ->call('complete', $session->id);
 
-        // Session is now completed; if somehow we try again, SessionService will throw
-        // an exception (only confirmed sessions can be completed) — but the idempotency
-        // guard in InvoiceService ensures no duplicate invoice is ever created.
         expect(Invoice::where('sport_session_id', $session->id)->count())->toBe(1);
     });
 
