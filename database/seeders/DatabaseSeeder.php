@@ -16,6 +16,9 @@ final class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Reference data — always seeded regardless of environment.
+        $this->call(PostalCodeCoordinatesSeeder::class);
+
         if (app()->environment('local', 'testing')) {
             $this->call(DevSeeder::class);
         }
