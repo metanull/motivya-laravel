@@ -55,6 +55,10 @@ return [
     'previous' => 'Previous',
     'uploading' => 'Uploading…',
     'welcome' => 'Welcome to :app',
+    'welcome_subtitle' => 'The Brussels sports marketplace — find a coach, book a session, get moving.',
+    'welcome_for_coaches' => 'Are you a coach? Create your sessions, manage bookings and receive payments effortlessly.',
+    'welcome_for_athletes' => 'Are you an athlete? Discover sessions near you and book in just a few clicks.',
+    'welcome_become_coach' => 'Become a Coach',
     'auth_coming_soon' => 'Login and registration are coming soon.',
 
     /*

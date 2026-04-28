@@ -55,6 +55,10 @@ return [
     'previous' => 'Précédent',
     'uploading' => 'Téléchargement…',
     'welcome' => 'Bienvenue sur :app',
+    'welcome_subtitle' => 'La marketplace sport de Bruxelles — trouvez un coach, réservez une séance, bougez.',
+    'welcome_for_coaches' => 'Vous êtes coach ? Créez vos séances, gérez vos réservations et recevez vos paiements en toute simplicité.',
+    'welcome_for_athletes' => 'Vous êtes sportif ? Découvrez les séances près de chez vous et réservez en quelques clics.',
+    'welcome_become_coach' => 'Devenir Coach',
     'auth_coming_soon' => 'La connexion et l\'inscription arrivent bientôt.',
 
     /*

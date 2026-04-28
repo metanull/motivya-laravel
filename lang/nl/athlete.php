@@ -16,6 +16,7 @@ return [
     'tab_upcoming' => 'Aankomend',
     'tab_past' => 'Verleden',
     'no_upcoming' => 'Je hebt geen aankomende boekingen.',
+    'no_upcoming_cta' => 'Beschikbare sessies verkennen',
     'no_past' => 'Je hebt geen vroegere boekingen.',
     'quick_link_explore' => 'Sessies verkennen',
     'quick_link_favourites' => 'Favorieten',
