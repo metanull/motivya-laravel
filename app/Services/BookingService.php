@@ -7,7 +7,6 @@ namespace App\Services;
 use App\Enums\BookingStatus;
 use App\Enums\SessionStatus;
 use App\Events\BookingCancelled;
-use App\Events\SessionConfirmed;
 use App\Exceptions\AlreadyBookedException;
 use App\Exceptions\SessionFullException;
 use App\Exceptions\SessionNotBookableException;
@@ -26,7 +25,7 @@ final class BookingService
      */
     public function book(SportSession $session, User $athlete): Booking
     {
-        $result = DB::transaction(function () use ($session, $athlete): array {
+        $booking = DB::transaction(function () use ($session, $athlete): Booking {
             $lockedSession = SportSession::query()
                 ->lockForUpdate()
                 ->findOrFail($session->getKey());
@@ -46,30 +45,17 @@ final class BookingService
             $booking = $lockedSession->bookings()->create([
                 'athlete_id' => $athlete->getKey(),
                 'status' => BookingStatus::PendingPayment->value,
+                'payment_expires_at' => now()->addMinutes(30),
             ]);
 
-            $nextParticipants = $lockedSession->current_participants + 1;
-            $shouldDispatchSessionConfirmed = $lockedSession->status === SessionStatus::Published
-                && $nextParticipants >= $lockedSession->min_participants;
-
             $lockedSession->forceFill([
-                'current_participants' => $nextParticipants,
-                'status' => $shouldDispatchSessionConfirmed
-                    ? SessionStatus::Confirmed
-                    : $lockedSession->status,
+                'current_participants' => $lockedSession->current_participants + 1,
             ])->save();
 
-            return [
-                'booking' => $booking,
-                'session_confirmed' => $shouldDispatchSessionConfirmed,
-            ];
+            return $booking;
         });
 
-        if ($result['session_confirmed']) {
-            SessionConfirmed::dispatch($session->getKey());
-        }
-
-        return $result['booking']->refresh();
+        return $booking->refresh();
     }
 
     /**

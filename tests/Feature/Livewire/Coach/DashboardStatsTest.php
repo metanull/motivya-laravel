@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Livewire\Coach\Dashboard;
+use App\Models\Booking;
 use App\Models\SportSession;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -47,16 +48,23 @@ describe('coach dashboard stats', function () {
     it('shows total bookings count', function () {
         $coach = User::factory()->coach()->create();
 
-        SportSession::factory()->published()->create([
+        $sessionA = SportSession::factory()->published()->create([
             'coach_id' => $coach->id,
             'current_participants' => 5,
             'date' => now()->addDays(3),
         ]);
-        SportSession::factory()->confirmed()->create([
+        $sessionB = SportSession::factory()->confirmed()->create([
             'coach_id' => $coach->id,
             'current_participants' => 8,
             'date' => now()->addDays(5),
         ]);
+
+        // 5 confirmed bookings on sessionA
+        Booking::factory()->confirmed()->count(5)->for($sessionA, 'sportSession')->create();
+        // 8 confirmed bookings on sessionB
+        Booking::factory()->confirmed()->count(8)->for($sessionB, 'sportSession')->create();
+        // 2 pending-payment bookings — must NOT be counted
+        Booking::factory()->pendingPayment()->count(2)->for($sessionA, 'sportSession')->create();
 
         Livewire::actingAs($coach)
             ->test(Dashboard::class)
@@ -92,25 +100,36 @@ describe('coach dashboard stats', function () {
     it('shows total revenue from confirmed and completed sessions', function () {
         $coach = User::factory()->coach()->create();
 
-        // Confirmed: 1500 cents * 3 participants = 4500 cents = 45.00 EUR
-        SportSession::factory()->confirmed()->create([
+        // Confirmed session: 3 confirmed bookings × 1500 cents = 4500 cents
+        $confirmedSession = SportSession::factory()->confirmed()->create([
             'coach_id' => $coach->id,
             'price_per_person' => 1500,
             'current_participants' => 3,
             'date' => now()->addDays(3),
         ]);
-        // Completed: 2000 cents * 5 participants = 10000 cents = 100.00 EUR
-        SportSession::factory()->completed()->create([
+        Booking::factory()->confirmed()->count(3)->for($confirmedSession, 'sportSession')->create([
+            'amount_paid' => 1500,
+        ]);
+
+        // Completed session: 5 confirmed bookings × 2000 cents = 10000 cents
+        $completedSession = SportSession::factory()->completed()->create([
             'coach_id' => $coach->id,
             'price_per_person' => 2000,
             'current_participants' => 5,
         ]);
-        // Published (not counted): 1000 * 2 = 2000
-        SportSession::factory()->published()->create([
+        Booking::factory()->confirmed()->count(5)->for($completedSession, 'sportSession')->create([
+            'amount_paid' => 2000,
+        ]);
+
+        // Published session with only pending bookings — must NOT be counted in revenue
+        $publishedSession = SportSession::factory()->published()->create([
             'coach_id' => $coach->id,
             'price_per_person' => 1000,
             'current_participants' => 2,
             'date' => now()->addDays(5),
+        ]);
+        Booking::factory()->pendingPayment()->count(2)->for($publishedSession, 'sportSession')->create([
+            'amount_paid' => 1000,
         ]);
 
         Livewire::actingAs($coach)
