@@ -17,6 +17,10 @@ use InvalidArgumentException;
 
 final class SessionService
 {
+    public function __construct(
+        private readonly PostalCodeCoordinateService $geoService,
+    ) {}
+
     /**
      * Create a new session in draft status.
      *
@@ -24,6 +28,8 @@ final class SessionService
      */
     public function create(User $coach, array $data): SportSession
     {
+        $coords = $this->resolveCoords($data);
+
         return SportSession::create([
             'coach_id' => $coach->id,
             'activity_type' => $data['activity_type'],
@@ -32,6 +38,8 @@ final class SessionService
             'description' => $data['description'] ?? null,
             'location' => $data['location'],
             'postal_code' => $data['postal_code'],
+            'latitude' => $coords['latitude'] ?? null,
+            'longitude' => $coords['longitude'] ?? null,
             'date' => $data['date'],
             'start_time' => $data['start_time'],
             'end_time' => $data['end_time'],
@@ -55,6 +63,9 @@ final class SessionService
         $groupId = Str::uuid()->toString();
         $baseDate = Carbon::parse($data['date']);
 
+        // Resolve coordinates once and reuse for every session in the group.
+        $coords = $this->resolveCoords($data);
+
         $sessions = collect();
 
         for ($i = 0; $i < $numberOfWeeks; $i++) {
@@ -68,6 +79,8 @@ final class SessionService
                 'description' => $data['description'] ?? null,
                 'location' => $data['location'],
                 'postal_code' => $data['postal_code'],
+                'latitude' => $coords['latitude'] ?? null,
+                'longitude' => $coords['longitude'] ?? null,
                 'date' => $sessionDate->format('Y-m-d'),
                 'start_time' => $data['start_time'],
                 'end_time' => $data['end_time'],
@@ -93,6 +106,8 @@ final class SessionService
      */
     public function update(SportSession $session, array $data): SportSession
     {
+        $coords = $this->resolveCoords($data);
+
         $session->update([
             'activity_type' => $data['activity_type'],
             'level' => $data['level'],
@@ -100,6 +115,8 @@ final class SessionService
             'description' => $data['description'] ?? null,
             'location' => $data['location'],
             'postal_code' => $data['postal_code'],
+            'latitude' => $coords['latitude'] ?? null,
+            'longitude' => $coords['longitude'] ?? null,
             'date' => $data['date'],
             'start_time' => $data['start_time'],
             'end_time' => $data['end_time'],
@@ -126,6 +143,8 @@ final class SessionService
             throw new InvalidArgumentException('Session does not belong to a recurrence group.');
         }
 
+        $coords = $this->resolveCoords($data);
+
         $updatableFields = [
             'activity_type' => $data['activity_type'],
             'level' => $data['level'],
@@ -133,6 +152,8 @@ final class SessionService
             'description' => $data['description'] ?? null,
             'location' => $data['location'],
             'postal_code' => $data['postal_code'],
+            'latitude' => $coords['latitude'] ?? null,
+            'longitude' => $coords['longitude'] ?? null,
             'price_per_person' => $data['price_per_person'],
             'min_participants' => $data['min_participants'],
             'max_participants' => $data['max_participants'],
@@ -236,5 +257,33 @@ final class SessionService
         }
 
         $session->update(['status' => SessionStatus::Published->value]);
+    }
+
+    /**
+     * Resolve coordinates for a data array.
+     *
+     * If explicit latitude AND longitude are present in $data, use them directly.
+     * Otherwise attempt a lookup via the geo service.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array{latitude: float, longitude: float}|null
+     */
+    private function resolveCoords(array $data): ?array
+    {
+        if (
+            isset($data['latitude'], $data['longitude'])
+            && $data['latitude'] !== null
+            && $data['longitude'] !== null
+        ) {
+            return ['latitude' => (float) $data['latitude'], 'longitude' => (float) $data['longitude']];
+        }
+
+        $coords = $this->geoService->resolveCoordinates((string) $data['postal_code']);
+
+        if ($coords === null) {
+            return null;
+        }
+
+        return ['latitude' => $coords[0], 'longitude' => $coords[1]];
     }
 }
