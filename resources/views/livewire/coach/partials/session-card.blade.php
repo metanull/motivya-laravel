@@ -88,7 +88,7 @@
                         @endcan
                     @endif
 
-                    @if (in_array($session->status->value, ['published', 'confirmed']))
+                    @if (in_array($session->status, [\App\Enums\SessionStatus::Published, \App\Enums\SessionStatus::Confirmed], true))
                         <a href="https://wa.me/?text={{ urlencode($session->title . ' — ' . route('sessions.show', $session)) }}"
                             target="_blank"
                             rel="noopener noreferrer"

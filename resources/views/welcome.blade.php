@@ -58,18 +58,14 @@
                     </svg>
                 </div>
                 <p class="text-sm text-gray-600 dark:text-gray-300">{{ __('common.welcome_for_coaches') }}</p>
-                @auth
-                    @if (
-                        auth()->user()->role === \App\Enums\UserRole::Athlete &&
-                        auth()->user()->coachProfile === null &&
-                        Route::has('coach.apply')
-                    )
+                @can('apply-as-coach')
+                    @if (Route::has('coach.apply'))
                         <a href="{{ route('coach.apply') }}" wire:navigate
                             class="mt-3 inline-block text-sm font-medium text-green-600 hover:text-green-500 dark:text-green-400">
                             {{ __('common.welcome_become_coach') }} →
                         </a>
                     @endif
-                @endauth
+                @endcan
             </div>
         </div>
 
