@@ -3,6 +3,17 @@
         {{ __('sessions.create_heading') }}
     </h1>
 
+    {{-- Stripe readiness warning --}}
+    @if (! $stripeReady)
+        <x-stripe-setup-warning
+            class="mt-4"
+            :onboard-url="route('coach.stripe.onboard')"
+            :message="__('sessions.stripe_not_ready_action')">
+            <p class="text-sm font-semibold text-amber-800 dark:text-amber-300">{{ __('sessions.stripe_not_ready_heading') }}</p>
+            <p class="mt-1 text-sm text-amber-700 dark:text-amber-400">{{ __('sessions.stripe_not_ready_body') }}</p>
+        </x-stripe-setup-warning>
+    @endif
+
     <form wire:submit="save" class="mt-6 space-y-6">
         {{-- Activity type + level --}}
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">

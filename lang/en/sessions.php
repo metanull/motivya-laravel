@@ -132,4 +132,14 @@ return [
     'geo_denied' => 'Location access was denied. Using postal code search.',
     'map_title' => 'Sessions on the map',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Stripe readiness
+    |--------------------------------------------------------------------------
+    */
+
+    'stripe_not_ready_heading' => 'Payment setup incomplete',
+    'stripe_not_ready_body' => 'You can save this session, but athletes will not be able to book it until you complete your Stripe payment setup.',
+    'stripe_not_ready_action' => 'Set up Stripe payments →',
+
 ];

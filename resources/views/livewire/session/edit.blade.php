@@ -3,6 +3,17 @@
         {{ __('sessions.edit_heading') }}
     </h1>
 
+    {{-- Stripe readiness warning --}}
+    @if (! $stripeReady)
+        <x-stripe-setup-warning
+            class="mt-4"
+            :onboard-url="route('coach.stripe.onboard')"
+            :message="__('sessions.stripe_not_ready_action')">
+            <p class="text-sm font-semibold text-amber-800 dark:text-amber-300">{{ __('sessions.stripe_not_ready_heading') }}</p>
+            <p class="mt-1 text-sm text-amber-700 dark:text-amber-400">{{ __('sessions.stripe_not_ready_body') }}</p>
+        </x-stripe-setup-warning>
+    @endif
+
     {{-- Recurring session edit scope --}}
     @if ($isRecurring)
         <div class="mt-4 rounded-lg border border-indigo-200 bg-indigo-50 p-4 dark:border-indigo-800 dark:bg-indigo-900/30">

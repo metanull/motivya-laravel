@@ -7,6 +7,29 @@
         </a>
     </div>
 
+    {{-- Stripe readiness checklist --}}
+    @if ($coachProfile !== null && ! $coachProfile->isStripeReady())
+        @php
+            $stripeOnboardUrl = $coachProfile->stripe_account_id
+                ? route('coach.stripe.refresh')
+                : route('coach.stripe.onboard');
+            $stripeOnboardLabel = $coachProfile->stripe_account_id
+                ? __('coach.stripe_setup_continue')
+                : __('coach.stripe_setup_start');
+        @endphp
+        <x-stripe-setup-warning
+            class="mb-6"
+            :onboard-url="$stripeOnboardUrl"
+            :message="$stripeOnboardLabel">
+            <h3 class="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                {{ __('coach.stripe_setup_required_heading') }}
+            </h3>
+            <p class="mt-1 text-sm text-amber-700 dark:text-amber-400">
+                {{ __('coach.stripe_setup_required_body') }}
+            </p>
+        </x-stripe-setup-warning>
+    @endif
+
     {{-- Stats cards --}}
     <div class="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">

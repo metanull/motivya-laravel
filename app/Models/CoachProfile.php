@@ -45,6 +45,16 @@ class CoachProfile extends Model
     }
 
     /**
+     * Whether this coach profile is fully ready to accept bookings via Stripe.
+     */
+    public function isStripeReady(): bool
+    {
+        return is_string($this->stripe_account_id)
+            && $this->stripe_account_id !== ''
+            && $this->stripe_onboarding_complete;
+    }
+
+    /**
      * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo

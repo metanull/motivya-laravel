@@ -58,10 +58,13 @@ final class Edit extends Component
             ? ActivityImage::where('activity_type', $this->form->activityType)->get()
             : collect();
 
+        $coachProfile = auth()->user()?->coachProfile;
+
         return view('livewire.session.edit', [
             'activityTypes' => ActivityType::cases(),
             'levels' => SessionLevel::cases(),
             'coverImages' => $coverImages,
+            'stripeReady' => $coachProfile?->isStripeReady() ?? false,
         ])->title(__('sessions.edit_title'));
     }
 }
