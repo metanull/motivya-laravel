@@ -14,6 +14,7 @@ use App\Models\SportSession;
 use App\Models\User;
 use App\Services\BookingService;
 use App\Services\PaymentService;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -39,6 +40,13 @@ final class Book extends Component
     {
         $athlete = auth()->user();
         abort_unless($athlete instanceof User, 403);
+
+        if ($athlete instanceof MustVerifyEmail && ! $athlete->hasVerifiedEmail()) {
+            $this->dispatch('notify', type: 'warning', message: __('auth.booking_requires_verified_email'));
+            $this->redirect(route('verification.notice'));
+
+            return null;
+        }
 
         Gate::authorize('create', [Booking::class, $this->sportSession]);
 
@@ -79,8 +87,15 @@ final class Book extends Component
     {
         $user = auth()->user();
 
-        return $user instanceof User
-            && $user->can('create', [Booking::class, $this->sportSession])
+        if (! $user instanceof User) {
+            return false;
+        }
+
+        if ($user instanceof MustVerifyEmail && ! $user->hasVerifiedEmail()) {
+            return false;
+        }
+
+        return $user->can('create', [Booking::class, $this->sportSession])
             && $this->existingBooking === null
             && $this->hasPaymentSetup()
             && in_array($this->sportSession->status, [SessionStatus::Published, SessionStatus::Confirmed], true)
@@ -97,6 +112,10 @@ final class Book extends Component
 
         if (! $user instanceof User || $user->role !== UserRole::Athlete) {
             return __('bookings.only_athletes_can_book');
+        }
+
+        if ($user instanceof MustVerifyEmail && ! $user->hasVerifiedEmail()) {
+            return __('auth.booking_requires_verified_email');
         }
 
         if (! $this->hasPaymentSetup()) {

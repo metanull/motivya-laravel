@@ -64,6 +64,39 @@ describe('booking widget', function () {
             ->assertSee(__('bookings.only_athletes_can_book'));
     });
 
+    it('redirects unverified athlete to verification notice when booking', function () {
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->approved()->for($coach)->create([
+            'stripe_account_id' => 'acct_booking_unverified',
+            'stripe_onboarding_complete' => true,
+        ]);
+
+        $session = SportSession::factory()->published()->for($coach, 'coach')->create();
+        $athlete = User::factory()->athlete()->unverified()->create();
+
+        Livewire::actingAs($athlete)
+            ->test(Book::class, ['sportSession' => $session])
+            ->call('book')
+            ->assertRedirect(route('verification.notice'))
+            ->assertDispatched('notify');
+    });
+
+    it('hides the book button for unverified athletes', function () {
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->approved()->for($coach)->create([
+            'stripe_account_id' => 'acct_booking_unverified_btn',
+            'stripe_onboarding_complete' => true,
+        ]);
+
+        $session = SportSession::factory()->published()->for($coach, 'coach')->create();
+        $athlete = User::factory()->athlete()->unverified()->create();
+
+        Livewire::actingAs($athlete)
+            ->test(Book::class, ['sportSession' => $session])
+            ->assertDontSeeHtml('wire:click="book"')
+            ->assertSee(__('auth.booking_requires_verified_email'));
+    });
+
     it('reports booking domain errors without creating duplicate records', function (SportSession $session, User $athlete, int $expectedCount) {
         Livewire::actingAs($athlete)
             ->test(Book::class, ['sportSession' => $session])

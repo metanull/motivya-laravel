@@ -6,6 +6,8 @@ use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Illuminate\Routing\Exceptions\InvalidSignatureException;
 use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
@@ -49,5 +51,17 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (InvalidSignatureException $e, Request $request) {
+            if ($request->routeIs('verification.verify')) {
+                $expires = $request->query('expires');
+                $isExpired = $expires !== null && (int) $expires < now()->timestamp;
+
+                $message = $isExpired
+                    ? __('auth.verify_link_expired')
+                    : __('auth.verify_link_invalid');
+
+                return redirect()->route('verification.notice')
+                    ->with('status', $message);
+            }
+        });
     })->create();

@@ -96,6 +96,10 @@ return [
     'verify_resend' => 'Verificatie-e-mail opnieuw versturen',
     'verify_resent' => 'Er is een nieuwe verificatielink naar uw e-mailadres gestuurd.',
     'verify_logout' => 'Uitloggen',
+    'verify_link_expired' => 'Uw verificatielink is verlopen. Vraag hieronder een nieuwe aan.',
+    'verify_link_invalid' => 'Uw verificatielink is ongeldig. Vraag hieronder een nieuwe aan.',
+    'unverified_email_banner' => 'Uw e-mailadres is niet geverifieerd. <a href=":url" class="font-medium underline hover:text-yellow-900 dark:hover:text-yellow-100">Klik hier om het te verifiëren</a>.',
+    'booking_requires_verified_email' => 'U moet uw e-mailadres verifiëren voordat u een sessie kunt reserveren.',
 
     /*
     |--------------------------------------------------------------------------

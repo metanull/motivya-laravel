@@ -96,6 +96,10 @@ return [
     'verify_resend' => 'Renvoyer l\'e-mail de vérification',
     'verify_resent' => 'Un nouveau lien de vérification a été envoyé à votre adresse e-mail.',
     'verify_logout' => 'Se déconnecter',
+    'verify_link_expired' => 'Votre lien de vérification a expiré. Veuillez en demander un nouveau ci-dessous.',
+    'verify_link_invalid' => 'Votre lien de vérification est invalide. Veuillez en demander un nouveau ci-dessous.',
+    'unverified_email_banner' => 'Votre adresse e-mail n\'est pas vérifiée. <a href=":url" class="font-medium underline hover:text-yellow-900 dark:hover:text-yellow-100">Cliquez ici pour la vérifier</a>.',
+    'booking_requires_verified_email' => 'Vous devez vérifier votre adresse e-mail avant de réserver une séance.',
 
     /*
     |--------------------------------------------------------------------------
