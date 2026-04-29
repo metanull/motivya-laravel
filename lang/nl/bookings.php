@@ -36,4 +36,10 @@ return [
     'cancel_error_unavailable' => 'Deze boeking kan niet meer geannuleerd worden.',
     'refund_window_label' => 'Terugbetalingsvenster',
     'refund_window_value' => ':hours uur voor de start',
+    'payment_return_title' => 'Betaling',
+    'payment_return_success_title' => 'Betaling ontvangen',
+    'payment_return_success_body' => 'Je betaling is ontvangen. Je boeking wordt binnenkort bevestigd.',
+    'payment_return_cancel_title' => 'Betaling geannuleerd',
+    'payment_return_cancel_body' => 'Je boeking is geannuleerd. Er werd niets in rekening gebracht.',
+    'payment_return_back_to_session' => 'Terug naar sessie',
 ];

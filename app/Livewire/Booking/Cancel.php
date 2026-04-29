@@ -56,6 +56,7 @@ final class Cancel extends Component
         Gate::authorize('cancel', $this->booking);
 
         $refundEligible = $bookingService->isRefundEligibleForCancellation($this->booking);
+        $hasAmountPaid = $this->booking->amount_paid > 0;
 
         try {
             $bookingService->cancel($this->booking, $athlete);
@@ -74,7 +75,7 @@ final class Cancel extends Component
         $this->dispatch(
             'notify',
             type: 'success',
-            message: $refundEligible
+            message: $refundEligible && $hasAmountPaid
                 ? __('bookings.cancel_success_refund')
                 : __('bookings.cancel_success_no_refund'),
         );

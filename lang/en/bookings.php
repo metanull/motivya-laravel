@@ -36,4 +36,10 @@ return [
     'cancel_error_unavailable' => 'This booking can no longer be cancelled.',
     'refund_window_label' => 'Refund window',
     'refund_window_value' => ':hours hours before the start',
+    'payment_return_title' => 'Payment',
+    'payment_return_success_title' => 'Payment received',
+    'payment_return_success_body' => 'Your payment was successful. Your booking will be confirmed shortly.',
+    'payment_return_cancel_title' => 'Payment cancelled',
+    'payment_return_cancel_body' => 'Your booking has been cancelled. You were not charged.',
+    'payment_return_back_to_session' => 'Back to session',
 ];

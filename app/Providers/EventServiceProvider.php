@@ -17,6 +17,7 @@ use App\Events\SessionConfirmed;
 use App\Listeners\GenerateCreditNoteOnRefund;
 use App\Listeners\GenerateInvoiceOnSessionCompletion;
 use App\Listeners\NotifyAdminsOfNewApplication;
+use App\Listeners\ProcessBookingRefund;
 use App\Listeners\RefundAllBookingsOnSessionCancellation;
 use App\Listeners\SendBookingCancelledNotification;
 use App\Listeners\SendBookingConfirmedNotification;
@@ -60,6 +61,7 @@ final class EventServiceProvider extends ServiceProvider
         ],
         BookingCancelled::class => [
             SendBookingCancelledNotification::class,
+            ProcessBookingRefund::class,
         ],
         BookingRefunded::class => [
             GenerateCreditNoteOnRefund::class,

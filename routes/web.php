@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\BookingPaymentReturnController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
@@ -54,6 +55,10 @@ Route::get('/sessions/{sportSession}', SessionShow::class)
 
 Route::get('/coaches/{user}', CoachProfile::class)
     ->name('coaches.show');
+
+Route::get('/bookings/payment-return', BookingPaymentReturnController::class)
+    ->middleware('auth')
+    ->name('bookings.payment-return');
 
 Route::get('/health', function () {
     $checks = ['status' => 'ok'];

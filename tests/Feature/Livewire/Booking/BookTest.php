@@ -10,12 +10,12 @@ use App\Models\User;
 use App\Services\PaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
-use Stripe\PaymentIntent;
+use Stripe\Checkout\Session as CheckoutSession;
 
 uses(RefreshDatabase::class);
 
 describe('booking widget', function () {
-    it('creates a booking and redirects to the Stripe payment flow', function () {
+    it('creates a booking and redirects to the Stripe Checkout URL', function () {
         $coach = User::factory()->coach()->create();
         CoachProfile::factory()->approved()->for($coach)->create([
             'stripe_account_id' => 'acct_booking_test',
@@ -28,26 +28,22 @@ describe('booking widget', function () {
         $athlete = User::factory()->athlete()->create();
 
         app()->instance(PaymentService::class, new PaymentService(
-            createPaymentIntentUsing: fn (array $payload): PaymentIntent => PaymentIntent::constructFrom([
-                'id' => 'pi_booking_redirect',
-                'next_action' => [
-                    'redirect_to_url' => [
-                        'url' => 'https://payments.stripe.test/bookings/pi_booking_redirect',
-                    ],
-                ],
+            createCheckoutSessionUsing: fn (array $payload): CheckoutSession => CheckoutSession::constructFrom([
+                'id' => 'cs_booking_redirect',
+                'url' => 'https://checkout.stripe.com/pay/cs_booking_redirect',
             ]),
         ));
 
         Livewire::actingAs($athlete)
             ->test(Book::class, ['sportSession' => $session])
             ->call('book')
-            ->assertRedirect('https://payments.stripe.test/bookings/pi_booking_redirect');
+            ->assertRedirect('https://checkout.stripe.com/pay/cs_booking_redirect');
 
         $booking = Booking::query()->where('sport_session_id', $session->id)->first();
 
         expect($booking)->not->toBeNull();
         expect($booking?->athlete_id)->toBe($athlete->id);
-        expect($booking?->stripe_payment_intent_id)->toBe('pi_booking_redirect');
+        expect($booking?->stripe_checkout_session_id)->toBe('cs_booking_redirect');
         expect($session->fresh()->current_participants)->toBe(1);
     });
 

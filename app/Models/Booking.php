@@ -20,6 +20,7 @@ class Booking extends Model
         'athlete_id',
         'status',
         'stripe_payment_intent_id',
+        'stripe_checkout_session_id',
         'amount_paid',
         'cancelled_at',
         'refunded_at',

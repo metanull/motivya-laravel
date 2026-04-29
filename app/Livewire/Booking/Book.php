@@ -15,13 +15,12 @@ use App\Models\User;
 use App\Services\BookingService;
 use App\Services\PaymentService;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use InvalidArgumentException;
 use Livewire\Component;
 use RuntimeException;
-use Stripe\PaymentIntent;
+use Stripe\Checkout\Session as CheckoutSession;
 
 final class Book extends Component
 {
@@ -44,13 +43,13 @@ final class Book extends Component
         Gate::authorize('create', [Booking::class, $this->sportSession]);
 
         try {
-            $paymentIntent = DB::transaction(function () use ($athlete, $bookingService, $paymentService): PaymentIntent {
+            $checkoutSession = DB::transaction(function () use ($athlete, $bookingService, $paymentService): CheckoutSession {
                 $booking = $bookingService->book($this->sportSession, $athlete);
-                $paymentIntent = $paymentService->createPaymentIntent($booking);
+                $checkoutSession = $paymentService->createCheckoutSession($booking);
 
                 $this->existingBooking = $booking->fresh();
 
-                return $paymentIntent;
+                return $checkoutSession;
             });
         } catch (AlreadyBookedException|SessionFullException|SessionNotBookableException|InvalidArgumentException|RuntimeException $exception) {
             $this->syncState();
@@ -62,15 +61,7 @@ final class Book extends Component
 
         $this->syncState();
 
-        $redirectUrl = $this->resolveRedirectUrl($paymentIntent);
-
-        if ($redirectUrl === null) {
-            $this->dispatch('notify', type: 'error', message: __('bookings.error_payment_redirect_unavailable'));
-
-            return null;
-        }
-
-        return redirect()->away($redirectUrl);
+        return redirect()->away($checkoutSession->url);
     }
 
     public function render(): View
@@ -130,14 +121,6 @@ final class Book extends Component
         return is_string($coachProfile?->stripe_account_id)
             && $coachProfile->stripe_account_id !== ''
             && $coachProfile->stripe_onboarding_complete;
-    }
-
-    private function resolveRedirectUrl(PaymentIntent $paymentIntent): ?string
-    {
-        $redirectUrl = Arr::get($paymentIntent->toArray(), 'next_action.redirect_to_url.url')
-            ?? ($paymentIntent->next_action?->redirect_to_url?->url ?? null);
-
-        return is_string($redirectUrl) && $redirectUrl !== '' ? $redirectUrl : null;
     }
 
     private function syncState(): void
