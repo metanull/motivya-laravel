@@ -54,7 +54,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (InvalidSignatureException $e, Request $request) {
             if ($request->routeIs('verification.verify')) {
                 $expires = $request->query('expires');
-                $isExpired = $expires !== null && (int) $expires < time();
+                $isExpired = $expires !== null && (int) $expires < now()->timestamp;
 
                 $message = $isExpired
                     ? __('auth.verify_link_expired')
