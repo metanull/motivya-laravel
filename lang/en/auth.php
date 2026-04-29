@@ -96,6 +96,10 @@ return [
     'verify_resend' => 'Resend verification email',
     'verify_resent' => 'A new verification link has been sent to your email address.',
     'verify_logout' => 'Log out',
+    'verify_link_expired' => 'Your verification link has expired. Please request a new one below.',
+    'verify_link_invalid' => 'Your verification link is invalid. Please request a new one below.',
+    'unverified_email_banner' => 'Your email address is not verified. <a href=":url" class="font-medium underline hover:text-yellow-900 dark:hover:text-yellow-100">Click here to verify it</a>.',
+    'booking_requires_verified_email' => 'You must verify your email address before booking a session.',
 
     /*
     |--------------------------------------------------------------------------
