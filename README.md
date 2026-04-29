@@ -1,6 +1,8 @@
 # Motivya
 
-Motivya is a marketplace for the Brussels sports community. It connects **Coaches** and **Athletes**, handling session discovery, booking, payment, and legal e-invoicing — all under Belgian law.
+[![CodeQL](https://github.com/metanull/motivya-laravel/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/metanull/motivya-laravel/actions/workflows/github-code-scanning/codeql) | [![Dependabot Updates](https://github.com/metanull/motivya-laravel/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/metanull/motivya-laravel/actions/workflows/dependabot/dependabot-updates) | [![Deploy](https://github.com/metanull/motivya-laravel/actions/workflows/deploy.yml/badge.svg)](https://github.com/metanull/motivya-laravel/actions/workflows/deploy.yml)
+
+> **Motivya** is a marketplace for the Brussels sports community. It connects _Coaches_ and _Athletes_, handling session discovery, booking, payment, and legal e-invoicing — all under Belgian law.
 
 ## Roles
 
@@ -35,20 +37,3 @@ Motivya is a marketplace for the Brussels sports community. It connects **Coache
 ## Tech Stack
 
 Laravel 12 · Livewire · Blade · Tailwind CSS · MySQL · Stripe Connect · PEPPOL BIS 3.0
-
-## Quick Start
-
-```bash
-composer install
-cp .env.example .env
-php artisan key:generate
-php artisan migrate
-npm install && npm run build
-php artisan serve
-```
-
-## Tests
-
-```bash
-php artisan test
-```
