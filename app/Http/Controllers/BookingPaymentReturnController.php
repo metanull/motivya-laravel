@@ -20,7 +20,9 @@ final class BookingPaymentReturnController extends Controller
 
         abort_unless($user instanceof User && $booking->athlete_id === $user->id, 403);
 
-        $paymentStatus = $request->string('status')->value();
+        $paymentStatus = in_array($request->query('status'), ['success', 'cancel'], true)
+            ? $request->query('status')
+            : 'cancel';
 
         if ($paymentStatus === 'cancel' && $booking->status === BookingStatus::PendingPayment) {
             try {

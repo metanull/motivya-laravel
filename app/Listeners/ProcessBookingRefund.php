@@ -29,7 +29,7 @@ final class ProcessBookingRefund
 
         try {
             $this->refundService->refund($booking);
-        } catch (\Throwable $e) {
+        } catch (\Exception $e) {
             Log::error('Failed to process booking refund.', [
                 'booking_id' => $event->bookingId,
                 'error' => $e->getMessage(),

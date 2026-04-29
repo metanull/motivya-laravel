@@ -103,7 +103,9 @@ final class StripeWebhookController extends Controller
             'charge.refunded' => ChargeRefunded::class,
         ];
 
-        // These event types are handled in processStripeEvent without a separate dispatch.
+        // These event types are processed in processStripeEvent and dispatch domain events
+        // inline (e.g. BookingCreated, SessionConfirmed) rather than mapping to a dedicated
+        // Stripe event class.
         $silentTypes = ['checkout.session.completed'];
 
         $eventClass = $eventMap[$event->type] ?? null;
