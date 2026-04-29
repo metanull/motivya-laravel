@@ -36,4 +36,10 @@ return [
     'cancel_error_unavailable' => 'Cette réservation ne peut plus être annulée.',
     'refund_window_label' => 'Fenêtre de remboursement',
     'refund_window_value' => ':hours heures avant le début',
+    'payment_return_title' => 'Paiement',
+    'payment_return_success_title' => 'Paiement reçu',
+    'payment_return_success_body' => 'Votre paiement a bien été reçu. Votre réservation sera confirmée sous peu.',
+    'payment_return_cancel_title' => 'Paiement annulé',
+    'payment_return_cancel_body' => 'Votre réservation a été annulée. Aucun montant n\'a été débité.',
+    'payment_return_back_to_session' => 'Retour à la séance',
 ];

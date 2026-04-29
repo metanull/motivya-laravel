@@ -89,6 +89,7 @@ final class StripeWebhookController extends Controller
             'payment_intent.payment_failed' => $this->handlePaymentIntentFailed($event),
             'charge.refunded' => $this->handleChargeRefunded($event),
             'account.updated' => $this->handleAccountUpdated($event),
+            'checkout.session.completed' => $this->handleCheckoutSessionCompleted($event),
             default => null,
         };
     }
@@ -102,11 +103,14 @@ final class StripeWebhookController extends Controller
             'charge.refunded' => ChargeRefunded::class,
         ];
 
+        // These event types are handled in processStripeEvent without a separate dispatch.
+        $silentTypes = ['checkout.session.completed'];
+
         $eventClass = $eventMap[$event->type] ?? null;
 
         if ($eventClass !== null) {
             event(new $eventClass($event));
-        } else {
+        } elseif (! in_array($event->type, $silentTypes, true)) {
             Log::info('Unhandled Stripe webhook event type.', [
                 'event_type' => $event->type,
                 'event_id' => $event->id,
@@ -249,6 +253,79 @@ final class StripeWebhookController extends Controller
         ])->save();
 
         CoachStripeOnboardingComplete::dispatch($coachProfile->getKey());
+    }
+
+    private function handleCheckoutSessionCompleted(Event $event): void
+    {
+        $checkoutSession = $event->data->object;
+        $checkoutSessionId = $this->stringValue($checkoutSession->id ?? null);
+
+        $booking = null;
+
+        if ($checkoutSessionId !== null) {
+            $booking = Booking::query()
+                ->where('stripe_checkout_session_id', $checkoutSessionId)
+                ->first();
+        }
+
+        if ($booking === null) {
+            // Fall back to metadata on the checkout session
+            $metadata = $checkoutSession->metadata ?? null;
+            $sessionId = $this->integerValue($metadata?->session_id ?? null);
+            $athleteId = $this->integerValue($metadata?->athlete_id ?? null);
+
+            if ($sessionId !== null && $athleteId !== null) {
+                $booking = Booking::query()
+                    ->where('sport_session_id', $sessionId)
+                    ->where('athlete_id', $athleteId)
+                    ->latest('id')
+                    ->first();
+            }
+        }
+
+        if ($booking === null) {
+            return;
+        }
+
+        $lockedBooking = Booking::query()
+            ->lockForUpdate()
+            ->find($booking->getKey());
+
+        if ($lockedBooking === null || $lockedBooking->status !== BookingStatus::PendingPayment) {
+            return;
+        }
+
+        // Do not confirm payments for expired holds.
+        if ($lockedBooking->isPaymentExpired()) {
+            return;
+        }
+
+        $paymentIntentId = $this->stringValue($checkoutSession->payment_intent ?? null);
+        $amountTotal = $this->integerValue($checkoutSession->amount_total ?? null);
+
+        $lockedBooking->forceFill([
+            'status' => BookingStatus::Confirmed,
+            'amount_paid' => $amountTotal ?? $lockedBooking->amount_paid,
+            'stripe_payment_intent_id' => $paymentIntentId ?? $lockedBooking->stripe_payment_intent_id,
+        ])->save();
+
+        // Check whether the session should now be confirmed based on paid booking count.
+        $lockedSession = SportSession::query()
+            ->lockForUpdate()
+            ->find($lockedBooking->sport_session_id);
+
+        if ($lockedSession !== null && $lockedSession->status === SessionStatus::Published) {
+            $confirmedBookings = $lockedSession->bookings()
+                ->where('status', BookingStatus::Confirmed->value)
+                ->count();
+
+            if ($confirmedBookings >= $lockedSession->min_participants) {
+                $lockedSession->forceFill(['status' => SessionStatus::Confirmed])->save();
+                SessionConfirmed::dispatch($lockedSession->getKey());
+            }
+        }
+
+        BookingCreated::dispatch($lockedBooking->getKey());
     }
 
     private function findBookingForPaymentIntent(Event $event): ?Booking
