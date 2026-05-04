@@ -152,4 +152,12 @@ return [
     'stripe_not_ready_body' => 'U kunt deze sessie opslaan, maar sporters kunnen deze pas boeken als u uw Stripe-betalingsinstelling heeft voltooid.',
     'stripe_not_ready_action' => 'Stripe-betalingen instellen →',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Publicatiebeveiliging
+    |--------------------------------------------------------------------------
+    */
+
+    'publish_requires_stripe_onboarding' => 'U moet de Stripe-onboarding voltooien voordat u een sessie kunt publiceren.',
+
 ];

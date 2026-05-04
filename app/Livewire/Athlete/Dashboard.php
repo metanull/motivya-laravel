@@ -19,9 +19,19 @@ final class Dashboard extends Component
         /** @var User $athlete */
         $athlete = auth()->user();
 
+        // Pending-payment bookings shown prominently with expiry timestamp.
+        $pendingPayments = Booking::query()
+            ->where('athlete_id', $athlete->id)
+            ->where('status', BookingStatus::PendingPayment)
+            ->whereHas('sportSession', fn ($q) => $q->where('date', '>=', now()->toDateString()))
+            ->with(['sportSession', 'sportSession.coach'])
+            ->get()
+            ->sortBy(fn (Booking $b) => $b->sportSession->date);
+
+        // Confirmed upcoming bookings.
         $upcoming = Booking::query()
             ->where('athlete_id', $athlete->id)
-            ->whereIn('status', [BookingStatus::PendingPayment, BookingStatus::Confirmed])
+            ->where('status', BookingStatus::Confirmed)
             ->whereHas('sportSession', fn ($q) => $q->where('date', '>=', now()->toDateString()))
             ->with(['sportSession', 'sportSession.coach'])
             ->get()
@@ -39,6 +49,7 @@ final class Dashboard extends Component
             ->take(20);
 
         return view('livewire.athlete.dashboard', [
+            'pendingPayments' => $pendingPayments,
             'upcoming' => $upcoming,
             'past' => $past,
         ])->title(__('athlete.dashboard_title'));

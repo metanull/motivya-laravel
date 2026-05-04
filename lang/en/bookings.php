@@ -41,5 +41,42 @@ return [
     'payment_return_success_body' => 'Your payment was successful. Your booking will be confirmed shortly.',
     'payment_return_cancel_title' => 'Payment cancelled',
     'payment_return_cancel_body' => 'Your booking has been cancelled. You were not charged.',
+    'payment_return_failed_title' => 'Payment not completed',
+    'payment_return_failed_body' => 'Your payment could not be completed. Your seat is no longer reserved.',
+    'payment_return_pending_title' => 'Payment not completed',
+    'payment_return_pending_body' => 'Your payment was not completed. Your seat is still reserved — you can retry or release it.',
+    'payment_return_retry_action' => 'Retry payment',
+    'payment_return_cancel_hold_action' => 'Release my seat',
+    'payment_return_cancel_hold_success' => 'Your seat has been released.',
+    'payment_return_expires_at' => 'Reservation expires at',
     'payment_return_back_to_session' => 'Back to session',
+    'payment_hold_expired' => 'Reservation expired',
+    'error_payment_hold_expired' => 'Your payment hold has expired. Please book again.',
+    'error_payment_hold_not_pending' => 'This booking is no longer awaiting payment.',
+    'pending_payment_expiry_label' => 'Reservation expires at',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Booking Confirmation Modal
+    |--------------------------------------------------------------------------
+    */
+
+    'confirm_modal_title' => 'Confirm your booking',
+    'confirm_modal_session_label' => 'Session',
+    'confirm_modal_coach_label' => 'Coach',
+    'confirm_modal_date_label' => 'Date & time',
+    'confirm_modal_location_label' => 'Location',
+    'confirm_modal_price_label' => 'Price',
+    'confirm_modal_payment_methods_label' => 'Payment methods',
+    'confirm_modal_payment_methods_value' => 'Bancontact, Card',
+    'confirm_modal_cancellation_label' => 'Cancellation policy',
+    'confirm_modal_cancellation_confirmed' => 'Free cancellation up to 48 hours before start.',
+    'confirm_modal_cancellation_published' => 'Free cancellation up to 24 hours before start.',
+    'confirm_modal_hold_expiry_label' => 'Payment hold expires',
+    'confirm_modal_hold_expiry_value' => '30 minutes after booking',
+    'confirm_modal_confirm_action' => 'Confirm & Pay',
+    'confirm_modal_cancel_action' => 'Cancel',
+    'guest_login_cta' => 'Log in to book',
+    'guest_register_cta' => 'Create an account',
+
 ];

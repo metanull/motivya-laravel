@@ -29,11 +29,37 @@ final class Book extends Component
 
     public ?Booking $existingBooking = null;
 
+    /** Controls visibility of the booking confirmation modal. */
+    public bool $showConfirmModal = false;
+
     public function mount(SportSession $sportSession): void
     {
         $this->sportSession = $sportSession;
 
         $this->syncState();
+    }
+
+    /**
+     * Open the confirmation modal after checking auth and authorization.
+     * Does NOT create a booking.
+     */
+    public function openConfirmModal(): mixed
+    {
+        $athlete = auth()->user();
+        abort_unless($athlete instanceof User, 403);
+
+        if ($athlete instanceof MustVerifyEmail && ! $athlete->hasVerifiedEmail()) {
+            $this->dispatch('notify', type: 'warning', message: __('auth.booking_requires_verified_email'));
+            $this->redirect(route('verification.notice'));
+
+            return null;
+        }
+
+        Gate::authorize('create', [Booking::class, $this->sportSession]);
+
+        $this->showConfirmModal = true;
+
+        return null;
     }
 
     public function book(BookingService $bookingService, PaymentService $paymentService): mixed
@@ -49,6 +75,8 @@ final class Book extends Component
         }
 
         Gate::authorize('create', [Booking::class, $this->sportSession]);
+
+        $this->showConfirmModal = false;
 
         try {
             $checkoutSession = DB::transaction(function () use ($athlete, $bookingService, $paymentService): CheckoutSession {
@@ -76,10 +104,19 @@ final class Book extends Component
     {
         $spotsRemaining = max($this->sportSession->max_participants - $this->sportSession->current_participants, 0);
 
+        // Determine cancellation policy message for the confirmation modal
+        $cancellationPolicy = match ($this->sportSession->status) {
+            SessionStatus::Confirmed => __('bookings.confirm_modal_cancellation_confirmed'),
+            default => __('bookings.confirm_modal_cancellation_published'),
+        };
+
         return view('livewire.booking.book', [
             'availabilityMessage' => $this->availabilityMessage(),
             'canBook' => $this->canBook(),
+            'isGuest' => ! (auth()->user() instanceof User),
             'spotsRemaining' => $spotsRemaining,
+            'cancellationPolicy' => $cancellationPolicy,
+            'paymentHoldExpiry' => __('bookings.confirm_modal_hold_expiry_value'),
         ]);
     }
 

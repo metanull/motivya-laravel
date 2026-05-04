@@ -41,5 +41,42 @@ return [
     'payment_return_success_body' => 'Je betaling is ontvangen. Je boeking wordt binnenkort bevestigd.',
     'payment_return_cancel_title' => 'Betaling geannuleerd',
     'payment_return_cancel_body' => 'Je boeking is geannuleerd. Er werd niets in rekening gebracht.',
+    'payment_return_failed_title' => 'Betaling niet voltooid',
+    'payment_return_failed_body' => 'Je betaling kon niet worden voltooid. Je plaats is niet meer gereserveerd.',
+    'payment_return_pending_title' => 'Betaling niet voltooid',
+    'payment_return_pending_body' => 'Je betaling is niet afgerond. Je plaats is nog gereserveerd — je kunt het opnieuw proberen of vrijgeven.',
+    'payment_return_retry_action' => 'Betaling opnieuw proberen',
+    'payment_return_cancel_hold_action' => 'Mijn plaats vrijgeven',
+    'payment_return_cancel_hold_success' => 'Je plaats is vrijgegeven.',
+    'payment_return_expires_at' => 'Reservering verloopt om',
     'payment_return_back_to_session' => 'Terug naar sessie',
+    'payment_hold_expired' => 'Reservering verlopen',
+    'error_payment_hold_expired' => 'Je reservering is verlopen. Boek opnieuw.',
+    'error_payment_hold_not_pending' => 'Deze boeking wacht niet meer op betaling.',
+    'pending_payment_expiry_label' => 'Reservering verloopt om',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Boekingsbevestigingsmodal
+    |--------------------------------------------------------------------------
+    */
+
+    'confirm_modal_title' => 'Bevestig uw boeking',
+    'confirm_modal_session_label' => 'Sessie',
+    'confirm_modal_coach_label' => 'Coach',
+    'confirm_modal_date_label' => 'Datum en tijd',
+    'confirm_modal_location_label' => 'Locatie',
+    'confirm_modal_price_label' => 'Prijs',
+    'confirm_modal_payment_methods_label' => 'Betaalmethoden',
+    'confirm_modal_payment_methods_value' => 'Bancontact, Kaart',
+    'confirm_modal_cancellation_label' => 'Annuleringsbeleid',
+    'confirm_modal_cancellation_confirmed' => 'Gratis annulering tot 48 uur voor aanvang.',
+    'confirm_modal_cancellation_published' => 'Gratis annulering tot 24 uur voor aanvang.',
+    'confirm_modal_hold_expiry_label' => 'Betalingsreservering verloopt',
+    'confirm_modal_hold_expiry_value' => '30 minuten na boeking',
+    'confirm_modal_confirm_action' => 'Bevestigen en betalen',
+    'confirm_modal_cancel_action' => 'Annuleren',
+    'guest_login_cta' => 'Inloggen om te boeken',
+    'guest_register_cta' => 'Account aanmaken',
+
 ];

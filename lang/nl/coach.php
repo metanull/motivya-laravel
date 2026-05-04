@@ -84,6 +84,8 @@ return [
     'stat_total_sessions' => 'Totaal sessies',
     'stat_sessions_this_month' => 'Deze maand',
     'stat_total_bookings' => 'Totaal boekingen',
+    'stat_confirmed_participants' => 'Bevestigde deelnemers',
+    'stat_pending_holds' => 'Wachtende betalingen',
     'stat_avg_fill_rate' => 'Gem. bezettingsgraad',
     'stat_total_revenue' => 'Totale omzet',
     'preview' => 'Voorbeeld',
@@ -92,6 +94,37 @@ return [
     'stripe_setup_required_body' => 'Om boekingen te accepteren en betalingen te ontvangen, moet u uw Stripe-account verbinden. Uw sessies zijn niet boekbaar totdat deze stap is voltooid.',
     'stripe_setup_start' => 'Stripe-account verbinden',
     'stripe_setup_continue' => 'Stripe-instelling voortzetten',
+    'published_sessions_not_stripe_ready' => 'U heeft gepubliceerde sessies die niet boekbaar zijn omdat uw Stripe-account nog niet is geconfigureerd.',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Deelnemersaantallen op sessiekaarten
+    |--------------------------------------------------------------------------
+    */
+
+    'session_card_confirmed' => 'Bevestigd',
+    'session_card_pending_holds' => 'Wachtend op betaling',
+    'session_card_available' => 'Beschikbaar',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Coach Onboarding Checklist
+    |--------------------------------------------------------------------------
+    */
+
+    'onboarding_checklist_heading' => 'Lanceerchecklist',
+    'onboarding_checklist_subtitle' => ':done van :total stappen voltooid',
+    'onboarding_show_checklist' => 'Lanceerchecklist bekijken',
+    'onboarding_hide_checklist' => 'Checklist verbergen',
+    'onboarding_item_profile_approved' => 'Profiel goedgekeurd door Motivya',
+    'onboarding_item_profile_complete' => 'Profiel volledig (bio, specialiteiten, ervaring, locatie, onderneming)',
+    'onboarding_item_vat_captured' => 'BTW-status bevestigd door beheerder',
+    'onboarding_item_stripe_ready' => 'Stripe-betaalaccount verbonden',
+    'onboarding_item_published_session' => 'Eerste sessie gepubliceerd',
+    'onboarding_item_cover_image' => 'Omslagafbeelding voor sessie geüpload',
+    'onboarding_item_action_complete' => 'Klaar',
+    'onboarding_item_action_fix' => 'Voltooien →',
+    'onboarding_all_done' => 'Alles is klaar — uw profiel is lanceerklaar!',
 
     /*
     |--------------------------------------------------------------------------

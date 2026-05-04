@@ -153,4 +153,12 @@ return [
     'stripe_not_ready_body' => 'You can save this session, but athletes will not be able to book it until you complete your Stripe payment setup.',
     'stripe_not_ready_action' => 'Set up Stripe payments →',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Publish guard
+    |--------------------------------------------------------------------------
+    */
+
+    'publish_requires_stripe_onboarding' => 'You must complete Stripe onboarding before publishing a session.',
+
 ];

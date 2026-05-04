@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use App\Enums\SessionStatus;
+use App\Models\CoachProfile;
 use App\Models\SportSession;
+use App\Models\User;
 use App\Services\SessionService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
@@ -12,7 +14,12 @@ uses(RefreshDatabase::class);
 
 describe('session publishing', function () {
     it('publishes a complete draft session', function () {
-        $session = SportSession::factory()->draft()->create();
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->for($coach)->create([
+            'stripe_account_id' => 'acct_test',
+            'stripe_onboarding_complete' => true,
+        ]);
+        $session = SportSession::factory()->draft()->create(['coach_id' => $coach->id]);
 
         $service = app(SessionService::class);
         $service->publish($session);
@@ -48,8 +55,46 @@ describe('session publishing', function () {
             ->toThrow(InvalidArgumentException::class, 'Only draft sessions can be published.');
     });
 
+    it('throws ValidationException with stripe_onboarding key when stripe not complete', function () {
+        $coach = User::factory()->coach()->create();
+        // No CoachProfile → stripe onboarding incomplete
+        $session = SportSession::factory()->draft()->create(['coach_id' => $coach->id]);
+
+        $service = app(SessionService::class);
+
+        try {
+            $service->publish($session);
+            $this->fail('Expected ValidationException was not thrown.');
+        } catch (ValidationException $e) {
+            expect($e->errors())->toHaveKey('stripe_onboarding');
+        }
+    });
+
+    it('throws ValidationException when coach profile exists but stripe_onboarding_complete is false', function () {
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->for($coach)->create([
+            'stripe_account_id' => 'acct_incomplete',
+            'stripe_onboarding_complete' => false,
+        ]);
+        $session = SportSession::factory()->draft()->create(['coach_id' => $coach->id]);
+
+        $service = app(SessionService::class);
+
+        try {
+            $service->publish($session);
+            $this->fail('Expected ValidationException was not thrown.');
+        } catch (ValidationException $e) {
+            expect($e->errors())->toHaveKey('stripe_onboarding');
+        }
+    });
+
     it('refuses to publish a session with missing title', function () {
-        $session = SportSession::factory()->draft()->create(['title' => '']);
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->for($coach)->create([
+            'stripe_account_id' => 'acct_test',
+            'stripe_onboarding_complete' => true,
+        ]);
+        $session = SportSession::factory()->draft()->create(['coach_id' => $coach->id, 'title' => '']);
 
         $service = app(SessionService::class);
 
@@ -58,7 +103,12 @@ describe('session publishing', function () {
     });
 
     it('refuses to publish a session with missing location', function () {
-        $session = SportSession::factory()->draft()->create(['location' => '']);
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->for($coach)->create([
+            'stripe_account_id' => 'acct_test',
+            'stripe_onboarding_complete' => true,
+        ]);
+        $session = SportSession::factory()->draft()->create(['coach_id' => $coach->id, 'location' => '']);
 
         $service = app(SessionService::class);
 
@@ -67,7 +117,12 @@ describe('session publishing', function () {
     });
 
     it('refuses to publish a session with zero price', function () {
-        $session = SportSession::factory()->draft()->create(['price_per_person' => 0]);
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->for($coach)->create([
+            'stripe_account_id' => 'acct_test',
+            'stripe_onboarding_complete' => true,
+        ]);
+        $session = SportSession::factory()->draft()->create(['coach_id' => $coach->id, 'price_per_person' => 0]);
 
         $service = app(SessionService::class);
 
@@ -76,7 +131,12 @@ describe('session publishing', function () {
     });
 
     it('refuses to publish a session with zero min participants', function () {
-        $session = SportSession::factory()->draft()->create(['min_participants' => 0]);
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->for($coach)->create([
+            'stripe_account_id' => 'acct_test',
+            'stripe_onboarding_complete' => true,
+        ]);
+        $session = SportSession::factory()->draft()->create(['coach_id' => $coach->id, 'min_participants' => 0]);
 
         $service = app(SessionService::class);
 

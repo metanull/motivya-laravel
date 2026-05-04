@@ -222,6 +222,16 @@ final class SessionService
             throw new InvalidArgumentException('Only draft sessions can be published.');
         }
 
+        // Guard: coach must have completed Stripe onboarding before publishing.
+        $session->loadMissing('coach.coachProfile');
+        $coachProfile = $session->coach?->coachProfile;
+
+        if (! ($coachProfile?->stripe_onboarding_complete === true)) {
+            throw ValidationException::withMessages([
+                'stripe_onboarding' => [__('sessions.publish_requires_stripe_onboarding')],
+            ]);
+        }
+
         $missing = [];
 
         if (empty($session->title)) {

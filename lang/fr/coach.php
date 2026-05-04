@@ -84,6 +84,8 @@ return [
     'stat_total_sessions' => 'Séances totales',
     'stat_sessions_this_month' => 'Ce mois-ci',
     'stat_total_bookings' => 'Réservations totales',
+    'stat_confirmed_participants' => 'Participants confirmés',
+    'stat_pending_holds' => 'Réservations en attente',
     'stat_avg_fill_rate' => 'Taux de remplissage',
     'stat_total_revenue' => 'Revenu total',
     'preview' => 'Aperçu',
@@ -92,6 +94,37 @@ return [
     'stripe_setup_required_body' => 'Pour accepter des réservations et recevoir des paiements, vous devez connecter votre compte Stripe. Vos séances ne seront pas réservables tant que cette étape n\'est pas complétée.',
     'stripe_setup_start' => 'Connecter le compte Stripe',
     'stripe_setup_continue' => 'Continuer la configuration Stripe',
+    'published_sessions_not_stripe_ready' => 'Vous avez des séances publiées qui ne sont pas réservables car votre compte Stripe n\'est pas encore configuré.',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Comptages participants sur les cartes de séance
+    |--------------------------------------------------------------------------
+    */
+
+    'session_card_confirmed' => 'Confirmé(s)',
+    'session_card_pending_holds' => 'En attente de paiement',
+    'session_card_available' => 'Disponible(s)',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Liste de vérification d'intégration Coach
+    |--------------------------------------------------------------------------
+    */
+
+    'onboarding_checklist_heading' => 'Checklist de lancement',
+    'onboarding_checklist_subtitle' => ':done étape(s) sur :total complétée(s)',
+    'onboarding_show_checklist' => 'Voir la checklist de lancement',
+    'onboarding_hide_checklist' => 'Masquer la checklist',
+    'onboarding_item_profile_approved' => 'Profil approuvé par Motivya',
+    'onboarding_item_profile_complete' => 'Profil complet (bio, spécialités, expérience, localisation, entreprise)',
+    'onboarding_item_vat_captured' => 'Statut TVA confirmé par l\'administrateur',
+    'onboarding_item_stripe_ready' => 'Compte de paiement Stripe connecté',
+    'onboarding_item_published_session' => 'Première séance publiée',
+    'onboarding_item_cover_image' => 'Image de couverture de séance téléchargée',
+    'onboarding_item_action_complete' => 'Fait',
+    'onboarding_item_action_fix' => 'Compléter →',
+    'onboarding_all_done' => 'Tout est prêt — votre profil est prêt pour le lancement !',
 
     /*
     |--------------------------------------------------------------------------

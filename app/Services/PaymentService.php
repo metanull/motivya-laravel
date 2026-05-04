@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Contracts\PaymentServiceContract;
 use App\Models\Booking;
 use Closure;
 use InvalidArgumentException;
@@ -11,7 +12,7 @@ use RuntimeException;
 use Stripe\Checkout\Session as CheckoutSession;
 use Stripe\Stripe;
 
-final class PaymentService
+final class PaymentService implements PaymentServiceContract
 {
     public function __construct(
         private readonly ?Closure $createCheckoutSessionUsing = null,

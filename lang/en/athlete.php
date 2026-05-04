@@ -23,6 +23,9 @@ return [
     'quick_link_profile' => 'My Profile',
     'booking_coach_label' => 'Coach',
     'cancel_booking_link' => 'Cancel',
+    'pending_payment_section_heading' => 'Awaiting payment',
+    'pending_payment_expiry_label' => 'Reservation expires at',
+    'pending_payment_retry_link' => 'Pay now',
 
     /*
     |--------------------------------------------------------------------------
