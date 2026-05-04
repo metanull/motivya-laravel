@@ -25,6 +25,19 @@ final class PayoutService
     ) {}
 
     /**
+     * Returns the plan definitions used by the auto-best-plan algorithm.
+     *
+     * Exposed as a public method so read-only views (e.g. admin billing config)
+     * can display the active values without duplicating the data.
+     *
+     * @return array<string, array{commission_rate: int, subscription_fee: int}>
+     */
+    public function planDefinitions(): array
+    {
+        return self::PLANS;
+    }
+
+    /**
      * Calculates the coach payout using the auto-best-plan algorithm.
      *
      * Computes the payout for all three plans (Freemium, Active, Premium) and
