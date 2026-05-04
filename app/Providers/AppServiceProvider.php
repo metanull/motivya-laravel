@@ -10,6 +10,7 @@ use App\Models\SportSession;
 use App\Models\User;
 use App\Policies\InvoicePolicy;
 use App\Policies\SessionPolicy;
+use App\Services\Audit\AuditContextResolver;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -20,7 +21,7 @@ final class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(AuditContextResolver::class);
     }
 
     /**
