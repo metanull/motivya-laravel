@@ -81,11 +81,12 @@ describe('CoachProfile', function () {
         expect($profile->stripe_onboarding_complete)->toBeFalse();
     });
 
-    it('defaults is_vat_subject to false', function () {
+    it('has null is_vat_subject by default (not yet reviewed by admin)', function () {
         $profile = CoachProfile::factory()->create();
         $profile->refresh();
 
-        expect($profile->is_vat_subject)->toBeFalse();
+        // null = admin has not yet captured VAT status; true/false = explicitly set
+        expect($profile->is_vat_subject)->toBeNull();
     });
 });
 

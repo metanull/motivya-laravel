@@ -23,6 +23,9 @@ return [
     'quick_link_profile' => 'Mon profil',
     'booking_coach_label' => 'Coach',
     'cancel_booking_link' => 'Annuler',
+    'pending_payment_section_heading' => 'En attente de paiement',
+    'pending_payment_expiry_label' => 'Réservation expire à',
+    'pending_payment_retry_link' => 'Payer maintenant',
 
     /*
     |--------------------------------------------------------------------------

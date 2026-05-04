@@ -41,5 +41,42 @@ return [
     'payment_return_success_body' => 'Votre paiement a bien été reçu. Votre réservation sera confirmée sous peu.',
     'payment_return_cancel_title' => 'Paiement annulé',
     'payment_return_cancel_body' => 'Votre réservation a été annulée. Aucun montant n\'a été débité.',
+    'payment_return_failed_title' => 'Paiement non complété',
+    'payment_return_failed_body' => 'Votre paiement n\'a pas pu être complété. Votre place n\'est plus réservée.',
+    'payment_return_pending_title' => 'Paiement non complété',
+    'payment_return_pending_body' => 'Votre paiement n\'a pas été finalisé. Votre place est toujours réservée — vous pouvez réessayer ou la libérer.',
+    'payment_return_retry_action' => 'Réessayer le paiement',
+    'payment_return_cancel_hold_action' => 'Libérer ma place',
+    'payment_return_cancel_hold_success' => 'Votre place a été libérée.',
+    'payment_return_expires_at' => 'Réservation expire à',
     'payment_return_back_to_session' => 'Retour à la séance',
+    'payment_hold_expired' => 'Réservation expirée',
+    'error_payment_hold_expired' => 'Votre réservation a expiré. Veuillez réserver à nouveau.',
+    'error_payment_hold_not_pending' => 'Cette réservation n\'est plus en attente de paiement.',
+    'pending_payment_expiry_label' => 'Réservation expire à',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Modal de confirmation de réservation
+    |--------------------------------------------------------------------------
+    */
+
+    'confirm_modal_title' => 'Confirmer votre réservation',
+    'confirm_modal_session_label' => 'Séance',
+    'confirm_modal_coach_label' => 'Coach',
+    'confirm_modal_date_label' => 'Date et heure',
+    'confirm_modal_location_label' => 'Lieu',
+    'confirm_modal_price_label' => 'Prix',
+    'confirm_modal_payment_methods_label' => 'Moyens de paiement',
+    'confirm_modal_payment_methods_value' => 'Bancontact, Carte',
+    'confirm_modal_cancellation_label' => 'Politique d\'annulation',
+    'confirm_modal_cancellation_confirmed' => 'Annulation gratuite jusqu\'à 48 heures avant le début.',
+    'confirm_modal_cancellation_published' => 'Annulation gratuite jusqu\'à 24 heures avant le début.',
+    'confirm_modal_hold_expiry_label' => 'Expiration de la réservation',
+    'confirm_modal_hold_expiry_value' => '30 minutes après la réservation',
+    'confirm_modal_confirm_action' => 'Confirmer et payer',
+    'confirm_modal_cancel_action' => 'Annuler',
+    'guest_login_cta' => 'Se connecter pour réserver',
+    'guest_register_cta' => 'Créer un compte',
+
 ];

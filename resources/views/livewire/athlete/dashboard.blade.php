@@ -21,6 +21,61 @@
         </a>
     </div>
 
+    {{-- Pending payment bookings (shown above tabs) --}}
+    @if ($pendingPayments->isNotEmpty())
+        <div class="mb-6">
+            <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400">
+                {{ __('athlete.pending_payment_section_heading') }}
+            </h2>
+            @foreach ($pendingPayments as $booking)
+                <div class="mb-3 rounded-lg border border-amber-200 bg-amber-50 p-4 shadow-sm dark:border-amber-900 dark:bg-gray-800">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                        <div class="space-y-1">
+                            <h3 class="font-semibold text-gray-900 dark:text-gray-100">
+                                <a href="{{ route('sessions.show', $booking->sportSession) }}" wire:navigate
+                                    class="hover:underline">
+                                    {{ $booking->sportSession->title }}
+                                </a>
+                            </h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                                {{ __('athlete.booking_coach_label') }}: {{ $booking->sportSession->coach->name }}
+                            </p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                                {{ $booking->sportSession->date->translatedFormat('l j F Y') }}
+                                &middot; {{ \Carbon\Carbon::parse($booking->sportSession->start_time)->format('H:i') }}
+                                &ndash; {{ \Carbon\Carbon::parse($booking->sportSession->end_time)->format('H:i') }}
+                            </p>
+                            @if ($booking->payment_expires_at)
+                                <p class="text-xs @if($booking->isPaymentExpired()) text-red-600 dark:text-red-400 @else text-amber-700 dark:text-amber-400 @endif">
+                                    {{ __('athlete.pending_payment_expiry_label') }}:
+                                    <span class="font-semibold">{{ $booking->payment_expires_at->format('H:i') }}</span>
+                                    @if (! $booking->isPaymentExpired())
+                                        ({{ $booking->payment_expires_at->diffForHumans() }})
+                                    @else
+                                        — {{ __('bookings.payment_hold_expired') }}
+                                    @endif
+                                </p>
+                            @endif
+                        </div>
+                        <div class="flex flex-shrink-0 items-center gap-3">
+                            <x-money :cents="$booking->sportSession->price_per_person"
+                                class="font-semibold text-gray-900 dark:text-gray-100" />
+                            @if (! $booking->isPaymentExpired())
+                                <form method="POST" action="{{ route('bookings.retry-payment', $booking) }}">
+                                    @csrf
+                                    <button type="submit"
+                                        class="inline-flex items-center rounded-md bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-indigo-500">
+                                        {{ __('athlete.pending_payment_retry_link') }}
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    @endif
+
     {{-- Tabs --}}
     <div class="border-b border-gray-200 dark:border-gray-700">
         <nav class="-mb-px flex space-x-8" aria-label="{{ __('athlete.tabs_label') }}">
@@ -67,7 +122,6 @@
                                 class="font-semibold text-gray-900 dark:text-gray-100" />
                             <span @class([
                                 'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
-                                'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' => $booking->status === \App\Enums\BookingStatus::PendingPayment,
                                 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' => $booking->status === \App\Enums\BookingStatus::Confirmed,
                             ])>
                                 {{ $booking->status->label() }}

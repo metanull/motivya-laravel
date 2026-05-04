@@ -152,4 +152,12 @@ return [
     'stripe_not_ready_body' => 'Vous pouvez enregistrer cette séance, mais les sportifs ne pourront pas la réserver tant que vous n\'avez pas complété votre configuration de paiement Stripe.',
     'stripe_not_ready_action' => 'Configurer les paiements Stripe →',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Garde de publication
+    |--------------------------------------------------------------------------
+    */
+
+    'publish_requires_stripe_onboarding' => 'Vous devez compléter l\'intégration Stripe avant de publier une séance.',
+
 ];

@@ -68,27 +68,31 @@ describe('coach dashboard stats', function () {
 
         Livewire::actingAs($coach)
             ->test(Dashboard::class)
-            ->assertSee(__('coach.stat_total_bookings'))
+            ->assertSee(__('coach.stat_confirmed_participants'))
             ->assertSeeHtml('>13</p>');
     });
 
     it('shows average fill rate', function () {
         $coach = User::factory()->coach()->create();
 
-        // Session 1: 5/10 = 50%
-        SportSession::factory()->published()->create([
+        // Session 1: 5 confirmed / 10 max = 50%
+        $sessionA = SportSession::factory()->published()->create([
             'coach_id' => $coach->id,
             'current_participants' => 5,
             'max_participants' => 10,
             'date' => now()->addDays(3),
         ]);
-        // Session 2: 10/10 = 100%
-        SportSession::factory()->confirmed()->create([
+        Booking::factory()->confirmed()->count(5)->for($sessionA, 'sportSession')->create();
+
+        // Session 2: 10 confirmed / 10 max = 100%
+        $sessionB = SportSession::factory()->confirmed()->create([
             'coach_id' => $coach->id,
             'current_participants' => 10,
             'max_participants' => 10,
             'date' => now()->addDays(5),
         ]);
+        Booking::factory()->confirmed()->count(10)->for($sessionB, 'sportSession')->create();
+
         // Average: 75%
 
         Livewire::actingAs($coach)

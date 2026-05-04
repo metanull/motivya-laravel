@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Contracts\BookingServiceContract;
+use App\Contracts\PaymentServiceContract;
 use App\Enums\UserRole;
 use App\Models\Invoice;
 use App\Models\SportSession;
@@ -11,6 +13,8 @@ use App\Models\User;
 use App\Policies\InvoicePolicy;
 use App\Policies\SessionPolicy;
 use App\Services\Audit\AuditContextResolver;
+use App\Services\BookingService;
+use App\Services\PaymentService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -22,6 +26,10 @@ final class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(AuditContextResolver::class);
+
+        // Bind service contracts to their concrete implementations
+        $this->app->singleton(BookingServiceContract::class, BookingService::class);
+        $this->app->singleton(PaymentServiceContract::class, PaymentService::class);
     }
 
     /**

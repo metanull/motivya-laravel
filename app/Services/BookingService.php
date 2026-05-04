@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Contracts\BookingServiceContract;
 use App\Enums\BookingStatus;
 use App\Enums\SessionStatus;
 use App\Events\BookingCancelled;
@@ -18,7 +19,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
-final class BookingService
+final class BookingService implements BookingServiceContract
 {
     /**
      * Create a booking atomically and update session capacity.

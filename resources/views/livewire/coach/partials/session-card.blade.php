@@ -37,8 +37,11 @@
                     {{ $session->current_participants }} / {{ $session->max_participants }}
                 </span>
                 @php
+                    $confirmedCount = $session->confirmed_count ?? 0;
+                    $pendingCount   = $session->pending_count ?? 0;
+                    $availableCount = max($session->max_participants - $confirmedCount - $pendingCount, 0);
                     $fillRate = $session->max_participants > 0
-                        ? round(($session->current_participants / $session->max_participants) * 100)
+                        ? round(($confirmedCount / $session->max_participants) * 100)
                         : 0;
                 @endphp
                 <div class="h-2 w-24 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-600">
@@ -46,6 +49,24 @@
                         style="width: {{ $fillRate }}%"></div>
                 </div>
                 <span class="text-xs text-gray-500 dark:text-gray-400">{{ $fillRate }}%</span>
+            </div>
+
+            {{-- Participant breakdown: confirmed / pending holds / available --}}
+            <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-gray-500 dark:text-gray-400">
+                <span>
+                    <span class="font-medium text-green-600 dark:text-green-400">{{ $confirmedCount }}</span>
+                    {{ __('coach.session_card_confirmed') }}
+                </span>
+                @if ($pendingCount > 0)
+                    <span>
+                        <span class="font-medium text-amber-600 dark:text-amber-400">{{ $pendingCount }}</span>
+                        {{ __('coach.session_card_pending_holds') }}
+                    </span>
+                @endif
+                <span>
+                    <span class="font-medium text-gray-700 dark:text-gray-300">{{ $availableCount }}</span>
+                    {{ __('coach.session_card_available') }}
+                </span>
             </div>
         </div>
 

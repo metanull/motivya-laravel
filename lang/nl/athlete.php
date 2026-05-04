@@ -23,6 +23,9 @@ return [
     'quick_link_profile' => 'Mijn profiel',
     'booking_coach_label' => 'Coach',
     'cancel_booking_link' => 'Annuleren',
+    'pending_payment_section_heading' => 'In afwachting van betaling',
+    'pending_payment_expiry_label' => 'Reservering verloopt om',
+    'pending_payment_retry_link' => 'Nu betalen',
 
     /*
     |--------------------------------------------------------------------------

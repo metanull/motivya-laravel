@@ -84,6 +84,8 @@ return [
     'stat_total_sessions' => 'Total Sessions',
     'stat_sessions_this_month' => 'This Month',
     'stat_total_bookings' => 'Total Bookings',
+    'stat_confirmed_participants' => 'Confirmed Participants',
+    'stat_pending_holds' => 'Pending Holds',
     'stat_avg_fill_rate' => 'Avg Fill Rate',
     'stat_total_revenue' => 'Total Revenue',
     'preview' => 'Preview',
@@ -92,6 +94,37 @@ return [
     'stripe_setup_required_body' => 'To accept bookings and receive payments, you need to connect your Stripe account. Your sessions will not be bookable until this step is completed.',
     'stripe_setup_start' => 'Connect Stripe account',
     'stripe_setup_continue' => 'Continue Stripe setup',
+    'published_sessions_not_stripe_ready' => 'You have published sessions that are not bookable because your Stripe account setup is not complete.',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Session Card participant counts
+    |--------------------------------------------------------------------------
+    */
+
+    'session_card_confirmed' => 'Confirmed',
+    'session_card_pending_holds' => 'Pending holds',
+    'session_card_available' => 'Available',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Coach Onboarding Checklist
+    |--------------------------------------------------------------------------
+    */
+
+    'onboarding_checklist_heading' => 'Launch checklist',
+    'onboarding_checklist_subtitle' => ':done of :total steps completed',
+    'onboarding_show_checklist' => 'View launch checklist',
+    'onboarding_hide_checklist' => 'Hide checklist',
+    'onboarding_item_profile_approved' => 'Profile approved by Motivya',
+    'onboarding_item_profile_complete' => 'Profile complete (bio, specialties, experience, location, enterprise)',
+    'onboarding_item_vat_captured' => 'VAT status confirmed by admin',
+    'onboarding_item_stripe_ready' => 'Stripe payment account connected',
+    'onboarding_item_published_session' => 'First session published',
+    'onboarding_item_cover_image' => 'Session cover image uploaded',
+    'onboarding_item_action_complete' => 'Done',
+    'onboarding_item_action_fix' => 'Complete →',
+    'onboarding_all_done' => 'You\'re all set — your profile is launch-ready!',
 
     /*
     |--------------------------------------------------------------------------

@@ -60,6 +60,14 @@ Route::get('/bookings/payment-return', BookingPaymentReturnController::class)
     ->middleware('auth')
     ->name('bookings.payment-return');
 
+Route::post('/bookings/{booking}/retry-payment', [BookingPaymentReturnController::class, 'retryPayment'])
+    ->middleware('auth')
+    ->name('bookings.retry-payment');
+
+Route::post('/bookings/{booking}/cancel-hold', [BookingPaymentReturnController::class, 'cancelHold'])
+    ->middleware('auth')
+    ->name('bookings.cancel-hold');
+
 Route::get('/health', function () {
     $checks = ['status' => 'ok'];
 

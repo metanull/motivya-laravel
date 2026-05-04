@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\PaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Stripe\Checkout\Session;
 use Stripe\Checkout\Session as CheckoutSession;
 
 uses(RefreshDatabase::class);
@@ -60,7 +61,7 @@ describe('booking widget', function () {
 
         Livewire::actingAs($coach)
             ->test(Book::class, ['sportSession' => $session])
-            ->assertDontSeeHtml('wire:click="book"')
+            ->assertDontSeeHtml('wire:click="openConfirmModal"')
             ->assertSee(__('bookings.only_athletes_can_book'));
     });
 
@@ -93,7 +94,7 @@ describe('booking widget', function () {
 
         Livewire::actingAs($athlete)
             ->test(Book::class, ['sportSession' => $session])
-            ->assertDontSeeHtml('wire:click="book"')
+            ->assertDontSeeHtml('wire:click="openConfirmModal"')
             ->assertSee(__('auth.booking_requires_verified_email'));
     });
 
@@ -149,4 +150,87 @@ describe('booking widget', function () {
             return [$session, $athlete, 0];
         },
     ]);
+});
+
+describe('booking confirmation modal (story 6.2)', function () {
+    it('openConfirmModal sets showConfirmModal to true and does not create a booking', function () {
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->approved()->for($coach)->create([
+            'stripe_account_id' => 'acct_modal_test',
+            'stripe_onboarding_complete' => true,
+        ]);
+
+        $session = SportSession::factory()->published()->for($coach, 'coach')->create();
+        $athlete = User::factory()->athlete()->create();
+
+        Livewire::actingAs($athlete)
+            ->test(Book::class, ['sportSession' => $session])
+            ->call('openConfirmModal')
+            ->assertSet('showConfirmModal', true);
+
+        expect(Booking::query()->where('sport_session_id', $session->id)->count())->toBe(0);
+    });
+
+    it('openConfirmModal redirects unverified athlete to verification notice', function () {
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->approved()->for($coach)->create([
+            'stripe_account_id' => 'acct_modal_unverified',
+            'stripe_onboarding_complete' => true,
+        ]);
+
+        $session = SportSession::factory()->published()->for($coach, 'coach')->create();
+        $athlete = User::factory()->athlete()->unverified()->create();
+
+        Livewire::actingAs($athlete)
+            ->test(Book::class, ['sportSession' => $session])
+            ->call('openConfirmModal')
+            ->assertRedirect(route('verification.notice'))
+            ->assertDispatched('notify');
+    });
+
+    it('confirmBook via book() creates booking and redirects to Stripe', function () {
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->approved()->for($coach)->create([
+            'stripe_account_id' => 'acct_confirm_book',
+            'stripe_onboarding_complete' => true,
+        ]);
+
+        $session = SportSession::factory()->published()->for($coach, 'coach')->create([
+            'price_per_person' => 3000,
+        ]);
+        $athlete = User::factory()->athlete()->create();
+
+        app()->instance(
+            PaymentService::class,
+            new PaymentService(
+                createCheckoutSessionUsing: fn (array $payload): Session => Session::constructFrom([
+                    'id' => 'cs_confirm_book',
+                    'url' => 'https://checkout.stripe.com/pay/cs_confirm_book',
+                ]),
+            ),
+        );
+
+        Livewire::actingAs($athlete)
+            ->test(Book::class, ['sportSession' => $session])
+            ->call('book')
+            ->assertRedirect('https://checkout.stripe.com/pay/cs_confirm_book');
+
+        expect(Booking::query()->where('sport_session_id', $session->id)->first())->not->toBeNull();
+    });
+
+    it('guest sees login and register CTAs instead of book button', function () {
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->approved()->for($coach)->create([
+            'stripe_account_id' => 'acct_guest_cta',
+            'stripe_onboarding_complete' => true,
+        ]);
+
+        $session = SportSession::factory()->published()->for($coach, 'coach')->create();
+
+        // Test as a guest (no actingAs)
+        Livewire::test(Book::class, ['sportSession' => $session])
+            ->assertSee(__('bookings.guest_login_cta'))
+            ->assertSee(__('bookings.guest_register_cta'))
+            ->assertDontSeeHtml('wire:click="openConfirmModal"');
+    });
 });
