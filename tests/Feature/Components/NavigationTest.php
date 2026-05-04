@@ -16,7 +16,18 @@ describe('Role-based navigation links', function () {
         $this->actingAs($admin)
             ->get(route('home'))
             ->assertOk()
-            ->assertSee(__('common.nav.admin_coach_approval'));
+            ->assertSee(__('common.nav.admin_coach_approval'))
+            ->assertSee(__('common.nav.admin_dashboard'))
+            ->assertSee(__('common.nav.admin_users'));
+    });
+
+    it('shows admin dashboard link to admin users', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+
+        $this->actingAs($admin)
+            ->get(route('home'))
+            ->assertOk()
+            ->assertSee(__('common.nav.admin_dashboard'));
     });
 
     it('does not show admin links to athletes', function () {
@@ -25,7 +36,9 @@ describe('Role-based navigation links', function () {
         $this->actingAs($athlete)
             ->get(route('home'))
             ->assertOk()
-            ->assertDontSee(__('common.nav.admin_coach_approval'));
+            ->assertDontSee(__('common.nav.admin_coach_approval'))
+            ->assertDontSee(__('common.nav.admin_dashboard'))
+            ->assertDontSee(__('common.nav.admin_users'));
     });
 
     it('shows become-a-coach link to athletes without coach profile', function () {

@@ -73,6 +73,14 @@ class UserFactory extends Factory
         return $this->state(['locale' => $locale]);
     }
 
+    public function suspended(string $reason = 'Suspended by admin'): static
+    {
+        return $this->state([
+            'suspended_at' => now(),
+            'suspension_reason' => $reason,
+        ]);
+    }
+
     public function withTwoFactor(TwoFactorMethod $method = TwoFactorMethod::Email): static
     {
         return $this->state([

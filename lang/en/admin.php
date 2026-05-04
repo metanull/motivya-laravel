@@ -68,4 +68,75 @@ return [
 
     'export_csv' => 'Export CSV',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin — Dashboard
+    |--------------------------------------------------------------------------
+    */
+
+    'dashboard_title' => 'Admin Dashboard',
+    'dashboard_heading' => 'Admin Dashboard',
+    'dashboard_subtitle' => 'Overview of platform operations.',
+    'dashboard_card_coach_approval' => 'Coach Applications',
+    'dashboard_card_coach_approval_desc' => 'Review and approve pending coach applications.',
+    'dashboard_card_users' => 'User Management',
+    'dashboard_card_users_desc' => 'Manage users, roles, and account status.',
+    'dashboard_suspended_count' => ':count suspended account(s)',
+    'dashboard_mfa_missing_count' => ':count admin/accountant(s) without MFA',
+    'dashboard_unverified_count' => ':count unverified email(s)',
+    'dashboard_card_activity_images' => 'Activity Images',
+    'dashboard_card_activity_images_desc' => 'Manage cover images for activity types.',
+    'dashboard_card_data_export' => 'Data Export',
+    'dashboard_card_data_export_desc' => 'Download CSV exports of the platform data.',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin — User Management
+    |--------------------------------------------------------------------------
+    */
+
+    'users_title' => 'User Management',
+    'users_heading' => 'Users',
+    'no_users_found' => 'No users found.',
+
+    'create_user_title' => 'Create User',
+    'create_user_heading' => 'Create Back-Office User',
+    'create_user_role_label' => 'Role',
+    'create_user_submit' => 'Create User',
+    'user_created' => 'User created. An onboarding email has been sent.',
+
+    'col_role' => 'Role',
+    'col_email_verified' => 'Email Verified',
+    'col_mfa' => 'MFA',
+    'col_status' => 'Status',
+    'col_created_at' => 'Created',
+    'col_actions' => 'Actions',
+
+    'filter_all_roles' => 'All roles',
+    'filter_all_statuses' => 'All statuses',
+    'filter_active' => 'Active',
+    'filter_suspended' => 'Suspended',
+
+    'status_active' => 'Active',
+    'status_suspended' => 'Suspended',
+
+    'action_reset_password' => 'Reset password',
+    'action_change_role' => 'Change role',
+    'action_suspend' => 'Suspend',
+    'action_reactivate' => 'Reactivate',
+
+    'suspend_confirm_title' => 'Suspend Account',
+    'suspension_reason_label' => 'Reason',
+    'suspension_reason_placeholder' => 'Provide the reason for suspension…',
+
+    'change_role_title' => 'Change Role',
+
+    'user_suspended' => 'Account suspended.',
+    'user_reactivated' => 'Account reactivated.',
+    'role_changed' => 'Role updated.',
+    'password_reset_sent' => 'Password reset link sent.',
+
+    'role_change_coach_blocked' => 'The Coach role cannot be directly assigned. Use the coach approval workflow.',
+    'role_change_last_admin' => 'Cannot demote the last active administrator.',
+
 ];

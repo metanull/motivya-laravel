@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Auth;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\RoleRedirectService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -19,7 +20,7 @@ class GoogleController extends Controller
         return Socialite::driver('google')->redirect();
     }
 
-    public function callback(): RedirectResponse
+    public function callback(RoleRedirectService $roleRedirectService): RedirectResponse
     {
         $googleUser = Socialite::driver('google')->user();
 
@@ -37,6 +38,6 @@ class GoogleController extends Controller
 
         Auth::login($user, remember: true);
 
-        return redirect()->intended(route('home'));
+        return redirect()->intended($roleRedirectService->pathFor($user));
     }
 }

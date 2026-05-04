@@ -10,15 +10,22 @@ use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Enums\TwoFactorMethod;
+use App\Models\User;
+use App\Services\RoleRedirectService;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Laravel\Fortify\Contracts\LoginResponse;
+use Laravel\Fortify\Contracts\RegisterResponse;
+use Laravel\Fortify\Contracts\TwoFactorLoginResponse;
 use Laravel\Fortify\Events\TwoFactorAuthenticationConfirmed;
 use Laravel\Fortify\Events\TwoFactorAuthenticationDisabled;
 use Laravel\Fortify\Fortify;
+use Symfony\Component\HttpFoundation\Response;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -31,6 +38,60 @@ class FortifyServiceProvider extends ServiceProvider
             \Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable::class,
             RedirectIfTwoFactorAuthenticatable::class,
         );
+
+        $this->app->singleton(LoginResponse::class, function () {
+            return new class implements LoginResponse
+            {
+                public function toResponse($request): Response
+                {
+                    /** @var User $user */
+                    $user = $request->user();
+                    $destination = app(RoleRedirectService::class)->pathFor($user);
+
+                    if ($request->wantsJson()) {
+                        return new JsonResponse(['two_factor' => false]);
+                    }
+
+                    return redirect()->intended($destination);
+                }
+            };
+        });
+
+        $this->app->singleton(RegisterResponse::class, function () {
+            return new class implements RegisterResponse
+            {
+                public function toResponse($request): Response
+                {
+                    /** @var User $user */
+                    $user = $request->user();
+                    $destination = app(RoleRedirectService::class)->pathFor($user);
+
+                    if ($request->wantsJson()) {
+                        return new JsonResponse(['two_factor' => false], 201);
+                    }
+
+                    return redirect($destination);
+                }
+            };
+        });
+
+        $this->app->singleton(TwoFactorLoginResponse::class, function () {
+            return new class implements TwoFactorLoginResponse
+            {
+                public function toResponse($request): Response
+                {
+                    /** @var User $user */
+                    $user = $request->user();
+                    $destination = app(RoleRedirectService::class)->pathFor($user);
+
+                    if ($request->wantsJson()) {
+                        return new JsonResponse(['two_factor' => true]);
+                    }
+
+                    return redirect()->intended($destination);
+                }
+            };
+        });
     }
 
     /**

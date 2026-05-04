@@ -97,4 +97,15 @@ return [
     'payout_processed_invoice' => 'Invoice number: :invoice_number',
     'view_dashboard' => 'View dashboard',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin User Onboarding
+    |--------------------------------------------------------------------------
+    */
+
+    'admin_onboarding_subject' => 'Welcome to Motivya — set your password',
+    'admin_onboarding_body' => 'An administrator has created a back-office account for you on Motivya. Click the button below to set your password and activate your account.',
+    'admin_onboarding_action' => 'Set my password',
+    'admin_onboarding_hint' => 'After setting your password, you will be prompted to configure multi-factor authentication before accessing your dashboard.',
+
 ];

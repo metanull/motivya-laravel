@@ -90,7 +90,7 @@ describe('Two-Factor Authentication — Email Code', function () {
             ->set('code', $code)
             ->call('verifyEmailCode');
 
-        $response->assertRedirect(config('fortify.home'));
+        $response->assertRedirect(route('athlete.dashboard'));
         $this->assertAuthenticatedAs($user);
     });
 
@@ -139,7 +139,7 @@ describe('Two-Factor Authentication — Email Code', function () {
             ->set('recoveryCode', 'recovery-code-1')
             ->call('verifyRecoveryCode');
 
-        $response->assertRedirect(config('fortify.home'));
+        $response->assertRedirect(route('athlete.dashboard'));
         $this->assertAuthenticatedAs($user);
 
         // The used recovery code should be consumed
@@ -259,7 +259,7 @@ describe('Two-Factor Authentication — Email Code', function () {
             'password' => 'Password1!',
         ]);
 
-        $response->assertRedirect(config('fortify.home'));
+        $response->assertRedirect(route('athlete.dashboard'));
         $this->assertAuthenticatedAs($user);
     });
 });

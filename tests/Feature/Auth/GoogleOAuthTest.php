@@ -46,7 +46,7 @@ describe('Google OAuth', function () {
         mockSocialiteUser('newuser@example.com', 'New User');
 
         $this->get(route('auth.google.callback'))
-            ->assertRedirect(route('home'));
+            ->assertRedirect(route('athlete.dashboard'));
 
         $this->assertAuthenticated();
 
@@ -67,7 +67,7 @@ describe('Google OAuth', function () {
         mockSocialiteUser('existing@example.com', 'Google Name');
 
         $this->get(route('auth.google.callback'))
-            ->assertRedirect(route('home'));
+            ->assertRedirect(route('coach.dashboard'));
 
         $this->assertAuthenticatedAs($existing);
 
