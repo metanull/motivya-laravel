@@ -10,6 +10,15 @@
         </p>
     </div>
 
+    {{-- Geolocation-denied banner --}}
+    @if ($geoDenied)
+        <div class="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-700 dark:bg-yellow-900/20">
+            <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                {{ __('sessions.geo_denied_state') }}
+            </p>
+        </div>
+    @endif
+
     {{-- Filter panel --}}
     <div class="rounded-lg bg-white p-4 shadow dark:bg-gray-800 sm:p-6">
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -42,18 +51,17 @@
                 </select>
             </div>
 
-            {{-- Postal code / geolocation --}}
+            {{-- City / postal code + geolocation button --}}
             <div>
-                <label for="postalCode" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {{ __('sessions.postal_code_label') }}
+                <label for="locationQuery" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {{ __('sessions.location_query_label') }}
                 </label>
                 <div class="mt-1 flex rounded-md shadow-sm">
-                    <input type="text" wire:model.live="postalCode" id="postalCode"
+                    <input type="text" wire:model.live="locationQuery" id="locationQuery"
                         :class="{ 'opacity-50': useGeolocation }"
                         :disabled="useGeolocation"
                         class="block w-full rounded-l-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
-                        placeholder="1000"
-                        maxlength="4">
+                        placeholder="{{ __('sessions.location_query_placeholder') }}">
                     {{-- Geolocation button --}}
                     <button
                         type="button"
@@ -71,16 +79,45 @@
                         </svg>
                     </button>
                 </div>
+
+                {{-- Active location indicator --}}
                 @if ($useGeolocation)
                     <div class="mt-1 flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400">
-                        <span>{{ __('sessions.geo_active') }}</span>
+                        <span>
+                            {{ __('sessions.active_location_radius', [
+                                'location' => __('sessions.geo_active'),
+                                'km' => $radius,
+                            ]) }}
+                        </span>
                         <button wire:click="clearGeolocation" type="button"
                             class="font-medium underline hover:no-underline">
                             {{ __('sessions.geo_clear') }}
                         </button>
                     </div>
+                @elseif ($effectiveQuery !== '' && ! $locationInvalid)
+                    <div class="mt-1 text-xs text-indigo-600 dark:text-indigo-400">
+                        {{ __('sessions.active_location_radius', [
+                            'location' => $effectiveQuery,
+                            'km' => $radius,
+                        ]) }}
+                    </div>
                 @endif
             </div>
+
+            {{-- Radius selector — shown when a location source is active --}}
+            @if ($useGeolocation || $locationQuery !== '' || $postalCode !== '')
+                <div>
+                    <label for="radiusKm" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {{ __('sessions.radius_label') }}
+                    </label>
+                    <select wire:model.live="radiusKm" id="radiusKm"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm">
+                        @foreach ($validRadii as $r)
+                            <option value="{{ $r }}">{{ __('sessions.radius_km', ['km' => $r]) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
 
             {{-- Date from --}}
             <div>
@@ -129,16 +166,41 @@
         </div>
     </div>
 
-    {{-- Map --}}
+    {{-- Map — hidden when there are no markers --}}
     @if ($markers->isNotEmpty())
         <x-session-map :markers="$markers" />
     @endif
 
     {{-- Results --}}
     <div>
-        @if ($sessions->isEmpty())
+        @if ($locationInvalid)
+            {{-- Unresolvable location input --}}
+            <div class="rounded-lg bg-white py-12 text-center shadow dark:bg-gray-800">
+                <p class="text-sm text-gray-500 dark:text-gray-400">{{ __('sessions.invalid_location') }}</p>
+                <button wire:click="resetFilters" type="button"
+                    class="mt-4 text-sm text-indigo-600 underline hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200">
+                    {{ __('sessions.reset_filters') }}
+                </button>
+            </div>
+        @elseif ($sessions->isEmpty() && $hasActiveLocation)
+            {{-- No sessions within the selected radius --}}
+            <div class="rounded-lg bg-white py-12 text-center shadow dark:bg-gray-800">
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                    {{ __('sessions.no_results_radius', ['km' => $radius]) }}
+                </p>
+                <button wire:click="resetFilters" type="button"
+                    class="mt-4 text-sm text-indigo-600 underline hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200">
+                    {{ __('sessions.reset_filters') }}
+                </button>
+            </div>
+        @elseif ($sessions->isEmpty())
+            {{-- Generic no-results (no location active) --}}
             <div class="rounded-lg bg-white py-12 text-center shadow dark:bg-gray-800">
                 <p class="text-sm text-gray-500 dark:text-gray-400">{{ __('sessions.no_results') }}</p>
+                <button wire:click="resetFilters" type="button"
+                    class="mt-4 text-sm text-indigo-600 underline hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-200">
+                    {{ __('sessions.reset_filters') }}
+                </button>
             </div>
         @else
             <p class="mb-3 text-sm text-gray-500 dark:text-gray-400">
@@ -249,10 +311,7 @@
                         );
                     },
                     () => {
-                        wire.dispatch('notify', {
-                            type: 'warning',
-                            message: '{{ __('sessions.geo_denied') }}'
-                        });
+                        wire.setGeolocationDenied();
                     }
                 );
             }
@@ -260,3 +319,4 @@
     }
 </script>
 @endpush
+
