@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\ActivityType;
 use App\Enums\SessionLevel;
 use App\Enums\SessionStatus;
+use Carbon\Carbon;
 use Database\Factories\SportSessionFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -92,5 +93,19 @@ class SportSession extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class, 'sport_session_id');
+    }
+
+    /**
+     * Returns true if the session's end datetime is in the past.
+     *
+     * Uses Carbon to combine the date and end_time columns so the comparison
+     * is DB-agnostic. This is the single source of truth used by both
+     * service-layer checks and blade templates.
+     */
+    public function hasEnded(): bool
+    {
+        return Carbon::parse(
+            $this->date->format('Y-m-d').' '.$this->end_time,
+        )->lte(now());
     }
 }

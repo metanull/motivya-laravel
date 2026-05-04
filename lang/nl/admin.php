@@ -88,6 +88,41 @@ return [
     'dashboard_card_activity_images_desc' => 'Beheer omslagafbeeldingen voor activiteitstypen.',
     'dashboard_card_data_export' => 'Data exporteren',
     'dashboard_card_data_export_desc' => 'Download CSV-exports van de platformgegevens.',
+    'dashboard_card_billing_config' => 'Facturatieconfiguratie',
+    'dashboard_card_billing_config_desc' => 'Bekijk actieve abonnementsplannen, commissietarieven en de uitbetalingsformule.',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin — Billing Configuration
+    |--------------------------------------------------------------------------
+    */
+
+    'billing_config_title' => 'Facturatieconfiguratie',
+    'billing_config_heading' => 'Configuratie abonnementen & commissies',
+    'billing_config_subtitle' => 'Alleen-lezen overzicht van actieve facturatieregels. Wijzigingen vereisen een code- of configuratie-deployment.',
+    'billing_config_read_only_notice' => 'Deze waarden zijn alleen-lezen. Om facturatieregels te wijzigen is een deployment vereist.',
+    'billing_config_plan_heading' => 'Abonnementsplannen',
+    'billing_config_col_plan' => 'Plan',
+    'billing_config_col_commission' => 'Commissietarief',
+    'billing_config_col_subscription_fee' => 'Maandelijkse kosten',
+    'billing_config_col_description' => 'Omschrijving',
+    'billing_config_free' => 'Gratis',
+    'billing_config_plan_desc_freemium' => 'Geen maandelijkse kosten. Hoogste commissietarief van toepassing.',
+    'billing_config_plan_desc_active' => 'Gemiddelde maandelijkse kosten. Verlaagd commissietarief.',
+    'billing_config_plan_desc_premium' => 'Hoogste maandelijkse kosten. Laagste commissietarief.',
+    'billing_config_vat_heading' => 'BTW-configuratie',
+    'billing_config_vat_rate_label' => 'BTW-tarief platform',
+    'billing_config_vat_subject' => 'BTW-plichtige coach',
+    'billing_config_vat_subject_note' => 'Standaard Belgisch tarief (art. 21% BTW-wetboek).',
+    'billing_config_vat_franchise' => 'Vrijstellingsregeling',
+    'billing_config_vat_franchise_note' => 'Vrijgesteld op grond van art. 56bis BTW-wetboek.',
+    'billing_config_vat_source' => 'Bron: hardgecodeerd Belgisch standaardtarief (21%), uitsluitend toegepast op BTW-plichtige coaches.',
+    'billing_config_stripe_heading' => 'Betalingsverwerking',
+    'billing_config_stripe_fee_label' => 'Stripe-tarief (geschat)',
+    'billing_config_stripe_source' => 'Bron: deploy-time configuratie (STRIPE_COMMISSION_RATE of standaard 1,5%).',
+    'billing_config_payout_heading' => 'Uitbetalingsformule',
+    'billing_config_payout_description' => 'Het platform selecteert het plan dat de hoogste netto-uitbetaling oplevert voor de coach (auto-best-plan algoritme). Netto-uitbetaling = Omzet (excl. BTW) − Commissie − Abonnementskosten − Stripe-kosten.',
+    'billing_config_payout_note' => 'Alle uitbetalingsberekeningen werken op bedragen excl. BTW, zodat de marge van Motivya gelijk blijft ongeacht de BTW-status van de coach.',
 
     /*
     |--------------------------------------------------------------------------
@@ -138,5 +173,81 @@ return [
 
     'role_change_coach_blocked' => 'De Coach-rol kan niet direct worden toegewezen. Gebruik de goedkeuringsprocedure voor coaches.',
     'role_change_last_admin' => 'De laatste actieve beheerder kan niet worden teruggedegradeerd.',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin — Session Supervision
+    |--------------------------------------------------------------------------
+    */
+
+    'sessions_title' => 'Sessiebeheer',
+    'sessions_heading' => 'Sessiebeheer',
+    'sessions_subtitle' => 'Zoek, inspecteer, annuleer en voltooi sessies op het hele platform.',
+    'sessions_filter_status' => 'Status',
+    'sessions_filter_all_statuses' => 'Alle statussen',
+    'sessions_filter_coach' => 'Coach',
+    'sessions_filter_coach_placeholder' => 'Naam van de coach…',
+    'sessions_filter_activity_type' => 'Type activiteit',
+    'sessions_filter_all_types' => 'Alle typen',
+    'sessions_filter_date_from' => 'Datum van',
+    'sessions_filter_date_to' => 'Datum tot',
+    'sessions_filter_pending_payment' => 'Alleen openstaande betalingen',
+    'sessions_filter_past_end_time' => 'Alleen voorbij eindtijd',
+    'sessions_filter_reset' => 'Filters resetten',
+    'sessions_col_title' => 'Titel',
+    'sessions_col_coach' => 'Coach',
+    'sessions_col_activity' => 'Activiteit',
+    'sessions_col_datetime' => 'Datum / Tijd',
+    'sessions_col_status' => 'Status',
+    'sessions_col_participants' => 'Deelnemers',
+    'sessions_col_confirmed_bookings' => 'Bevestigd',
+    'sessions_col_pending_bookings' => 'In behandeling',
+    'sessions_col_actions' => 'Acties',
+    'sessions_action_view' => 'Bekijken',
+    'sessions_action_cancel' => 'Annuleren',
+    'sessions_action_complete' => 'Voltooien',
+    'sessions_action_complete_confirm' => 'Deze sessie als voltooid markeren? Dit zal het aanmaken van een factuur activeren.',
+    'sessions_cancel_reason_label' => 'Reden voor annulering',
+    'sessions_cancel_reason_placeholder' => 'Geef de reden voor de annulering op…',
+    'sessions_cancel_confirm_btn' => 'Annulering bevestigen',
+    'sessions_cancelled_success' => 'Sessie succesvol geannuleerd.',
+    'sessions_cancelled_error' => 'Annulering van sessie mislukt.',
+    'sessions_completed_success' => 'Sessie gemarkeerd als voltooid.',
+    'sessions_completed_error' => 'Voltooiing van sessie mislukt.',
+    'sessions_stripe_ready' => 'Stripe gereed',
+    'sessions_stripe_not_ready' => 'Stripe niet gereed',
+    'sessions_no_results' => 'Geen sessies gevonden die overeenkomen met uw filters.',
+    'dashboard_card_sessions' => 'Sessiebeheer',
+    'dashboard_card_sessions_desc' => 'Zoek, inspecteer, annuleer en voltooi sessies.',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin — Wachtrij voor uitzonderlijke terugbetalingen
+    |--------------------------------------------------------------------------
+    */
+
+    'refunds_title' => 'Wachtrij voor uitzonderlijke terugbetalingen',
+    'refunds_heading' => 'Wachtrij voor uitzonderlijke terugbetalingen',
+    'refunds_subtitle' => 'Bekijk boekingen en verwerk uitzonderlijke terugbetalingen voor bevestigde, betaalde boekingen.',
+    'refunds_filter_status' => 'Boekingsstatus',
+    'refunds_filter_all_statuses' => 'Alle statussen',
+    'refunds_col_booking' => 'Boeking',
+    'refunds_col_athlete' => 'Atleet',
+    'refunds_col_session' => 'Sessie',
+    'refunds_col_status' => 'Status',
+    'refunds_col_amount' => 'Betaald bedrag',
+    'refunds_col_date' => 'Datum',
+    'refunds_col_actions' => 'Acties',
+    'refunds_action_refund' => 'Terugbetalen',
+    'refunds_refund_reason_label' => 'Reden voor terugbetaling',
+    'refunds_refund_reason_placeholder' => 'Geef de reden voor deze uitzonderlijke terugbetaling op…',
+    'refunds_confirm_btn' => 'Terugbetaling bevestigen',
+    'refunds_not_eligible' => 'Niet in aanmerking',
+    'refunds_ineligibility_reason' => 'De boeking komt niet in aanmerking voor een uitzonderlijke terugbetaling (moet bevestigd zijn met een positief betaald bedrag).',
+    'refunds_success' => 'Terugbetaling succesvol verwerkt.',
+    'refunds_error' => 'Verwerking van terugbetaling mislukt.',
+    'refunds_no_results' => 'Geen boekingen gevonden.',
+    'dashboard_card_refunds' => 'Uitzonderlijke terugbetalingen',
+    'dashboard_card_refunds_desc' => 'Verwerk uitzonderlijke terugbetalingen voor bevestigde, betaalde boekingen.',
 
 ];

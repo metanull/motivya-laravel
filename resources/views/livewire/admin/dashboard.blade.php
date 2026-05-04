@@ -89,5 +89,47 @@
             </p>
         </a>
 
+        {{-- Billing Configuration --}}
+        <a
+            href="{{ route('admin.configuration.billing') }}"
+            class="block rounded-lg bg-white p-6 shadow transition hover:shadow-md dark:bg-gray-800"
+            wire:navigate
+        >
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                {{ __('admin.dashboard_card_billing_config') }}
+            </h2>
+            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                {{ __('admin.dashboard_card_billing_config_desc') }}
+            </p>
+        </a>
+
+        {{-- Session Supervision --}}
+        <a
+            href="{{ route('admin.sessions.index') }}"
+            class="block rounded-lg bg-white p-6 shadow transition hover:shadow-md dark:bg-gray-800"
+            wire:navigate
+        >
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                {{ __('admin.dashboard_card_sessions') }}
+            </h2>
+            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                {{ __('admin.dashboard_card_sessions_desc') }}
+            </p>
+        </a>
+
+        {{-- Exceptional Refunds --}}
+        <a
+            href="{{ route('admin.refunds.index') }}"
+            class="block rounded-lg bg-white p-6 shadow transition hover:shadow-md dark:bg-gray-800"
+            wire:navigate
+        >
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                {{ __('admin.dashboard_card_refunds') }}
+            </h2>
+            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                {{ __('admin.dashboard_card_refunds_desc') }}
+            </p>
+        </a>
+
     </div>
 </div>
