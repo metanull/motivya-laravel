@@ -179,6 +179,24 @@ final class Index extends Component
         $this->dispatch('notify', type: 'success', message: __('admin.role_changed'));
     }
 
+    public function isMfaRequired(UserRole $role): bool
+    {
+        return in_array($role, [UserRole::Admin, UserRole::Accountant], true);
+    }
+
+    /**
+     * Roles that can be assigned via this UI (Coach is excluded — must use coach-approval flow).
+     *
+     * @return array<string, string>
+     */
+    public function assignableRoles(): array
+    {
+        return collect(UserRole::cases())
+            ->reject(fn (UserRole $r) => $r === UserRole::Coach)
+            ->mapWithKeys(fn (UserRole $r) => [$r->value => __('common.roles.'.$r->value)])
+            ->all();
+    }
+
     /**
      * @return LengthAwarePaginator<User>
      */
@@ -186,7 +204,7 @@ final class Index extends Component
     {
         return User::query()
             ->when($this->search !== '', function ($q): void {
-                $term = '%'.$this->search.'%';
+                $term = '%'.addcslashes($this->search, '%_').'%';
                 $q->where(function ($q2) use ($term): void {
                     $q2->where('name', 'like', $term)
                         ->orWhere('email', 'like', $term);
@@ -204,6 +222,7 @@ final class Index extends Component
         return view('livewire.admin.users.index', [
             'users' => $this->users(),
             'roles' => UserRole::cases(),
+            'assignableRoles' => $this->assignableRoles(),
         ])->title(__('admin.users_title'));
     }
 }

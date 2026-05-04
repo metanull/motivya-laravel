@@ -74,7 +74,7 @@
                             @endif
                         </td>
                         <td class="whitespace-nowrap px-6 py-4 text-sm">
-                            @if(in_array($user->role, [\App\Enums\UserRole::Admin, \App\Enums\UserRole::Accountant]))
+                            @if($this->isMfaRequired($user->role))
                                 @if($user->two_factor_confirmed_at)
                                     <span class="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800 dark:bg-green-900 dark:text-green-200">✓</span>
                                 @else
@@ -207,10 +207,8 @@
                         class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white sm:text-sm"
                     >
                         <option value="">{{ __('common.form.select') }}</option>
-                        @foreach(\App\Enums\UserRole::cases() as $role)
-                            @if($role !== \App\Enums\UserRole::Coach)
-                                <option value="{{ $role->value }}">{{ __('common.roles.'.$role->value) }}</option>
-                            @endif
+                        @foreach($assignableRoles as $value => $label)
+                            <option value="{{ $value }}">{{ $label }}</option>
                         @endforeach
                     </select>
                     @error('newRole')
