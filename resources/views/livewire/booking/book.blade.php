@@ -86,7 +86,7 @@
                     <dt class="font-medium text-gray-500 dark:text-gray-400">{{ __('bookings.confirm_modal_date_label') }}</dt>
                     <dd class="text-right">
                         {{ $sportSession->date->translatedFormat('D j M Y') }}
-                        {{ substr($sportSession->start_time, 0, 5) }} – {{ substr($sportSession->end_time, 0, 5) }}
+                        {{ \Carbon\Carbon::parse($sportSession->start_time)->format('H:i') }} – {{ \Carbon\Carbon::parse($sportSession->end_time)->format('H:i') }}
                     </dd>
                 </div>
                 <div class="flex justify-between gap-4">

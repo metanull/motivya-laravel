@@ -67,10 +67,8 @@ final class Dashboard extends Component
             && is_string($coachProfile->enterprise_number) && $coachProfile->enterprise_number !== '';
 
         // ── 3. VAT status captured (admin must set true or false; null = not yet reviewed) ─
-        $rawVat = $coachProfile !== null
-            ? ($coachProfile->getAttributes()['is_vat_subject'] ?? null)
-            : null;
-        $vatCaptured = $rawVat !== null;
+        // is_vat_subject is nullable boolean: null means not yet set by admin.
+        $vatCaptured = $coachProfile !== null && $coachProfile->is_vat_subject !== null;
 
         // ── 4. Stripe onboarding complete ────────────────────────────────────
         $stripeReady = $coachProfile?->stripe_onboarding_complete === true;
@@ -223,14 +221,14 @@ final class Dashboard extends Component
             ->count();
 
         // Avg fill rate based on confirmed paid bookings only (Story 5.3)
+        $confirmedStatus = BookingStatus::Confirmed->value;
         $sessionStats = DB::table('sport_sessions')
             ->where('sport_sessions.coach_id', $coach->id)
             ->where('sport_sessions.max_participants', '>', 0)
-            ->select([
-                'sport_sessions.id',
-                'sport_sessions.max_participants',
-                DB::raw('(SELECT COUNT(*) FROM bookings WHERE sport_session_id = sport_sessions.id AND status = \''.BookingStatus::Confirmed->value.'\') as confirmed_count'),
-            ])
+            ->selectRaw(
+                'sport_sessions.id, sport_sessions.max_participants, (SELECT COUNT(*) FROM bookings WHERE sport_session_id = sport_sessions.id AND status = ?) as confirmed_count',
+                [$confirmedStatus],
+            )
             ->get();
 
         $avgFillRate = $sessionStats->count() > 0
