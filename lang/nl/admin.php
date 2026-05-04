@@ -68,4 +68,75 @@ return [
 
     'export_csv' => 'Exporteren als CSV',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin — Dashboard
+    |--------------------------------------------------------------------------
+    */
+
+    'dashboard_title' => 'Admin Dashboard',
+    'dashboard_heading' => 'Admin Dashboard',
+    'dashboard_subtitle' => 'Overzicht van platformactiviteiten.',
+    'dashboard_card_coach_approval' => 'Coachaanvragen',
+    'dashboard_card_coach_approval_desc' => 'Bekijk en keur lopende coachaanvragen goed.',
+    'dashboard_card_users' => 'Gebruikersbeheer',
+    'dashboard_card_users_desc' => 'Beheer gebruikers, rollen en accountstatus.',
+    'dashboard_suspended_count' => ':count geschorst(e) account(s)',
+    'dashboard_mfa_missing_count' => ':count admin/accountant(s) zonder MFA',
+    'dashboard_unverified_count' => ':count niet-geverifieerd(e) e-mail(s)',
+    'dashboard_card_activity_images' => 'Activiteitafbeeldingen',
+    'dashboard_card_activity_images_desc' => 'Beheer omslagafbeeldingen voor activiteitstypen.',
+    'dashboard_card_data_export' => 'Data exporteren',
+    'dashboard_card_data_export_desc' => 'Download CSV-exports van de platformgegevens.',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin — User Management
+    |--------------------------------------------------------------------------
+    */
+
+    'users_title' => 'Gebruikersbeheer',
+    'users_heading' => 'Gebruikers',
+    'no_users_found' => 'Geen gebruikers gevonden.',
+
+    'create_user_title' => 'Gebruiker aanmaken',
+    'create_user_heading' => 'Back-office gebruiker aanmaken',
+    'create_user_role_label' => 'Rol',
+    'create_user_submit' => 'Gebruiker aanmaken',
+    'user_created' => 'Gebruiker aangemaakt. Er is een onboarding-e-mail verzonden.',
+
+    'col_role' => 'Rol',
+    'col_email_verified' => 'E-mail geverifieerd',
+    'col_mfa' => 'MFA',
+    'col_status' => 'Status',
+    'col_created_at' => 'Aangemaakt',
+    'col_actions' => 'Acties',
+
+    'filter_all_roles' => 'Alle rollen',
+    'filter_all_statuses' => 'Alle statussen',
+    'filter_active' => 'Actief',
+    'filter_suspended' => 'Geschorst',
+
+    'status_active' => 'Actief',
+    'status_suspended' => 'Geschorst',
+
+    'action_reset_password' => 'Wachtwoord resetten',
+    'action_change_role' => 'Rol wijzigen',
+    'action_suspend' => 'Schorsen',
+    'action_reactivate' => 'Reactiveren',
+
+    'suspend_confirm_title' => 'Account schorsen',
+    'suspension_reason_label' => 'Reden',
+    'suspension_reason_placeholder' => 'Geef de reden voor de schorsing op…',
+
+    'change_role_title' => 'Rol wijzigen',
+
+    'user_suspended' => 'Account geschorst.',
+    'user_reactivated' => 'Account gereactiveerd.',
+    'role_changed' => 'Rol bijgewerkt.',
+    'password_reset_sent' => 'Link voor wachtwoordherstel verzonden.',
+
+    'role_change_coach_blocked' => 'De Coach-rol kan niet direct worden toegewezen. Gebruik de goedkeuringsprocedure voor coaches.',
+    'role_change_last_admin' => 'De laatste actieve beheerder kan niet worden teruggedegradeerd.',
+
 ];

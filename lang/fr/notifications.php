@@ -97,4 +97,15 @@ return [
     'payout_processed_invoice' => 'Numéro de facture : :invoice_number',
     'view_dashboard' => 'Voir le tableau de bord',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Intégration utilisateur admin
+    |--------------------------------------------------------------------------
+    */
+
+    'admin_onboarding_subject' => 'Bienvenue sur Motivya — définissez votre mot de passe',
+    'admin_onboarding_body' => 'Un administrateur a créé un compte back-office pour vous sur Motivya. Cliquez sur le bouton ci-dessous pour définir votre mot de passe et activer votre compte.',
+    'admin_onboarding_action' => 'Définir mon mot de passe',
+    'admin_onboarding_hint' => 'Après avoir défini votre mot de passe, vous devrez configurer l\'authentification multifacteur avant d\'accéder à votre tableau de bord.',
+
 ];

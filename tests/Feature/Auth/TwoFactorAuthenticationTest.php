@@ -177,7 +177,7 @@ describe('Two-Factor Authentication — TOTP', function () {
             'code' => $code,
         ]);
 
-        $response->assertRedirect(config('fortify.home'));
+        $response->assertRedirect(route('athlete.dashboard'));
         $this->assertAuthenticatedAs($user);
     });
 
@@ -252,7 +252,7 @@ describe('Two-Factor Authentication — TOTP', function () {
             'recovery_code' => $recoveryCodes[0],
         ]);
 
-        $response->assertRedirect(config('fortify.home'));
+        $response->assertRedirect(route('athlete.dashboard'));
         $this->assertAuthenticatedAs($user);
     });
 
@@ -266,7 +266,7 @@ describe('Two-Factor Authentication — TOTP', function () {
             'password' => 'Password1!',
         ]);
 
-        $response->assertRedirect(config('fortify.home'));
+        $response->assertRedirect(route('athlete.dashboard'));
         $this->assertAuthenticatedAs($user);
     });
 

@@ -97,4 +97,15 @@ return [
     'payout_processed_invoice' => 'Factuurnummer: :invoice_number',
     'view_dashboard' => 'Dashboard bekijken',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin gebruikersinvoering
+    |--------------------------------------------------------------------------
+    */
+
+    'admin_onboarding_subject' => 'Welkom bij Motivya — stel uw wachtwoord in',
+    'admin_onboarding_body' => 'Een beheerder heeft een back-office account voor u aangemaakt op Motivya. Klik op de knop hieronder om uw wachtwoord in te stellen en uw account te activeren.',
+    'admin_onboarding_action' => 'Mijn wachtwoord instellen',
+    'admin_onboarding_hint' => 'Na het instellen van uw wachtwoord wordt u gevraagd om meervoudige verificatie in te stellen voordat u toegang krijgt tot uw dashboard.',
+
 ];

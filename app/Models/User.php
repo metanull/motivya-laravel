@@ -35,6 +35,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'role',
         'locale',
         'two_factor_type',
+        'suspended_at',
+        'suspension_reason',
     ];
 
     /**
@@ -56,10 +58,19 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
+            'suspended_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
             'two_factor_type' => TwoFactorMethod::class,
         ];
+    }
+
+    /**
+     * Determine if the user account is suspended.
+     */
+    public function isSuspended(): bool
+    {
+        return $this->suspended_at !== null;
     }
 
     /**

@@ -60,4 +60,37 @@ final class UserPolicy
     {
         return false;
     }
+
+    /**
+     * Determine whether the user can create a privileged back-office user (accountant or admin).
+     */
+    public function createPrivileged(User $user): bool
+    {
+        return false;
+    }
+
+    /**
+     * Determine whether the user can suspend another user.
+     */
+    public function suspend(User $user, User $model): bool
+    {
+        return false;
+    }
+
+    /**
+     * Determine whether the user can reactivate a suspended user.
+     */
+    public function reactivate(User $user, User $model): bool
+    {
+        return false;
+    }
+
+    /**
+     * Determine whether the user can change another user's role.
+     * (non-privileged role changes — admin bypass handles admin access)
+     */
+    public function changeRole(User $user, User $model): bool
+    {
+        return false;
+    }
 }

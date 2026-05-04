@@ -7,6 +7,7 @@ namespace App\Livewire\Auth;
 use App\Enums\TwoFactorMethod;
 use App\Models\User;
 use App\Services\EmailTwoFactorService;
+use App\Services\RoleRedirectService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -65,7 +66,9 @@ final class TwoFactorChallenge extends Component
         Auth::login($user, session('login.remember', false));
         session()->forget(['login.id', 'login.remember', 'login.two_factor_method']);
 
-        $this->redirect(route('home'));
+        $intended = session()->pull('url.intended');
+        $destination = $intended ?? app(RoleRedirectService::class)->pathFor($user);
+        $this->redirect($destination);
     }
 
     public function verifyRecoveryCode(): void
@@ -101,7 +104,9 @@ final class TwoFactorChallenge extends Component
         Auth::login($user, session('login.remember', false));
         session()->forget(['login.id', 'login.remember', 'login.two_factor_method']);
 
-        $this->redirect(route('home'));
+        $intended = session()->pull('url.intended');
+        $destination = $intended ?? app(RoleRedirectService::class)->pathFor($user);
+        $this->redirect($destination);
     }
 
     public function resendCode(): void

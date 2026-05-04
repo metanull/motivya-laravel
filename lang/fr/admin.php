@@ -68,4 +68,75 @@ return [
 
     'export_csv' => 'Exporter en CSV',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin — Dashboard
+    |--------------------------------------------------------------------------
+    */
+
+    'dashboard_title' => 'Tableau de bord Admin',
+    'dashboard_heading' => 'Tableau de bord Admin',
+    'dashboard_subtitle' => 'Vue d\'ensemble des opérations de la plateforme.',
+    'dashboard_card_coach_approval' => 'Candidatures de coachs',
+    'dashboard_card_coach_approval_desc' => 'Examinez et approuvez les candidatures de coachs en attente.',
+    'dashboard_card_users' => 'Gestion des utilisateurs',
+    'dashboard_card_users_desc' => 'Gérez les utilisateurs, les rôles et le statut des comptes.',
+    'dashboard_suspended_count' => ':count compte(s) suspendu(s)',
+    'dashboard_mfa_missing_count' => ':count admin/comptable(s) sans MFA',
+    'dashboard_unverified_count' => ':count e-mail(s) non vérifié(s)',
+    'dashboard_card_activity_images' => 'Images d\'activité',
+    'dashboard_card_activity_images_desc' => 'Gérez les images de couverture pour les types d\'activités.',
+    'dashboard_card_data_export' => 'Export de données',
+    'dashboard_card_data_export_desc' => 'Téléchargez des exports CSV des données de la plateforme.',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Admin — User Management
+    |--------------------------------------------------------------------------
+    */
+
+    'users_title' => 'Gestion des utilisateurs',
+    'users_heading' => 'Utilisateurs',
+    'no_users_found' => 'Aucun utilisateur trouvé.',
+
+    'create_user_title' => 'Créer un utilisateur',
+    'create_user_heading' => 'Créer un utilisateur back-office',
+    'create_user_role_label' => 'Rôle',
+    'create_user_submit' => 'Créer l\'utilisateur',
+    'user_created' => 'Utilisateur créé. Un e-mail d\'intégration a été envoyé.',
+
+    'col_role' => 'Rôle',
+    'col_email_verified' => 'E-mail vérifié',
+    'col_mfa' => 'MFA',
+    'col_status' => 'Statut',
+    'col_created_at' => 'Créé le',
+    'col_actions' => 'Actions',
+
+    'filter_all_roles' => 'Tous les rôles',
+    'filter_all_statuses' => 'Tous les statuts',
+    'filter_active' => 'Actif',
+    'filter_suspended' => 'Suspendu',
+
+    'status_active' => 'Actif',
+    'status_suspended' => 'Suspendu',
+
+    'action_reset_password' => 'Réinitialiser le mot de passe',
+    'action_change_role' => 'Changer le rôle',
+    'action_suspend' => 'Suspendre',
+    'action_reactivate' => 'Réactiver',
+
+    'suspend_confirm_title' => 'Suspendre le compte',
+    'suspension_reason_label' => 'Raison',
+    'suspension_reason_placeholder' => 'Indiquez la raison de la suspension…',
+
+    'change_role_title' => 'Changer le rôle',
+
+    'user_suspended' => 'Compte suspendu.',
+    'user_reactivated' => 'Compte réactivé.',
+    'role_changed' => 'Rôle mis à jour.',
+    'password_reset_sent' => 'Lien de réinitialisation du mot de passe envoyé.',
+
+    'role_change_coach_blocked' => 'Le rôle Coach ne peut pas être assigné directement. Utilisez le flux d\'approbation des coachs.',
+    'role_change_last_admin' => 'Impossible de rétrograder le dernier administrateur actif.',
+
 ];
