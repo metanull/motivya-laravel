@@ -70,22 +70,16 @@ describe('SessionQueryService geolocation search', function () {
         expect($results->pluck('title')->all())->not->toContain('No Coordinates Session');
     });
 
-    it('falls back to postal code search when geolocation is not active', function () {
-        SportSession::factory()->published()->create([
-            'title' => 'Brussels Session',
-            'postal_code' => '1000',
-        ]);
-        SportSession::factory()->published()->create([
-            'title' => 'Antwerp Session',
-            'postal_code' => '2000',
-        ]);
+    it('search without location filters returns all published sessions', function () {
+        SportSession::factory()->published()->create(['title' => 'Brussels Session']);
+        SportSession::factory()->published()->create(['title' => 'Antwerp Session']);
 
         $service = app(SessionQueryService::class);
-        $results = $service->search(['postal_code' => '1000']);
+        $results = $service->search([]);
 
         $titles = $results->pluck('title')->all();
         expect($titles)->toContain('Brussels Session')
-            ->not->toContain('Antwerp Session');
+            ->toContain('Antwerp Session');
     });
 
     it('returns map markers only for sessions with coordinates', function () {
@@ -140,6 +134,48 @@ describe('SessionQueryService geolocation search', function () {
         $titles = $results->pluck('title')->all();
         expect($titles)->toContain('Nearby Yoga')
             ->not->toContain('Nearby Running');
+    });
+
+    it('mapMarkers with coordinates excludes sessions outside radius', function () {
+        // Right at Brussels centre — within any reasonable radius.
+        SportSession::factory()->published()->create([
+            'title' => 'Near Session',
+            'latitude' => 50.8503,
+            'longitude' => 4.3517,
+        ]);
+        // Antwerp area — ~45 km from Brussels.
+        SportSession::factory()->published()->create([
+            'title' => 'Far Session',
+            'latitude' => 51.2194,
+            'longitude' => 4.4025,
+        ]);
+
+        $service = app(SessionQueryService::class);
+        $markers = $service->mapMarkers([], 50.8503, 4.3517, 10.0);
+
+        $titles = $markers->pluck('title')->all();
+        expect($titles)->toContain('Near Session')
+            ->not->toContain('Far Session');
+    });
+
+    it('mapMarkers without coordinates returns all sessions that have coordinates', function () {
+        SportSession::factory()->published()->create([
+            'title' => 'Session A',
+            'latitude' => 50.8503,
+            'longitude' => 4.3517,
+        ]);
+        SportSession::factory()->published()->create([
+            'title' => 'Session B',
+            'latitude' => 51.2194,
+            'longitude' => 4.4025,
+        ]);
+
+        $service = app(SessionQueryService::class);
+        $markers = $service->mapMarkers();
+
+        $titles = $markers->pluck('title')->all();
+        expect($titles)->toContain('Session A')
+            ->toContain('Session B');
     });
 
 });

@@ -37,7 +37,7 @@ final class SessionQueryService
     /**
      * Return a paginated list of sessions with optional filters.
      *
-     * @param  array{activity_type?: string, level?: string, date_from?: string, date_to?: string, time_from?: string, time_to?: string, postal_code?: string}  $filters
+     * @param  array{activity_type?: string, level?: string, date_from?: string, date_to?: string, time_from?: string, time_to?: string}  $filters
      */
     public function search(array $filters = []): LengthAwarePaginator
     {
@@ -61,15 +61,8 @@ final class SessionQueryService
     ): LengthAwarePaginator {
         $query = $this->baseQuery();
 
-        // Haversine formula to compute great-circle distance in km.
-        // The condition is placed in a WHERE-compatible subexpression so that it
-        // works on both MySQL (production) and SQLite (tests), which does not allow
-        // HAVING on non-aggregate queries.
-        $haversine = '(6371 * ACOS(
-            COS(RADIANS(?)) * COS(RADIANS(latitude)) *
-            COS(RADIANS(longitude) - RADIANS(?)) +
-            SIN(RADIANS(?)) * SIN(RADIANS(latitude))
-        ))';
+        // Haversine formula — extracted to avoid duplication with mapMarkers().
+        $haversine = $this->haversineExpression();
 
         $query->whereNotNull('latitude')
             ->whereNotNull('longitude')
@@ -103,18 +96,39 @@ final class SessionQueryService
      * Return all discoverable sessions as a flat collection for map markers,
      * limited to sessions that have coordinates.
      *
-     * @param  array{activity_type?: string, level?: string, date_from?: string, date_to?: string, time_from?: string, time_to?: string, postal_code?: string}  $filters
+     * When latitude/longitude are provided the same Haversine distance filter
+     * as {@see searchByLocation()} is applied, keeping map markers consistent
+     * with the active search scope.
+     *
+     * @param  array{activity_type?: string, level?: string, date_from?: string, date_to?: string, time_from?: string, time_to?: string}  $filters
      * @return Collection<int, array{id: int, title: string, latitude: float, longitude: float, coach: string, date: string, time: string, price: int, url: string}>
      */
-    public function mapMarkers(array $filters = []): Collection
-    {
+    public function mapMarkers(
+        array $filters = [],
+        ?float $latitude = null,
+        ?float $longitude = null,
+        float $radiusKm = self::DEFAULT_RADIUS_KM,
+    ): Collection {
         $query = $this->baseQuery();
 
         $this->applyFilters($query, $filters);
 
+        $query->whereNotNull('latitude')
+            ->whereNotNull('longitude');
+
+        // When a centre point is provided, restrict markers to the same radius
+        // used for the session list so map pins always match the visible results.
+        if ($latitude !== null && $longitude !== null) {
+            $haversine = $this->haversineExpression();
+            $query->whereRaw("{$haversine} <= CAST(? AS REAL)", [
+                $latitude,
+                $longitude,
+                $latitude,
+                $radiusKm,
+            ]);
+        }
+
         return $query
-            ->whereNotNull('latitude')
-            ->whereNotNull('longitude')
             ->get()
             ->map(fn (SportSession $session) => [
                 'id' => $session->id,
@@ -130,7 +144,31 @@ final class SessionQueryService
     }
 
     /**
+     * Build the Haversine great-circle distance SQL expression.
+     *
+     * Returns a parameterised SQL fragment that expects three positional
+     * bindings in order: latitude, longitude, latitude.  The result is the
+     * distance in kilometres between the bound point and each row.
+     */
+    private function haversineExpression(): string
+    {
+        // The Haversine formula computes great-circle distance in km.
+        // Latitude appears three times in the binding list (and twice in the SQL):
+        //   • first ? → COS(RADIANS(?)) — cosine of the reference latitude
+        //   • second ? → RADIANS(longitude) - RADIANS(?) — longitude difference
+        //   • third ? → SIN(RADIANS(?)) — sine of the reference latitude
+        return '(6371 * ACOS(
+            COS(RADIANS(?)) * COS(RADIANS(latitude)) *
+            COS(RADIANS(longitude) - RADIANS(?)) +
+            SIN(RADIANS(?)) * SIN(RADIANS(latitude))
+        ))';
+    }
+
+    /**
      * Apply shared filter criteria to the given query builder.
+     *
+     * Location filtering (postal code / municipality) is handled upstream via
+     * coordinate resolution; it is intentionally absent here.
      *
      * @param  Builder<SportSession>  $query
      * @param  array<string, string>  $filters
@@ -159,10 +197,6 @@ final class SessionQueryService
 
         if (! empty($filters['time_to'])) {
             $query->where('start_time', '<=', $filters['time_to']);
-        }
-
-        if (! empty($filters['postal_code'])) {
-            $query->where('postal_code', $filters['postal_code']);
         }
     }
 }
