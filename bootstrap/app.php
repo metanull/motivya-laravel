@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CaptureAuditContext;
 use App\Http\Middleware\EnsureTwoFactorEnabled;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\SetLocale;
@@ -41,6 +42,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
             SetLocale::class,
+            CaptureAuditContext::class,
         ]);
         $middleware->validateCsrfTokens(except: [
             'stripe/webhook',
