@@ -152,6 +152,11 @@ final class SessionQueryService
      */
     private function haversineExpression(): string
     {
+        // The Haversine formula computes great-circle distance in km.
+        // Latitude appears three times in the binding list (and twice in the SQL):
+        //   • first ? → COS(RADIANS(?)) — cosine of the reference latitude
+        //   • second ? → RADIANS(longitude) - RADIANS(?) — longitude difference
+        //   • third ? → SIN(RADIANS(?)) — sine of the reference latitude
         return '(6371 * ACOS(
             COS(RADIANS(?)) * COS(RADIANS(latitude)) *
             COS(RADIANS(longitude) - RADIANS(?)) +

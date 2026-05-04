@@ -190,6 +190,10 @@ final class Index extends Component
         // True when we have a usable centre point for distance-based queries.
         $hasActiveLocation = $activeLat !== null && $activeLng !== null;
 
+        // True when any location input is present, even if not yet resolved —
+        // used by the view to decide whether to show the radius selector.
+        $hasAnyLocationInput = $this->useGeolocation || $effectiveQuery !== '';
+
         if ($locationInvalid) {
             // Unresolvable input — show no results without a DB round-trip.
             $sessions = new LengthAwarePaginator([], 0, SessionQueryService::PER_PAGE);
@@ -212,6 +216,7 @@ final class Index extends Component
             'validRadii' => self::VALID_RADII,
             'effectiveQuery' => $effectiveQuery,
             'hasActiveLocation' => $hasActiveLocation,
+            'hasAnyLocationInput' => $hasAnyLocationInput,
         ])->title(__('sessions.discovery_title'));
     }
 

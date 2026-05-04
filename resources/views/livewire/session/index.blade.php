@@ -105,7 +105,7 @@
             </div>
 
             {{-- Radius selector — shown when a location source is active --}}
-            @if ($useGeolocation || $locationQuery !== '' || $postalCode !== '')
+            @if ($hasAnyLocationInput)
                 <div>
                     <label for="radiusKm" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
                         {{ __('sessions.radius_label') }}
