@@ -373,7 +373,7 @@ return [
     'readiness_public_storage_not_symlink' => 'public/storage bestaat maar is geen symlink. Activiteitsafbeeldingen worden mogelijk niet correct aangeboden.',
 
     'readiness_scheduler_detail_heading' => 'Status geplande taken',
-    'readiness_scheduler_detail_subtitle' => 'Laatste geregistreerde uitvoering voor elke kritieke geplande taak. Als een taak nooit is uitgevoerd, controleer dan of motivya-scheduler.timer actief is op de server.',
+    'readiness_scheduler_detail_subtitle' => 'Laatste geregistreerde succesvolle uitvoering voor elke kritieke geplande taak. Als een taak nooit is uitgevoerd, controleer dan of motivya-scheduler.timer actief is op de server.',
     'readiness_scheduler_col_command' => 'Opdracht',
     'readiness_scheduler_col_status' => 'Laatste uitvoering',
 
