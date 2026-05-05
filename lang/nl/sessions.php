@@ -141,6 +141,8 @@ return [
     'no_results_radius' => 'Geen sessies gevonden binnen :km km. Probeer de straal te vergroten of uw filters aan te passen.',
     'invalid_location' => 'Locatie niet gevonden. Gebruik een postcode (bijv. 1000, 1050) of gemeentenaam (bijv. Brussel, Elsene).',
     'map_title' => 'Sessies op de kaart',
+    'map_no_markers' => 'Geen gekoppelde sessies overeenkomen met uw huidige filters.',
+    'directions' => 'Routebeschrijving',
 
     /*
     |--------------------------------------------------------------------------

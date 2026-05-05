@@ -8,19 +8,21 @@ import 'maplibre-gl/dist/maplibre-gl.css';
  * OpenFreeMap vector tiles. Marker clustering is handled by MapLibre's
  * built-in GeoJSON cluster support.
  *
+ * @param {string} containerId - The DOM element ID to render the map into
  * @param {Array} markers - Array of session marker objects from SessionQueryService::mapMarkers()
+ * @param {Array} fallbackCenter - [lng, lat] to use when no markers are present (default: Brussels)
  */
-export function sessionMap(markers) {
+export function sessionMap(containerId, markers, fallbackCenter = [4.3517, 50.8503]) {
     return {
         map: null,
         popup: null,
 
         initMap() {
             this.map = new maplibregl.Map({
-                container: 'session-map',
+                container: containerId,
                 // OpenFreeMap liberty style — free, no API key, hosted by the OSM community
                 style: 'https://tiles.openfreemap.org/styles/liberty',
-                center: [4.3517, 50.8503],
+                center: fallbackCenter,
                 zoom: 11,
             });
 

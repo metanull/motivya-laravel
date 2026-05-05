@@ -60,6 +60,9 @@ final class MvpJourneySeeder extends Seeder
             return;
         }
 
+        // Load Belgian postal-code coordinate reference data (idempotent).
+        $this->call(PostalCodeCoordinatesSeeder::class);
+
         $password = Hash::make('password');
 
         // ── Admin ─────────────────────────────────────────────────────────────

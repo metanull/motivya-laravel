@@ -1,10 +1,16 @@
-@props(['markers'])
+@props([
+    'mapId' => 'session-map',
+    'markers' => [],
+    'fallbackCenter' => [4.3517, 50.8503],
+    'height' => '400px',
+    'singleMarker' => false,
+])
 
 <div
-    id="session-map"
+    id="{{ $mapId }}"
     class="overflow-hidden rounded-lg shadow"
-    style="height: 400px;"
-    x-data="sessionMap({{ json_encode($markers) }})"
+    style="height: {{ $height }};"
+    x-data="sessionMap('{{ $mapId }}', {{ json_encode($markers) }}, {{ json_encode($fallbackCenter) }})"
     x-init="initMap()"
     wire:ignore>
 </div>

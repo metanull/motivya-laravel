@@ -54,6 +54,9 @@ final class Readiness extends Component
             'accountant' => $this->checkAccountant(),
             'activity_images' => $this->checkActivityImages(),
             'billing_config' => $this->checkBillingConfig(),
+            'google_maps_key' => $this->checkGoogleMapsKey(),
+            'geocoding_cache' => $this->checkGeocodingCache(),
+            'public_storage' => $this->checkPublicStorage(),
         ];
     }
 
@@ -266,6 +269,56 @@ final class Readiness extends Component
         }
 
         return ['status' => 'green', 'message' => __('admin.readiness_billing_config_ok')];
+    }
+
+    /**
+     * @return array{status: string, message: string}
+     */
+    private function checkGoogleMapsKey(): array
+    {
+        $key = config('maps.google_api_key');
+
+        if (empty($key)) {
+            return ['status' => 'yellow', 'message' => __('admin.readiness_google_maps_key_missing')];
+        }
+
+        if (! str_starts_with((string) $key, 'AIza')) {
+            return ['status' => 'yellow', 'message' => __('admin.readiness_google_maps_key_format')];
+        }
+
+        return ['status' => 'green', 'message' => __('admin.readiness_google_maps_key_ok')];
+    }
+
+    /**
+     * @return array{status: string, message: string}
+     */
+    private function checkGeocodingCache(): array
+    {
+        try {
+            DB::table('geocoding_cache')->count();
+
+            return ['status' => 'green', 'message' => __('admin.readiness_geocoding_cache_ok')];
+        } catch (\Throwable) {
+            return ['status' => 'red', 'message' => __('admin.readiness_geocoding_cache_missing')];
+        }
+    }
+
+    /**
+     * @return array{status: string, message: string}
+     */
+    private function checkPublicStorage(): array
+    {
+        $linkPath = public_path('storage');
+
+        if (! file_exists($linkPath)) {
+            return ['status' => 'red', 'message' => __('admin.readiness_public_storage_missing')];
+        }
+
+        if (! is_link($linkPath)) {
+            return ['status' => 'yellow', 'message' => __('admin.readiness_public_storage_not_symlink')];
+        }
+
+        return ['status' => 'green', 'message' => __('admin.readiness_public_storage_ok')];
     }
 
     public function render(): View

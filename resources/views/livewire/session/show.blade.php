@@ -93,6 +93,18 @@
     <livewire:booking.book :sport-session="$sportSession" />
     <livewire:booking.cancel :sport-session="$sportSession" />
 
+    {{-- Map preview --}}
+    @if ($sportSession->latitude && $sportSession->longitude)
+        <div class="mt-6">
+            <x-session-map
+                map-id="detail-map"
+                :markers="$this->mapMarker"
+                :single-marker="true"
+                height="300px"
+            />
+        </div>
+    @endif
+
     {{-- Description --}}
     @if ($sportSession->description)
         <div class="mt-6 rounded-lg bg-white p-6 shadow dark:bg-gray-800">
@@ -105,6 +117,23 @@
 
     {{-- Share buttons --}}
     <div class="mt-6 flex flex-wrap gap-3">
+        {{-- Directions --}}
+        @php
+            $directionsBase = config('maps.google_directions_base_url');
+            if ($sportSession->latitude && $sportSession->longitude) {
+                $directionsUrl = $directionsBase.'?api=1&destination='.$sportSession->latitude.','.$sportSession->longitude;
+            } else {
+                $directionsUrl = $directionsBase.'?api=1&destination='.urlencode(($sportSession->location ?? '').' '.($sportSession->postal_code ?? '').' Belgium');
+            }
+        @endphp
+        <a href="{{ $directionsUrl }}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
+            <x-icon.directions />
+            {{ __('sessions.directions') }}
+        </a>
+
         <a href="https://wa.me/?text={{ urlencode($sportSession->title . ' — ' . request()->url()) }}"
             target="_blank"
             rel="noopener noreferrer"

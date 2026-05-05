@@ -44,6 +44,9 @@
                 </label>
                 <input type="file" wire:model="image" id="image" accept="image/jpeg,image/png,image/webp"
                     class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:rounded-md file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100 dark:text-gray-400 dark:file:bg-indigo-900 dark:file:text-indigo-300">
+                <div wire:loading wire:target="image" class="mt-1 text-sm text-indigo-600 dark:text-indigo-400">
+                    {{ __('admin.image_uploading') }}
+                </div>
                 @error('image')
                     <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                 @enderror
@@ -52,8 +55,12 @@
 
         <div class="mt-4 flex justify-end">
             <button type="submit"
-                class="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                {{ __('admin.upload_button') }}
+                wire:loading.attr="disabled"
+                wire:target="image,save"
+                wire:loading.class="opacity-50 cursor-not-allowed"
+                class="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-opacity">
+                <span wire:loading.remove wire:target="image,save">{{ __('admin.upload_button') }}</span>
+                <span wire:loading wire:target="image,save">{{ __('admin.uploading') }}</span>
             </button>
         </div>
     </form>

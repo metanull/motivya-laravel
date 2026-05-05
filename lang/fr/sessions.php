@@ -141,6 +141,8 @@ return [
     'no_results_radius' => 'Aucune séance dans un rayon de :km km. Essayez d\'augmenter le rayon ou de modifier les filtres.',
     'invalid_location' => 'Lieu introuvable. Essayez un code postal (ex. 1000, 1050) ou un nom de commune (ex. Bruxelles, Ixelles).',
     'map_title' => 'Séances sur la carte',
+    'map_no_markers' => 'Aucune séance cartographiée ne correspond à vos filtres actuels.',
+    'directions' => 'Itinéraire',
 
     /*
     |--------------------------------------------------------------------------

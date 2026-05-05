@@ -166,9 +166,12 @@
         </div>
     </div>
 
-    {{-- Map — hidden when there are no markers --}}
-    @if ($markers->isNotEmpty())
-        <x-session-map :markers="$markers" />
+    {{-- Map — always rendered; shows empty-state message when no markers match --}}
+    <x-session-map :markers="$markers" />
+    @if ($markers->isEmpty())
+        <p class="mt-2 text-center text-sm text-gray-500 dark:text-gray-400">
+            {{ __('sessions.map_no_markers') }}
+        </p>
     @endif
 
     {{-- Results --}}

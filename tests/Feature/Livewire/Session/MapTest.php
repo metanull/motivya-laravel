@@ -78,7 +78,7 @@ describe('session map', function () {
             ->assertSeeHtml('session-map');
     });
 
-    it('does not render the map when no sessions have coordinates', function () {
+    it('renders the map container even when no sessions have coordinates', function () {
         $athlete = User::factory()->athlete()->create();
 
         SportSession::factory()->published()->create([
@@ -88,7 +88,8 @@ describe('session map', function () {
 
         Livewire::actingAs($athlete)
             ->test(Index::class)
-            ->assertDontSeeHtml('id="session-map"');
+            ->assertSeeHtml('id="session-map"')
+            ->assertSee(__('sessions.map_no_markers'));
     });
 
 });
