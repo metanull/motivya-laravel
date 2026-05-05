@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\AuditEventType;
+use App\Enums\AuditOperation;
 use App\Enums\SessionStatus;
 use App\Events\SessionCancelled;
 use App\Events\SessionCompleted;
 use App\Models\SportSession;
 use App\Models\User;
+use App\Services\Audit\AuditService;
+use App\Services\Audit\AuditSubject;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
@@ -19,6 +24,7 @@ final class SessionService
 {
     public function __construct(
         private readonly PostalCodeCoordinateService $geoService,
+        private readonly AuditService $auditService,
     ) {}
 
     /**
@@ -30,26 +36,46 @@ final class SessionService
     {
         $coords = $this->resolveCoords($data);
 
-        return SportSession::create([
-            'coach_id' => $coach->id,
-            'activity_type' => $data['activity_type'],
-            'level' => $data['level'],
-            'title' => $data['title'],
-            'description' => $data['description'] ?? null,
-            'location' => $data['location'],
-            'postal_code' => $data['postal_code'],
-            'latitude' => $coords['latitude'] ?? null,
-            'longitude' => $coords['longitude'] ?? null,
-            'date' => $data['date'],
-            'start_time' => $data['start_time'],
-            'end_time' => $data['end_time'],
-            'price_per_person' => $data['price_per_person'],
-            'min_participants' => $data['min_participants'],
-            'max_participants' => $data['max_participants'],
-            'cover_image_id' => $data['cover_image_id'] ?? null,
-            'status' => SessionStatus::Draft->value,
-            'current_participants' => 0,
-        ]);
+        return DB::transaction(function () use ($coach, $data, $coords): SportSession {
+            $session = SportSession::create([
+                'coach_id' => $coach->id,
+                'activity_type' => $data['activity_type'],
+                'level' => $data['level'],
+                'title' => $data['title'],
+                'description' => $data['description'] ?? null,
+                'location' => $data['location'],
+                'postal_code' => $data['postal_code'],
+                'latitude' => $coords['latitude'] ?? null,
+                'longitude' => $coords['longitude'] ?? null,
+                'date' => $data['date'],
+                'start_time' => $data['start_time'],
+                'end_time' => $data['end_time'],
+                'price_per_person' => $data['price_per_person'],
+                'min_participants' => $data['min_participants'],
+                'max_participants' => $data['max_participants'],
+                'cover_image_id' => $data['cover_image_id'] ?? null,
+                'status' => SessionStatus::Draft->value,
+                'current_participants' => 0,
+            ]);
+
+            $this->auditService->record(
+                AuditEventType::SessionCreated,
+                AuditOperation::Create,
+                $session,
+                subjects: [
+                    AuditSubject::primary($session),
+                    AuditSubject::related($coach, 'coach'),
+                ],
+                newValues: [
+                    'title' => $session->title,
+                    'date' => $session->date?->format('Y-m-d'),
+                    'status' => $session->status->value,
+                    'price_per_person' => $session->price_per_person,
+                ],
+            );
+
+            return $session;
+        });
     }
 
     /**
@@ -66,37 +92,56 @@ final class SessionService
         // Resolve coordinates once and reuse for every session in the group.
         $coords = $this->resolveCoords($data);
 
-        $sessions = collect();
+        return DB::transaction(function () use ($coach, $data, $numberOfWeeks, $groupId, $baseDate, $coords): Collection {
+            $sessions = collect();
 
-        for ($i = 0; $i < $numberOfWeeks; $i++) {
-            $sessionDate = $baseDate->copy()->addWeeks($i);
+            for ($i = 0; $i < $numberOfWeeks; $i++) {
+                $sessionDate = $baseDate->copy()->addWeeks($i);
 
-            $session = SportSession::create([
-                'coach_id' => $coach->id,
-                'activity_type' => $data['activity_type'],
-                'level' => $data['level'],
-                'title' => $data['title'],
-                'description' => $data['description'] ?? null,
-                'location' => $data['location'],
-                'postal_code' => $data['postal_code'],
-                'latitude' => $coords['latitude'] ?? null,
-                'longitude' => $coords['longitude'] ?? null,
-                'date' => $sessionDate->format('Y-m-d'),
-                'start_time' => $data['start_time'],
-                'end_time' => $data['end_time'],
-                'price_per_person' => $data['price_per_person'],
-                'min_participants' => $data['min_participants'],
-                'max_participants' => $data['max_participants'],
-                'cover_image_id' => $data['cover_image_id'] ?? null,
-                'status' => SessionStatus::Draft->value,
-                'current_participants' => 0,
-                'recurrence_group_id' => $groupId,
-            ]);
+                $session = SportSession::create([
+                    'coach_id' => $coach->id,
+                    'activity_type' => $data['activity_type'],
+                    'level' => $data['level'],
+                    'title' => $data['title'],
+                    'description' => $data['description'] ?? null,
+                    'location' => $data['location'],
+                    'postal_code' => $data['postal_code'],
+                    'latitude' => $coords['latitude'] ?? null,
+                    'longitude' => $coords['longitude'] ?? null,
+                    'date' => $sessionDate->format('Y-m-d'),
+                    'start_time' => $data['start_time'],
+                    'end_time' => $data['end_time'],
+                    'price_per_person' => $data['price_per_person'],
+                    'min_participants' => $data['min_participants'],
+                    'max_participants' => $data['max_participants'],
+                    'cover_image_id' => $data['cover_image_id'] ?? null,
+                    'status' => SessionStatus::Draft->value,
+                    'current_participants' => 0,
+                    'recurrence_group_id' => $groupId,
+                ]);
 
-            $sessions->push($session);
-        }
+                $this->auditService->record(
+                    AuditEventType::SessionCreated,
+                    AuditOperation::Create,
+                    $session,
+                    subjects: [
+                        AuditSubject::primary($session),
+                        AuditSubject::related($coach, 'coach'),
+                    ],
+                    newValues: [
+                        'title' => $session->title,
+                        'date' => $session->date?->format('Y-m-d'),
+                        'status' => $session->status->value,
+                        'price_per_person' => $session->price_per_person,
+                    ],
+                    metadata: ['recurrence_group_id' => $groupId],
+                );
 
-        return $sessions;
+                $sessions->push($session);
+            }
+
+            return $sessions;
+        });
     }
 
     /**
@@ -108,31 +153,57 @@ final class SessionService
     {
         $coords = $this->resolveCoords($data);
 
-        $session->update([
-            'activity_type' => $data['activity_type'],
-            'level' => $data['level'],
-            'title' => $data['title'],
-            'description' => $data['description'] ?? null,
-            'location' => $data['location'],
-            'postal_code' => $data['postal_code'],
-            'latitude' => $coords['latitude'] ?? null,
-            'longitude' => $coords['longitude'] ?? null,
-            'date' => $data['date'],
-            'start_time' => $data['start_time'],
-            'end_time' => $data['end_time'],
-            'price_per_person' => $data['price_per_person'],
-            'min_participants' => $data['min_participants'],
-            'max_participants' => $data['max_participants'],
-            'cover_image_id' => $data['cover_image_id'] ?? null,
-        ]);
+        return DB::transaction(function () use ($session, $data, $coords): SportSession {
+            $oldValues = [
+                'title' => $session->title,
+                'date' => $session->date?->format('Y-m-d'),
+                'price_per_person' => $session->price_per_person,
+                'location' => $session->location,
+            ];
 
-        return $session->refresh();
+            $session->update([
+                'activity_type' => $data['activity_type'],
+                'level' => $data['level'],
+                'title' => $data['title'],
+                'description' => $data['description'] ?? null,
+                'location' => $data['location'],
+                'postal_code' => $data['postal_code'],
+                'latitude' => $coords['latitude'] ?? null,
+                'longitude' => $coords['longitude'] ?? null,
+                'date' => $data['date'],
+                'start_time' => $data['start_time'],
+                'end_time' => $data['end_time'],
+                'price_per_person' => $data['price_per_person'],
+                'min_participants' => $data['min_participants'],
+                'max_participants' => $data['max_participants'],
+                'cover_image_id' => $data['cover_image_id'] ?? null,
+            ]);
+
+            $session->refresh();
+
+            $this->auditService->record(
+                AuditEventType::SessionUpdated,
+                AuditOperation::Update,
+                $session,
+                subjects: [AuditSubject::primary($session)],
+                oldValues: $oldValues,
+                newValues: [
+                    'title' => $session->title,
+                    'date' => $session->date?->format('Y-m-d'),
+                    'price_per_person' => $session->price_per_person,
+                    'location' => $session->location,
+                ],
+            );
+
+            return $session;
+        });
     }
 
     /**
      * Update all future sessions in a recurrence group.
      *
      * Only updates sessions with date >= today that are in draft or published status.
+     * Each session is updated individually so that an audit event is recorded per session.
      *
      * @param  array<string, mixed>  $data  Fields to update (date/time excluded — each session keeps its own schedule)
      * @return int Number of sessions updated
@@ -160,10 +231,27 @@ final class SessionService
             'cover_image_id' => $data['cover_image_id'] ?? null,
         ];
 
-        return SportSession::where('recurrence_group_id', $session->recurrence_group_id)
-            ->where('date', '>=', now()->toDateString())
-            ->whereIn('status', [SessionStatus::Draft, SessionStatus::Published])
-            ->update($updatableFields);
+        return DB::transaction(function () use ($session, $updatableFields): int {
+            $sessions = SportSession::where('recurrence_group_id', $session->recurrence_group_id)
+                ->where('date', '>=', now()->toDateString())
+                ->whereIn('status', [SessionStatus::Draft, SessionStatus::Published])
+                ->get();
+
+            foreach ($sessions as $s) {
+                $s->update($updatableFields);
+
+                $this->auditService->record(
+                    AuditEventType::SessionUpdated,
+                    AuditOperation::Update,
+                    $s,
+                    subjects: [AuditSubject::primary($s)],
+                    newValues: $updatableFields,
+                    metadata: ['recurrence_group_id' => $session->recurrence_group_id],
+                );
+            }
+
+            return $sessions->count();
+        });
     }
 
     /**
@@ -175,13 +263,23 @@ final class SessionService
             throw new InvalidArgumentException('Only draft sessions can be deleted.');
         }
 
-        $session->delete();
+        DB::transaction(function () use ($session): void {
+            $this->auditService->record(
+                AuditEventType::SessionDeleted,
+                AuditOperation::Delete,
+                $session,
+                subjects: [AuditSubject::primary($session)],
+                oldValues: ['status' => $session->status->value],
+            );
+
+            $session->delete();
+        });
     }
 
     /**
      * Cancel a published or confirmed session.
      */
-    public function cancel(SportSession $session): void
+    public function cancel(SportSession $session, ?string $reason = null): void
     {
         if (! in_array($session->status, [SessionStatus::Published, SessionStatus::Confirmed], true)) {
             throw new InvalidArgumentException('Only published or confirmed sessions can be cancelled.');
@@ -189,7 +287,21 @@ final class SessionService
 
         $wasConfirmed = $session->status === SessionStatus::Confirmed;
 
-        $session->update(['status' => SessionStatus::Cancelled->value]);
+        DB::transaction(function () use ($session, $reason): void {
+            $oldStatus = $session->status;
+
+            $session->update(['status' => SessionStatus::Cancelled->value]);
+
+            $this->auditService->record(
+                AuditEventType::SessionCancelled,
+                AuditOperation::StateChange,
+                $session,
+                subjects: [AuditSubject::primary($session)],
+                oldValues: ['status' => $oldStatus->value],
+                newValues: ['status' => SessionStatus::Cancelled->value],
+                metadata: $reason !== null ? ['reason' => $reason] : [],
+            );
+        });
 
         if ($wasConfirmed) {
             SessionCancelled::dispatch($session);
@@ -205,7 +317,18 @@ final class SessionService
             throw new InvalidArgumentException('Only confirmed sessions can be marked as completed.');
         }
 
-        $session->update(['status' => SessionStatus::Completed->value]);
+        DB::transaction(function () use ($session): void {
+            $session->update(['status' => SessionStatus::Completed->value]);
+
+            $this->auditService->record(
+                AuditEventType::SessionCompleted,
+                AuditOperation::StateChange,
+                $session,
+                subjects: [AuditSubject::primary($session)],
+                oldValues: ['status' => SessionStatus::Confirmed->value],
+                newValues: ['status' => SessionStatus::Completed->value],
+            );
+        });
 
         SessionCompleted::dispatch($session);
     }
@@ -266,7 +389,18 @@ final class SessionService
             throw ValidationException::withMessages($missing);
         }
 
-        $session->update(['status' => SessionStatus::Published->value]);
+        DB::transaction(function () use ($session): void {
+            $session->update(['status' => SessionStatus::Published->value]);
+
+            $this->auditService->record(
+                AuditEventType::SessionPublished,
+                AuditOperation::StateChange,
+                $session,
+                subjects: [AuditSubject::primary($session)],
+                oldValues: ['status' => SessionStatus::Draft->value],
+                newValues: ['status' => SessionStatus::Published->value],
+            );
+        });
     }
 
     /**

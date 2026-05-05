@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\CoachProfile;
 use App\Models\SportSession;
 use App\Models\User;
+use App\Services\Audit\AuditService;
 use App\Services\PaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Stripe\Checkout\Session as CheckoutSession;
@@ -32,6 +33,7 @@ describe('createCheckoutSession', function () {
             ->create();
 
         $service = new PaymentService(
+            auditService: app(AuditService::class),
             createCheckoutSessionUsing: function (array $payload) use ($session, $athlete, $coach, $sessionPrice, $expectedCoachPayout): CheckoutSession {
                 expect($payload['mode'])->toBe('payment');
                 expect($payload['payment_method_types'])->toBe(['bancontact', 'card']);
@@ -76,7 +78,7 @@ describe('createCheckoutSession', function () {
         $session = SportSession::factory()->published()->for($coach, 'coach')->create();
         $booking = Booking::factory()->for($session, 'sportSession')->create();
 
-        expect(fn () => (new PaymentService)->createCheckoutSession($booking))
+        expect(fn () => (new PaymentService(auditService: app(AuditService::class)))->createCheckoutSession($booking))
             ->toThrow(InvalidArgumentException::class, 'Coach must have a Stripe account identifier before creating a checkout session.');
     });
 
@@ -93,6 +95,7 @@ describe('createCheckoutSession', function () {
         $booking = Booking::factory()->for($session, 'sportSession')->create();
 
         $service = new PaymentService(
+            auditService: app(AuditService::class),
             createCheckoutSessionUsing: function (array $payload): CheckoutSession {
                 expect($payload['payment_intent_data']['transfer_data'])->toBe([
                     'destination' => 'acct_coach_123',
@@ -123,6 +126,7 @@ describe('createCheckoutSession', function () {
         $booking = Booking::factory()->for($session, 'sportSession')->create();
 
         $service = new PaymentService(
+            auditService: app(AuditService::class),
             calculateCoachPayoutUsing: fn (): int => -1,
         );
 
@@ -142,6 +146,7 @@ describe('createCheckoutSession', function () {
         $booking = Booking::factory()->for($session, 'sportSession')->create();
 
         $service = new PaymentService(
+            auditService: app(AuditService::class),
             calculateCoachPayoutUsing: fn (): int => 2751,
         );
 

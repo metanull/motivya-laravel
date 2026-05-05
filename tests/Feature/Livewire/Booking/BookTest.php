@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\CoachProfile;
 use App\Models\SportSession;
 use App\Models\User;
+use App\Services\Audit\AuditService;
 use App\Services\PaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -29,6 +30,7 @@ describe('booking widget', function () {
         $athlete = User::factory()->athlete()->create();
 
         app()->instance(PaymentService::class, new PaymentService(
+            auditService: app(AuditService::class),
             createCheckoutSessionUsing: fn (array $payload): CheckoutSession => CheckoutSession::constructFrom([
                 'id' => 'cs_booking_redirect',
                 'url' => 'https://checkout.stripe.com/pay/cs_booking_redirect',
@@ -203,6 +205,7 @@ describe('booking confirmation modal (story 6.2)', function () {
         app()->instance(
             PaymentService::class,
             new PaymentService(
+                auditService: app(AuditService::class),
                 createCheckoutSessionUsing: fn (array $payload): Session => Session::constructFrom([
                     'id' => 'cs_confirm_book',
                     'url' => 'https://checkout.stripe.com/pay/cs_confirm_book',
