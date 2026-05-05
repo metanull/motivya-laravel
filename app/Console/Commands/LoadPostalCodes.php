@@ -11,7 +11,7 @@ final class LoadPostalCodes extends Command
 {
     protected $signature = 'geo:load-postal-codes';
 
-    protected $description = 'Load Belgian postal-code → coordinate reference data (idempotent, production-safe). No demo accounts are created.';
+    protected $description = 'Load Belgian postal-code to coordinate reference data (idempotent, production-safe). No demo accounts are created.';
 
     public function handle(): int
     {

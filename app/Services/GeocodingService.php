@@ -42,6 +42,8 @@ final class GeocodingService
 
     private function resolveLocal(string $query): ?array
     {
+        // Leading-wildcard LIKE is intentional: postal_code uses an exact-match first;
+        // the municipality LIKE pattern is a prefix match (trailing wildcard only).
         $coord = PostalCodeCoordinate::where('postal_code', $query)
             ->orWhere('municipality', 'like', $query.'%')
             ->first();
@@ -76,8 +78,9 @@ final class GeocodingService
 
                 return ['latitude' => (float) $cached->latitude, 'longitude' => (float) $cached->longitude];
             }
-        } catch (\Throwable) {
-            // geocoding_cache table may not exist yet
+        } catch (\Throwable $e) {
+            // geocoding_cache table may not exist yet (e.g. migration pending)
+            Log::warning('GeocodingService: cache read failed — '.$e->getMessage());
         }
 
         // Call Google API
@@ -114,8 +117,9 @@ final class GeocodingService
                     ['query_hash'],
                     ['latitude', 'longitude', 'found', 'cached_at', 'updated_at'],
                 );
-            } catch (\Throwable) {
-                // Silently ignore cache write failures
+            } catch (\Throwable $e) {
+                // Cache write failure is non-fatal; log for observability
+                Log::warning('GeocodingService: cache write failed — '.$e->getMessage());
             }
 
             if (! $found) {

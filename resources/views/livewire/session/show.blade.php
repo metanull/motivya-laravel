@@ -119,23 +119,19 @@
     <div class="mt-6 flex flex-wrap gap-3">
         {{-- Directions --}}
         @if ($sportSession->latitude && $sportSession->longitude)
-            <a href="https://www.google.com/maps/dir/?api=1&amp;destination={{ $sportSession->latitude }},{{ $sportSession->longitude }}"
+            <a href="{{ config('maps.google_directions_base_url') }}?api=1&amp;destination={{ $sportSession->latitude }},{{ $sportSession->longitude }}"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-9.253A1 1 0 014.5 9h15a1 1 0 01.947 1.316L15 20M12 9V3m0 0L9 6m3-3l3 3"/>
-                </svg>
+                <x-icon.directions />
                 {{ __('sessions.directions') }}
             </a>
         @else
-            <a href="https://www.google.com/maps/dir/?api=1&amp;destination={{ urlencode(($sportSession->location ?? '') . ' ' . ($sportSession->postal_code ?? '') . ' Belgium') }}"
+            <a href="{{ config('maps.google_directions_base_url') }}?api=1&amp;destination={{ urlencode(($sportSession->location ?? '') . ' ' . ($sportSession->postal_code ?? '') . ' Belgium') }}"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-9.253A1 1 0 014.5 9h15a1 1 0 01.947 1.316L15 20M12 9V3m0 0L9 6m3-3l3 3"/>
-                </svg>
+                <x-icon.directions />
                 {{ __('sessions.directions') }}
             </a>
         @endif
