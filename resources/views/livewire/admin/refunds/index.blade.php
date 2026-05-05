@@ -141,7 +141,7 @@
                                             </button>
                                         </div>
                                     </div>
-                                @elseif ($booking->status === \App\Enums\BookingStatus::Confirmed && $booking->amount_paid > 0 && empty($booking->stripe_payment_intent_id))
+                                @elseif ($booking->status === \App\Enums\BookingStatus::Confirmed && $booking->amount_paid > 0 && !empty($bookingFlags[$booking->id]['missing_payment_intent']))
                                     {{-- Story 1.4: Confirmed paid but missing payment intent — reconciliation needed. --}}
                                     <div class="flex flex-col items-end gap-1">
                                         <span class="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
@@ -250,7 +250,7 @@
                                 </button>
                             </div>
                         </div>
-                    @elseif ($booking->status === \App\Enums\BookingStatus::Confirmed && $booking->amount_paid > 0 && empty($booking->stripe_payment_intent_id))
+                    @elseif ($booking->status === \App\Enums\BookingStatus::Confirmed && $booking->amount_paid > 0 && !empty($bookingFlags[$booking->id]['missing_payment_intent']))
                         {{-- Story 1.4: Confirmed paid but missing payment intent — reconciliation needed. --}}
                         <div class="mt-3 flex flex-col gap-1">
                             <span class="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
