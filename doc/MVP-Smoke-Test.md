@@ -36,6 +36,8 @@ php artisan key:generate
 php artisan migrate
 
 # Seed the MVP journey scenario
+# Note: MvpJourneySeeder automatically loads Belgian postal-code coordinates
+# (via PostalCodeCoordinatesSeeder) before creating demo users — no separate step needed.
 php artisan db:seed --class=MvpJourneySeeder
 
 # Build assets

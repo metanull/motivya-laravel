@@ -93,6 +93,19 @@
     <livewire:booking.book :sport-session="$sportSession" />
     <livewire:booking.cancel :sport-session="$sportSession" />
 
+    {{-- Map preview --}}
+    @if ($sportSession->latitude && $sportSession->longitude)
+        <div class="mt-6">
+            <x-session-map
+                map-id="detail-map"
+                :markers="collect([['id' => $sportSession->id, 'title' => $sportSession->title, 'latitude' => $sportSession->latitude, 'longitude' => $sportSession->longitude, 'coach' => $sportSession->coach->name, 'date' => $sportSession->date->format('d/m/Y'), 'time' => \Carbon\Carbon::parse($sportSession->start_time)->format('H:i'), 'price' => $sportSession->price_per_person, 'url' => route('sessions.show', $sportSession)]])"
+                :fallback-center="[$sportSession->longitude, $sportSession->latitude]"
+                :single-marker="true"
+                height="300px"
+            />
+        </div>
+    @endif
+
     {{-- Description --}}
     @if ($sportSession->description)
         <div class="mt-6 rounded-lg bg-white p-6 shadow dark:bg-gray-800">
@@ -105,6 +118,29 @@
 
     {{-- Share buttons --}}
     <div class="mt-6 flex flex-wrap gap-3">
+        {{-- Directions --}}
+        @if ($sportSession->latitude && $sportSession->longitude)
+            <a href="https://www.google.com/maps/dir/?api=1&amp;destination={{ $sportSession->latitude }},{{ $sportSession->longitude }}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-9.253A1 1 0 014.5 9h15a1 1 0 01.947 1.316L15 20M12 9V3m0 0L9 6m3-3l3 3"/>
+                </svg>
+                {{ __('sessions.directions') }}
+            </a>
+        @else
+            <a href="https://www.google.com/maps/dir/?api=1&amp;destination={{ urlencode(($sportSession->location ?? '') . ' ' . ($sportSession->postal_code ?? '') . ' Belgium') }}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-9.253A1 1 0 014.5 9h15a1 1 0 01.947 1.316L15 20M12 9V3m0 0L9 6m3-3l3 3"/>
+                </svg>
+                {{ __('sessions.directions') }}
+            </a>
+        @endif
+
         <a href="https://wa.me/?text={{ urlencode($sportSession->title . ' — ' . request()->url()) }}"
             target="_blank"
             rel="noopener noreferrer"

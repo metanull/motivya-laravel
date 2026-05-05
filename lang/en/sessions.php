@@ -142,6 +142,8 @@ return [
     'no_results_radius' => 'No sessions found within :km km. Try increasing the radius or adjusting your filters.',
     'invalid_location' => 'Location not found. Try a postal code (e.g. 1000, 1050) or a municipality name (e.g. Bruxelles, Ixelles).',
     'map_title' => 'Sessions on the map',
+    'map_no_markers' => 'No mapped sessions match your current filters.',
+    'directions' => 'Directions',
 
     /*
     |--------------------------------------------------------------------------

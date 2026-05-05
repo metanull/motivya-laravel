@@ -79,6 +79,14 @@ deploy_release() {
     # Swap the current symlink atomically
     ln -sfn "$RELEASE_DIR" "${CURRENT}"
 
+    # Create or verify the public/storage → shared storage symlink
+    if [[ ! -L "${RELEASE_DIR}/public/storage" ]]; then
+        info "Creating public/storage symlink..."
+        ln -sfn "${APP_DIR}/shared/storage/app/public" "${RELEASE_DIR}/public/storage"
+    else
+        info "Public storage symlink already exists."
+    fi
+
     info "Release deployed: ${RELEASE_DIR}"
 }
 
