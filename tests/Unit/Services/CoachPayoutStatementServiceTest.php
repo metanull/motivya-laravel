@@ -195,11 +195,11 @@ describe('block', function () {
         $service = app(CoachPayoutStatementService::class);
 
         foreach ([
-            CoachPayoutStatement::factory()->draft(),
-            CoachPayoutStatement::factory()->readyForInvoice(),
-            CoachPayoutStatement::factory()->invoiceSubmitted(),
-        ] as $factory) {
-            $statement = $factory->create(['coach_id' => $coach->id]);
+            [CoachPayoutStatement::factory()->draft(), 2025, 1],
+            [CoachPayoutStatement::factory()->readyForInvoice(), 2025, 2],
+            [CoachPayoutStatement::factory()->invoiceSubmitted(), 2025, 3],
+        ] as [$factory, $year, $month]) {
+            $statement = $factory->forPeriod($year, $month)->create(['coach_id' => $coach->id]);
             $service->block($statement, $accountant, 'Suspicious activity');
             expect($statement->fresh()->status)->toBe(CoachPayoutStatementStatus::Blocked);
         }
