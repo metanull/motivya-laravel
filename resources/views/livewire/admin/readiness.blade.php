@@ -57,6 +57,16 @@
                             class="flex-shrink-0 text-xs font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">
                             {{ __('admin.readiness_action_billing') }}
                         </a>
+                    @elseif (in_array($key, ['payment_anomalies']) && Route::has('admin.anomalies.index'))
+                        <a href="{{ route('admin.anomalies.index') }}" wire:navigate
+                            class="flex-shrink-0 text-xs font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">
+                            {{ __('admin.readiness_action_anomalies') }}
+                        </a>
+                    @elseif ($key === 'stripe_connect' && Route::has('admin.coach-approval'))
+                        <a href="{{ route('admin.coach-approval') }}" wire:navigate
+                            class="flex-shrink-0 text-xs font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">
+                            {{ __('admin.readiness_action_coach_approval') }}
+                        </a>
                     @endif
                 @endif
             </div>
@@ -107,6 +117,36 @@
                     @endforeach
                 </tbody>
             </table>
+        </div>
+    </div>
+
+    {{-- Operational repair tools panel --}}
+    <div class="mt-10">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            {{ __('admin.readiness_operations_heading') }}
+        </h2>
+        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            {{ __('admin.readiness_operations_subtitle') }}
+        </p>
+
+        <div class="mt-4 space-y-3">
+            @foreach ([
+                'readiness_operations_scheduler_status'   => 'systemctl status motivya-scheduler.timer && journalctl -u motivya-scheduler.service --since "1 hour ago"',
+                'readiness_operations_load_postal_codes'  => 'php artisan geo:load-postal-codes',
+                'readiness_operations_backfill_coordinates' => 'php artisan sessions:backfill-coordinates',
+                'readiness_operations_reconcile_dry_run'  => 'php artisan payments:reconcile-bookings --dry-run',
+                'readiness_operations_reconcile_repair'   => 'php artisan payments:reconcile-bookings --repair',
+                'readiness_operations_health_snapshot'    => 'php artisan mvp:health-snapshot',
+            ] as $labelKey => $command)
+                <div class="rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+                    <p class="mb-1 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                        {{ __('admin.' . $labelKey) }}
+                    </p>
+                    <code class="block break-all rounded bg-gray-100 px-3 py-2 font-mono text-sm text-gray-800 dark:bg-gray-900 dark:text-gray-200">
+                        {{ $command }}
+                    </code>
+                </div>
+            @endforeach
         </div>
     </div>
 

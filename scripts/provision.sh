@@ -430,7 +430,61 @@ else
 fi
 
 # =============================================================================
-# 14. Daily MySQL backup cron
+# 14. Laravel Scheduler — systemd service + timer
+# =============================================================================
+# The scheduler runs as www-data in /opt/motivya/current (a symlink updated
+# atomically by deploy.sh). Because it is a oneshot service fired every minute
+# by a timer, it picks up new code automatically after each deploy without
+# needing a service restart.
+# =============================================================================
+info "Creating Laravel scheduler systemd service and timer..."
+
+cat > /etc/systemd/system/motivya-scheduler.service <<UNIT
+[Unit]
+Description=Motivya Laravel Scheduler (single run)
+After=network.target mysql.service valkey-server.service
+# Do NOT add Wants= or requires= on the timer here; the timer pulls in the service.
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+WorkingDirectory=${APP_DIR}/current
+ExecStart=/usr/bin/php artisan schedule:run --no-interaction
+StandardOutput=append:${APP_DIR}/shared/storage/logs/scheduler.log
+StandardError=append:${APP_DIR}/shared/storage/logs/scheduler.log
+# Do not restart on failure — the timer will fire again in 60 seconds.
+Restart=no
+UNIT
+
+cat > /etc/systemd/system/motivya-scheduler.timer <<UNIT
+[Unit]
+Description=Motivya Laravel Scheduler Timer (every minute)
+After=network.target
+
+[Timer]
+# Fire every minute regardless of when the service last completed.
+OnCalendar=*:*:00
+AccuracySec=1s
+# Keep the service active so start-up race conditions are minimised.
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+UNIT
+
+systemctl daemon-reload
+systemctl enable motivya-scheduler.timer
+# Don't start the timer until the app is deployed (current must be a real release).
+if [[ -L "${APP_DIR}/current" ]]; then
+    systemctl start motivya-scheduler.timer
+    info "Scheduler timer started."
+else
+    info "Scheduler timer configured (will start after first deploy via: systemctl start motivya-scheduler.timer)."
+fi
+
+# =============================================================================
+# 15. Daily MySQL backup cron
 # =============================================================================
 info "Setting up daily MySQL backup..."
 BACKUP_SCRIPT="${APP_DIR}/backup-db.sh"
@@ -486,6 +540,7 @@ info ""
 info "  MySQL:         ${DB_NAME} (credentials in ${DB_CREDENTIALS_FILE})"
 info "  Valkey:        localhost:6379"
 info "  Queue worker:  motivya-queue.service"
+info "  Scheduler:     motivya-scheduler.timer  (every minute, logs → ${APP_DIR}/shared/storage/logs/scheduler.log)"
 info "  Backup:        daily at 3 AM (14-day retention)"
 info ""
 info "  Next steps:"

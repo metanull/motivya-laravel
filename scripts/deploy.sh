@@ -16,6 +16,8 @@
 #   - Nginx vhost pointing to /opt/motivya/current/public
 #   - MySQL credentials in /root/.motivya-db-credentials
 #   - motivya-queue.service systemd unit installed
+#   - motivya-scheduler.service + motivya-scheduler.timer systemd units installed
+#   - motivya-scheduler.service + motivya-scheduler.timer systemd units installed
 #
 # This script is idempotent — safe to re-run.
 # This script uses NO sudo — all operations are within /opt/motivya/.

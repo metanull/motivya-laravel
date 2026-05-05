@@ -35,10 +35,16 @@ php artisan key:generate
 # Run migrations
 php artisan migrate
 
+# Create the public storage symlink (required for activity images to display)
+php artisan storage:link
+
 # Seed the MVP journey scenario
 # Note: MvpJourneySeeder automatically loads Belgian postal-code coordinates
 # (via PostalCodeCoordinatesSeeder) before creating demo users — no separate step needed.
 php artisan db:seed --class=MvpJourneySeeder
+
+# Backfill GPS coordinates for seeded sessions (uses the loaded postal codes)
+php artisan sessions:backfill-coordinates
 
 # Build assets
 npm install && npm run build
@@ -49,10 +55,16 @@ php artisan serve
 npm run dev
 ```
 
+> **Warning**: `MvpJourneySeeder` must **never** run in production. It creates predictable demo credentials.
+> In production, use `php artisan geo:load-postal-codes` and `php artisan sessions:backfill-coordinates` instead.
+
 - [ ] App is reachable at `http://localhost:8000`
 - [ ] No errors in `storage/logs/laravel.log`
 - [ ] Mailpit (or another mail catcher) running on `http://localhost:8025`
 - [ ] The seed completed without errors
+- [ ] `storage/app/public` symlink exists (`ls -la public/storage` shows a symlink)
+- [ ] `postal_code_coordinates` table has rows (`php artisan tinker --execute="echo \App\Models\PostalCodeCoordinate::count();"`)
+- [ ] Sessions have lat/lng after backfill (`php artisan tinker --execute="echo \App\Models\SportSession::whereNull('latitude')->count().' missing';"`)
 
 ---
 
