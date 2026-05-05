@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Enums\BookingStatus;
 use App\Livewire\Admin\Readiness;
+use App\Models\Booking;
+use App\Models\SportSession;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -169,12 +172,12 @@ describe('MVP Admin Journey', function () {
 
         $coach = User::factory()->coach()->create();
         $athlete = User::factory()->athlete()->create();
-        $session = \App\Models\SportSession::factory()->create(['coach_id' => $coach->id]);
+        $session = SportSession::factory()->create(['coach_id' => $coach->id]);
 
-        \App\Models\Booking::factory()->create([
+        Booking::factory()->create([
             'sport_session_id' => $session->id,
             'athlete_id' => $athlete->id,
-            'status' => \App\Enums\BookingStatus::Confirmed->value,
+            'status' => BookingStatus::Confirmed->value,
             'amount_paid' => 1000,
             'stripe_payment_intent_id' => null,
         ]);
