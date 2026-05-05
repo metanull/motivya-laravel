@@ -11,6 +11,7 @@ use App\Livewire\Admin\CoachApproval;
 use App\Livewire\Admin\Configuration\Billing as BillingConfiguration;
 use App\Livewire\Admin\Dashboard;
 use App\Livewire\Admin\DataExport;
+use App\Livewire\Admin\Readiness;
 use App\Livewire\Admin\Refunds\Index as AdminRefundsIndex;
 use App\Livewire\Admin\Sessions\Index as AdminSessionsIndex;
 use App\Livewire\Admin\Users\Create as AdminUserCreate;
@@ -18,6 +19,7 @@ use App\Livewire\Admin\Users\Index as AdminUserIndex;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/dashboard', Dashboard::class)->name('dashboard');
+Route::get('/readiness', Readiness::class)->name('readiness');
 Route::get('/users', AdminUserIndex::class)->name('users.index');
 Route::get('/users/create', AdminUserCreate::class)->name('users.create');
 Route::get('/coach-approval', CoachApproval::class)->name('coach-approval');

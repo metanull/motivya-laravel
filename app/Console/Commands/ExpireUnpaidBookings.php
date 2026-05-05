@@ -9,6 +9,7 @@ use App\Enums\AuditOperation;
 use App\Enums\BookingStatus;
 use App\Events\BookingCancelled;
 use App\Models\Booking;
+use App\Models\SchedulerHeartbeat;
 use App\Models\SportSession;
 use App\Services\Audit\AuditContextResolver;
 use App\Services\Audit\AuditService;
@@ -86,6 +87,8 @@ final class ExpireUnpaidBookings extends Command
                 BookingCancelled::dispatch($bookingId, 'payment_expired', false);
             }
         }
+
+        SchedulerHeartbeat::record('bookings:expire-unpaid');
 
         return self::SUCCESS;
     }

@@ -277,6 +277,74 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Admin — MVP Readiness
+    |--------------------------------------------------------------------------
+    */
+
+    'dashboard_card_readiness' => 'MVP Readiness',
+    'dashboard_card_readiness_desc' => 'Check platform readiness before launch.',
+
+    'readiness_title' => 'MVP Readiness',
+    'readiness_heading' => 'MVP Readiness Checklist',
+    'readiness_subtitle' => 'Green/yellow/red status for each critical platform prerequisite. No secrets are exposed.',
+    'readiness_back_to_dashboard' => 'Back to Dashboard',
+
+    'readiness_status_ok' => 'OK',
+    'readiness_status_warning' => 'Warning',
+    'readiness_status_error' => 'Error',
+
+    'readiness_check_stripe' => 'Stripe keys configured',
+    'readiness_check_mail' => 'Mail configured',
+    'readiness_check_database' => 'Database reachable',
+    'readiness_check_cache' => 'Cache reachable',
+    'readiness_check_queue' => 'Queue configured',
+    'readiness_check_scheduler' => 'Scheduler heartbeats',
+    'readiness_check_postal_codes' => 'Postal code coordinates seeded',
+    'readiness_check_admin_mfa' => 'Admin with MFA',
+    'readiness_check_accountant' => 'Accountant user exists',
+    'readiness_check_activity_images' => 'Activity images uploaded',
+    'readiness_check_billing_config' => 'Billing configuration page reachable',
+
+    'readiness_stripe_ok' => 'Stripe publishable and secret keys are configured.',
+    'readiness_stripe_missing' => 'Stripe keys are not configured. Set STRIPE_KEY and STRIPE_SECRET.',
+    'readiness_stripe_unexpected_format' => 'Stripe keys are set but do not match the expected pk_/sk_ format.',
+    'readiness_mail_ok' => 'Mail driver ":driver" is configured.',
+    'readiness_mail_log_driver' => 'Mail is using the "log" driver. Set a real mail provider for production.',
+    'readiness_mail_smtp_missing_host' => 'SMTP mailer is selected but MAIL_HOST is not configured.',
+    'readiness_database_ok' => 'Database connection is healthy.',
+    'readiness_database_error' => 'Cannot connect to the database.',
+    'readiness_cache_ok' => 'Cache driver ":driver" is reachable.',
+    'readiness_cache_error' => 'Cache is not reachable.',
+    'readiness_queue_ok' => 'Queue driver ":driver" is configured.',
+    'readiness_queue_error' => 'Queue driver is not configured.',
+    'readiness_scheduler_all_ok' => 'All critical scheduled commands have run recently.',
+    'readiness_scheduler_warning' => 'Some scheduled commands have not run recently.',
+    'readiness_scheduler_error' => 'One or more critical scheduled commands have never run.',
+    'readiness_scheduler_ok' => 'Last run :time.',
+    'readiness_scheduler_stale' => 'Last run :time — may be stale.',
+    'readiness_scheduler_never_run' => 'Never run. Ensure the scheduler is running.',
+    'readiness_postal_codes_ok' => ':count postal code coordinates loaded.',
+    'readiness_postal_codes_missing' => 'No postal code coordinates found. Run the coordinates seeder.',
+    'readiness_admin_mfa_ok' => ':count active admin(s) with MFA configured.',
+    'readiness_admin_mfa_missing' => 'No active admin user has MFA configured.',
+    'readiness_accountant_ok' => ':count active accountant(s) exist.',
+    'readiness_accountant_missing' => 'No active accountant user found. Create one in User Management.',
+    'readiness_activity_images_ok' => ':count activity image(s) uploaded.',
+    'readiness_activity_images_missing' => 'No activity images uploaded. Add images in Activity Images.',
+    'readiness_billing_config_ok' => 'Billing configuration page is reachable.',
+    'readiness_billing_config_missing' => 'Billing configuration route is not registered.',
+
+    'readiness_scheduler_detail_heading' => 'Scheduler Heartbeats',
+    'readiness_scheduler_detail_subtitle' => 'Last recorded run for each critical scheduled command.',
+    'readiness_scheduler_col_command' => 'Command',
+    'readiness_scheduler_col_status' => 'Last Run',
+
+    'readiness_action_billing' => 'Review billing config',
+    'readiness_action_users' => 'Manage users',
+    'readiness_action_activity_images' => 'Manage images',
+
+    /*
+    |--------------------------------------------------------------------------
     | Admin — Audit Event Viewer
     |--------------------------------------------------------------------------
     */

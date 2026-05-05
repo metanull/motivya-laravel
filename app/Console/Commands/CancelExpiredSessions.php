@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Enums\SessionStatus;
+use App\Models\SchedulerHeartbeat;
 use App\Models\SportSession;
 use App\Services\SessionService;
 use Illuminate\Console\Command;
@@ -51,6 +52,8 @@ final class CancelExpiredSessions extends Command
         foreach ($sessions as $session) {
             $service->cancel($session);
         }
+
+        SchedulerHeartbeat::record('sessions:cancel-expired');
 
         return self::SUCCESS;
     }
