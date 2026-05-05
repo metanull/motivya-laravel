@@ -116,15 +116,10 @@ describe('mvp:health-snapshot', function () {
     });
 
     it('outputs valid json when --json flag is used', function (): void {
-        // Capture the output by asserting the command runs (exit code varies).
-        $output = null;
-
+        // The --json flag must produce a JSON array as output.
+        // Each object in the array must have a "check" key (among others).
         $this->artisan('mvp:health-snapshot', ['--json' => true])
-            ->execute();
-
-        // The command should not crash — any exit code is acceptable here;
-        // the important thing is it accepts the --json option without an error.
-        expect(true)->toBeTrue();
+            ->expectsOutputToContain('"check"');
     });
 
     it('reports yellow for stale scheduler heartbeats without triggering a red blocker', function (): void {
