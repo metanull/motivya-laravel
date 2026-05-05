@@ -172,4 +172,21 @@ return [
     'plan_active' => 'Actief',
     'plan_premium' => 'Premium',
 
+    // Maandelijkse betalingsoverzichten (Story #268)
+    'payout_statement_heading' => 'Maandelijkse betalingsoverzichten',
+    'payout_statement_subtitle' => 'Volg de status van uw maandelijkse betalingsoverzichten.',
+    'payout_statement_col_period' => 'Periode',
+    'payout_statement_col_status' => 'Status',
+    'payout_statement_col_payout' => 'Uw uitbetaling',
+    'payout_statement_col_actions' => 'Acties',
+    'payout_statement_action_request_payout' => 'Uitbetaling aanvragen',
+    'payout_statement_action_submit_invoice' => 'Factuur indienen',
+    'payout_statement_no_results' => 'Geen betalingsoverzichten gevonden.',
+    'payout_statement_status_draft' => 'Concept',
+    'payout_statement_status_ready_for_invoice' => 'Klaar voor facturatie',
+    'payout_statement_status_invoice_submitted' => 'Factuur ingediend',
+    'payout_statement_status_approved' => 'Goedgekeurd',
+    'payout_statement_status_paid' => 'Betaald',
+    'payout_statement_status_blocked' => 'Geblokkeerd',
+
 ];

@@ -1,7 +1,96 @@
 <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
     {{-- Page heading --}}
-    <div class="mb-6">
+    <div class="mb-6 flex items-center justify-between">
         <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ __('accountant.dashboard_heading') }}</h1>
+        @if (Route::has('accountant.anomalies.index'))
+            <a href="{{ route('accountant.anomalies.index') }}"
+               class="inline-flex items-center rounded-md border border-orange-300 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700 shadow-sm hover:bg-orange-100 dark:border-orange-600 dark:bg-orange-900/30 dark:text-orange-300 dark:hover:bg-orange-900/50">
+                {{ __('accountant.summary_view_anomalies') }}
+            </a>
+        @endif
+    </div>
+
+    {{-- Summary cards --}}
+    <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {{-- Revenue TTC --}}
+        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <p class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                {{ __('accountant.summary_revenue_ttc') }}
+            </p>
+            <p class="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                <x-money :cents="$this->summaryRevenueTtc" />
+            </p>
+        </div>
+
+        {{-- Revenue HTVA --}}
+        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <p class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                {{ __('accountant.summary_revenue_htva') }}
+            </p>
+            <p class="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                <x-money :cents="$this->summaryRevenueHtva" />
+            </p>
+        </div>
+
+        {{-- VAT --}}
+        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <p class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                {{ __('accountant.summary_vat') }}
+            </p>
+            <p class="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                <x-money :cents="$this->summaryVat" />
+            </p>
+        </div>
+
+        {{-- Payout Pending --}}
+        <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 shadow-sm dark:border-amber-700 dark:bg-amber-900/20">
+            <p class="text-xs font-medium uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                {{ __('accountant.summary_payout_pending') }}
+            </p>
+            <p class="mt-2 text-2xl font-semibold text-amber-700 dark:text-amber-300">
+                <x-money :cents="$this->summaryPayoutPending" />
+            </p>
+        </div>
+
+        {{-- Invoices count --}}
+        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <p class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                {{ __('accountant.summary_invoices') }}
+            </p>
+            <p class="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                {{ $this->summaryInvoicesCount }}
+            </p>
+        </div>
+
+        {{-- Credit notes count --}}
+        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <p class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                {{ __('accountant.summary_credit_notes') }}
+            </p>
+            <p class="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                {{ $this->summaryCreditNotesCount }}
+            </p>
+        </div>
+
+        {{-- Refunds count --}}
+        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <p class="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                {{ __('accountant.summary_refunds') }}
+            </p>
+            <p class="mt-2 text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                {{ $this->summaryRefundsCount }}
+            </p>
+        </div>
+
+        {{-- Stuck sessions count --}}
+        <div class="rounded-lg border border-red-200 bg-red-50 p-4 shadow-sm dark:border-red-700 dark:bg-red-900/20">
+            <p class="text-xs font-medium uppercase tracking-wider text-red-600 dark:text-red-400">
+                {{ __('accountant.summary_anomalies') }}
+            </p>
+            <p class="mt-2 text-2xl font-semibold text-red-700 dark:text-red-300">
+                {{ $this->summaryStuckSessionsCount }}
+            </p>
+        </div>
     </div>
 
     {{-- Stuck sessions queue --}}

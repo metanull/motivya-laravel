@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Admin\DatabaseExportController;
 use App\Livewire\Admin\ActivityImages;
+use App\Livewire\Admin\Anomalies\Index as AdminAnomaliesIndex;
 use App\Livewire\Admin\CoachApproval;
 use App\Livewire\Admin\Configuration\Billing as BillingConfiguration;
 use App\Livewire\Admin\Dashboard;
@@ -24,3 +25,4 @@ Route::get('/export/{type}', [DatabaseExportController::class, 'download'])->nam
 Route::get('/configuration/billing', BillingConfiguration::class)->name('configuration.billing');
 Route::get('/sessions', AdminSessionsIndex::class)->name('sessions.index');
 Route::get('/refunds', AdminRefundsIndex::class)->name('refunds.index');
+Route::get('/anomalies', AdminAnomaliesIndex::class)->name('anomalies.index');

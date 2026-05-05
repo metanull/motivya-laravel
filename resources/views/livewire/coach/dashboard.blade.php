@@ -185,4 +185,55 @@
             @endforelse
         @endif
     </div>
+
+    {{-- Payout Statements summary (last 12) --}}
+    @if ($this->payoutStatements->isNotEmpty())
+        <div class="mt-8">
+            <div class="mb-3 flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    {{ __('coach.payout_statement_heading') }}
+                </h2>
+                @if (Route::has('coach.payout-statements.index'))
+                    <a href="{{ route('coach.payout-statements.index') }}" wire:navigate
+                        class="text-sm font-medium text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">
+                        {{ __('common.view_all') }} →
+                    </a>
+                @endif
+            </div>
+            <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-900">
+                        <tr>
+                            <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">{{ __('coach.payout_statement_col_period') }}</th>
+                            <th class="px-4 py-2 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">{{ __('coach.payout_statement_col_status') }}</th>
+                            <th class="px-4 py-2 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">{{ __('coach.payout_statement_col_payout') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        @foreach ($this->payoutStatements as $statement)
+                            <tr>
+                                <td class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">
+                                    {{ sprintf('%04d-%02d', $statement->period_year, $statement->period_month) }}
+                                </td>
+                                <td class="px-4 py-2 text-sm">
+                                    <span class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium
+                                        @if ($statement->status->value === 'paid') bg-emerald-100 text-emerald-700
+                                        @elseif ($statement->status->value === 'approved') bg-green-100 text-green-700
+                                        @elseif ($statement->status->value === 'blocked') bg-red-100 text-red-700
+                                        @else bg-gray-100 text-gray-700
+                                        @endif">
+                                        {{ $statement->status->label() }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-2 text-right text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                    <x-money :cents="$statement->coach_payout" />
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    @endif
+
 </div>

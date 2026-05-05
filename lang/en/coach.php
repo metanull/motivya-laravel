@@ -172,4 +172,21 @@ return [
     'plan_active' => 'Active',
     'plan_premium' => 'Premium',
 
+    // Payout Statements (Story #268)
+    'payout_statement_heading' => 'Monthly Payout Statements',
+    'payout_statement_subtitle' => 'Track the status of your monthly payout statements.',
+    'payout_statement_col_period' => 'Period',
+    'payout_statement_col_status' => 'Status',
+    'payout_statement_col_payout' => 'Your Payout',
+    'payout_statement_col_actions' => 'Actions',
+    'payout_statement_action_request_payout' => 'Request Payout',
+    'payout_statement_action_submit_invoice' => 'Submit Invoice',
+    'payout_statement_no_results' => 'No payout statements found.',
+    'payout_statement_status_draft' => 'Draft',
+    'payout_statement_status_ready_for_invoice' => 'Ready for Invoice',
+    'payout_statement_status_invoice_submitted' => 'Invoice Submitted',
+    'payout_statement_status_approved' => 'Approved',
+    'payout_statement_status_paid' => 'Paid',
+    'payout_statement_status_blocked' => 'Blocked',
+
 ];

@@ -61,6 +61,7 @@ return [
     'back' => 'Terug',
     'next' => 'Volgende',
     'previous' => 'Vorige',
+    'view_all' => 'Alles bekijken',
     'uploading' => 'Uploaden…',
     'welcome' => 'Welkom bij :app',
     'welcome_subtitle' => 'De Brusselse sportsmarktplaats — vind een coach, boek een sessie, beweeg.',
