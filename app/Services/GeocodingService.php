@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Log;
 
 final class GeocodingService
 {
+    /** Minimum character length for a plausible Google API key. */
+    private const MIN_API_KEY_LENGTH = 10;
+
     /**
      * Resolve a location query to coordinates.
      * Tries local postal-code table first, then Google Geocoding API.
@@ -54,7 +57,7 @@ final class GeocodingService
     {
         $key = config('maps.google_api_key');
 
-        return ! empty($key) && is_string($key) && strlen($key) > 10;
+        return ! empty($key) && is_string($key) && strlen($key) > self::MIN_API_KEY_LENGTH;
     }
 
     private function resolveGoogle(string $query, string $locale, string $country): ?array

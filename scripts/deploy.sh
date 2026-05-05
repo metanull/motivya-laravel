@@ -76,16 +76,16 @@ deploy_release() {
     # Ensure bootstrap/cache exists
     mkdir -p "${RELEASE_DIR}/bootstrap/cache"
 
-    # Swap the current symlink atomically
-    ln -sfn "$RELEASE_DIR" "${CURRENT}"
-
-    # Create or verify the public/storage → shared storage symlink
+    # Create or verify the public/storage → shared storage symlink before going live
     if [[ ! -L "${RELEASE_DIR}/public/storage" ]]; then
         info "Creating public/storage symlink..."
         ln -sfn "${APP_DIR}/shared/storage/app/public" "${RELEASE_DIR}/public/storage"
     else
         info "Public storage symlink already exists."
     fi
+
+    # Swap the current symlink atomically
+    ln -sfn "$RELEASE_DIR" "${CURRENT}"
 
     info "Release deployed: ${RELEASE_DIR}"
 }

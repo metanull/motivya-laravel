@@ -98,8 +98,7 @@
         <div class="mt-6">
             <x-session-map
                 map-id="detail-map"
-                :markers="collect([['id' => $sportSession->id, 'title' => $sportSession->title, 'latitude' => $sportSession->latitude, 'longitude' => $sportSession->longitude, 'coach' => $sportSession->coach->name, 'date' => $sportSession->date->format('d/m/Y'), 'time' => \Carbon\Carbon::parse($sportSession->start_time)->format('H:i'), 'price' => $sportSession->price_per_person, 'url' => route('sessions.show', $sportSession)]])"
-                :fallback-center="[$sportSession->longitude, $sportSession->latitude]"
+                :markers="$this->mapMarker"
                 :single-marker="true"
                 height="300px"
             />
