@@ -277,6 +277,74 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Admin — Liste de contrôle de disponibilité MVP
+    |--------------------------------------------------------------------------
+    */
+
+    'dashboard_card_readiness' => 'Disponibilité MVP',
+    'dashboard_card_readiness_desc' => 'Vérifiez la disponibilité de la plateforme avant le lancement.',
+
+    'readiness_title' => 'Disponibilité MVP',
+    'readiness_heading' => 'Liste de contrôle de disponibilité MVP',
+    'readiness_subtitle' => 'Statut vert/jaune/rouge pour chaque prérequis critique de la plateforme. Aucune valeur secrète n\'est exposée.',
+    'readiness_back_to_dashboard' => 'Retour au tableau de bord',
+
+    'readiness_status_ok' => 'OK',
+    'readiness_status_warning' => 'Avertissement',
+    'readiness_status_error' => 'Erreur',
+
+    'readiness_check_stripe' => 'Clés Stripe configurées',
+    'readiness_check_mail' => 'Courrier configuré',
+    'readiness_check_database' => 'Base de données accessible',
+    'readiness_check_cache' => 'Cache accessible',
+    'readiness_check_queue' => 'File d\'attente configurée',
+    'readiness_check_scheduler' => 'Battements du planificateur',
+    'readiness_check_postal_codes' => 'Coordonnées des codes postaux chargées',
+    'readiness_check_admin_mfa' => 'Admin avec MFA',
+    'readiness_check_accountant' => 'Utilisateur comptable existant',
+    'readiness_check_activity_images' => 'Images d\'activité téléchargées',
+    'readiness_check_billing_config' => 'Page de configuration de facturation accessible',
+
+    'readiness_stripe_ok' => 'Les clés Stripe publiable et secrète sont configurées.',
+    'readiness_stripe_missing' => 'Les clés Stripe ne sont pas configurées. Définissez STRIPE_KEY et STRIPE_SECRET.',
+    'readiness_stripe_unexpected_format' => 'Les clés Stripe sont définies mais ne correspondent pas au format pk_/sk_ attendu.',
+    'readiness_mail_ok' => 'Le pilote de courrier ":driver" est configuré.',
+    'readiness_mail_log_driver' => 'Le courrier utilise le pilote "log". Définissez un fournisseur de messagerie réel pour la production.',
+    'readiness_mail_smtp_missing_host' => 'Le pilote SMTP est sélectionné mais MAIL_HOST n\'est pas configuré.',
+    'readiness_database_ok' => 'La connexion à la base de données est saine.',
+    'readiness_database_error' => 'Impossible de se connecter à la base de données.',
+    'readiness_cache_ok' => 'Le pilote de cache ":driver" est accessible.',
+    'readiness_cache_error' => 'Le cache n\'est pas accessible.',
+    'readiness_queue_ok' => 'Le pilote de file d\'attente ":driver" est configuré.',
+    'readiness_queue_error' => 'Le pilote de file d\'attente n\'est pas configuré.',
+    'readiness_scheduler_all_ok' => 'Toutes les tâches planifiées critiques ont été exécutées récemment.',
+    'readiness_scheduler_warning' => 'Certaines tâches planifiées n\'ont pas été exécutées récemment.',
+    'readiness_scheduler_error' => 'Une ou plusieurs tâches planifiées critiques n\'ont jamais été exécutées.',
+    'readiness_scheduler_ok' => 'Dernière exécution :time.',
+    'readiness_scheduler_stale' => 'Dernière exécution :time — peut être obsolète.',
+    'readiness_scheduler_never_run' => 'Jamais exécuté. Assurez-vous que le planificateur est en cours d\'exécution.',
+    'readiness_postal_codes_ok' => ':count coordonnées de codes postaux chargées.',
+    'readiness_postal_codes_missing' => 'Aucune coordonnée de code postal trouvée. Exécutez le semoir de coordonnées.',
+    'readiness_admin_mfa_ok' => ':count administrateur(s) actif(s) avec MFA configuré.',
+    'readiness_admin_mfa_missing' => 'Aucun administrateur actif n\'a le MFA configuré.',
+    'readiness_accountant_ok' => ':count comptable(s) actif(s) existe(nt).',
+    'readiness_accountant_missing' => 'Aucun utilisateur comptable actif trouvé. Créez-en un dans la gestion des utilisateurs.',
+    'readiness_activity_images_ok' => ':count image(s) d\'activité téléchargée(s).',
+    'readiness_activity_images_missing' => 'Aucune image d\'activité téléchargée. Ajoutez des images dans Images d\'activité.',
+    'readiness_billing_config_ok' => 'La page de configuration de facturation est accessible.',
+    'readiness_billing_config_missing' => 'La route de configuration de facturation n\'est pas enregistrée.',
+
+    'readiness_scheduler_detail_heading' => 'Battements du planificateur',
+    'readiness_scheduler_detail_subtitle' => 'Dernière exécution enregistrée pour chaque tâche planifiée critique.',
+    'readiness_scheduler_col_command' => 'Commande',
+    'readiness_scheduler_col_status' => 'Dernière exécution',
+
+    'readiness_action_billing' => 'Vérifier la facturation',
+    'readiness_action_users' => 'Gérer les utilisateurs',
+    'readiness_action_activity_images' => 'Gérer les images',
+
+    /*
+    |--------------------------------------------------------------------------
     | Admin — Visionneuse du journal d'audit
     |--------------------------------------------------------------------------
     */

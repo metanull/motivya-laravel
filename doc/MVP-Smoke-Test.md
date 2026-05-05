@@ -100,16 +100,28 @@ The `MvpJourneySeeder` creates a realistic starting state for the MVP journey:
 php artisan db:seed --class=MvpJourneySeeder
 ```
 
+> **Note**: The seeder will **abort** if `APP_ENV=production` to prevent accidental seeding of demo
+> credentials in production.
+
 This creates:
 - 1 **Admin** user (pre-existing platform admin)
 - 1 **Coach** (`sophie.coach@motivya.test`) with a *pending* profile (needs admin approval)
-- 1 **Coach** (`marc.coach@motivya.test`) with an *approved, Stripe-ready* profile and a published session near its minimum participant threshold
-- 3 **Athletes** (`alice@motivya.test`, `bob@motivya.test`, `charlie@motivya.test`) — Alice and Bob already have confirmed bookings; Charlie is the "fresh" tester
+- 1 **Coach** (`marc.coach@motivya.test`) with an *approved, Stripe-ready* profile and sessions across multiple Brussels postal codes
+- 4 **Athletes**:
+  - `alice@motivya.test` — confirmed bookings for Marc's sessions
+  - `bob@motivya.test` — confirmed booking + one refunded booking (cancelled session)
+  - `charlie@motivya.test` — fresh tester, no bookings yet
+  - `diana@motivya.test` — pending-payment booking (for payment recovery testing)
 - 1 **Accountant** (`accountant@motivya.test`)
-- 1 published **session** (`Running Cinquantenaire — Cardio Débutant`) with `min_participants=3`, `max_participants=10`, 2 existing confirmed bookings
+- 1 **Suspended athlete** (`suspended@motivya.test`) — account suspended (for admin user management testing)
+- 1 **Unverified athlete** (`unverified@motivya.test`) — unverified email (for admin testing)
+- Sessions across 5 Brussels postal codes: **1000, 1020, 1030, 1040, 1050**
 - 1 **draft invoice** for the previous month's completed session by Marc
+- 1 **payout statement** (Draft) for Marc's previous billing month
+- 1 **payment anomaly** (open, for accountant/admin anomaly queue review)
 
 > All passwords are `password` (bcrypt-hashed — safe for local/dev only).
+> Replace `stripe_account_id: acct_mvp_smoke_test` with a real Stripe Express test account ID.
 
 ---
 
@@ -117,12 +129,15 @@ This creates:
 
 | Role | Email | Password | Notes |
 |------|-------|----------|-------|
-| Admin | `admin@motivya.test` | `password` | Can approve coaches, manage activity images, export data |
+| Admin | `admin@motivya.test` | `password` | Can approve coaches, manage users, review readiness |
 | Pending Coach | `sophie.coach@motivya.test` | `password` | Profile awaiting admin approval |
-| Approved Coach | `marc.coach@motivya.test` | `password` | Approved + Stripe-ready; has a published session |
-| Athlete 1 | `alice@motivya.test` | `password` | Has a confirmed booking for Marc's session |
-| Athlete 2 | `bob@motivya.test` | `password` | Has a confirmed booking for Marc's session |
-| Athlete 3 (tester) | `charlie@motivya.test` | `password` | Fresh athlete — use this account to walk through the booking flow |
+| Approved Coach | `marc.coach@motivya.test` | `password` | Approved + Stripe-ready; sessions in multiple postal codes |
+| Athlete 1 | `alice@motivya.test` | `password` | Has confirmed bookings for Marc's sessions |
+| Athlete 2 | `bob@motivya.test` | `password` | Confirmed booking + refunded booking |
+| Athlete (tester) | `charlie@motivya.test` | `password` | Fresh — use for the full booking journey |
+| Athlete (pending payment) | `diana@motivya.test` | `password` | Pending-payment booking (payment recovery) |
+| Athlete (suspended) | `suspended@motivya.test` | `password` | Suspended — for admin user management |
+| Athlete (unverified) | `unverified@motivya.test` | `password` | Email not verified — for admin testing |
 | Accountant | `accountant@motivya.test` | `password` | Read-only access to transactions, invoices, exports |
 
 ---
@@ -411,28 +426,79 @@ This creates:
 
 ---
 
-## 12. Phase H — Recovery Queue (Admin)
+## 12. Phase H — Recovery Queue & Anomaly Review
 
-**Goal**: Verify the admin can see data exports and system health.
+**Goal**: Verify the admin can see payment anomalies, pending-payment bookings, and review system health.
 
 **Actor**: Admin (`admin@motivya.test`)
 
-- [ ] **H1** — Log in as admin and navigate to `/admin/data-export`.
+- [ ] **H1** — Navigate to `/admin/anomalies`.
+  - *Expected*: At least one anomaly from the seed is visible (type: "Completed session without invoice").
+  - 📸 _Screenshot placeholder: anomaly queue_
+
+- [ ] **H2** — Verify Diana's pending-payment booking is visible in the recovery queue.
+  - Navigate to the session detail for "Running Cinquantenaire". Diana should appear as "Pending Payment".
+  - *Expected*: Booking shows `PendingPayment` status with an expiry time.
+
+- [ ] **H3** — Navigate to `/admin/data-export`.
   - *Expected*: Export page loads. Options available.
   - 📸 _Screenshot placeholder: admin data export page_
 
-- [ ] **H2** — Download a data export (e.g., sessions or bookings).
+- [ ] **H4** — Download a data export (e.g., sessions or bookings).
   - *Expected*: File downloads. Content is valid (not empty, correct format).
 
-- [ ] **H3** — Check `/health` endpoint.
+- [ ] **H5** — Check `/health` endpoint.
   - *Expected*: Returns `{"status":"ok","database":"ok","cache":"ok"}`.
 
-- [ ] **H4** — Verify admin activity images management at `/admin/activity-images`.
+- [ ] **H6** — Verify admin activity images management at `/admin/activity-images`.
   - *Expected*: Page loads without errors. Existing images listed.
 
 ---
 
-## 13. Notes & Screenshot Placeholders
+## 13. Phase I — MVP Readiness Checklist (Admin)
+
+**Goal**: Verify the readiness page shows correct status for all platform prerequisites.
+
+**Actor**: Admin (`admin@motivya.test`)
+
+- [ ] **I1** — Navigate to `/admin/readiness`.
+  - *Expected*: Page loads. Shows green/yellow/red indicators for all checks.
+  - 📸 _Screenshot placeholder: readiness page_
+
+- [ ] **I2** — Verify the **Stripe keys** check.
+  - *Expected*: 🟡 Yellow (test keys not matching `pk_test_`/`sk_test_` format if using examples), or 🟢 Green if real test keys are configured.
+
+- [ ] **I3** — Verify the **Mail** check.
+  - *Expected*: 🟡 Yellow when `MAIL_MAILER=log` (dev default), 🟢 Green when a real mailer is configured.
+
+- [ ] **I4** — Verify the **Database** check.
+  - *Expected*: 🟢 Green (database is connected).
+
+- [ ] **I5** — Verify the **Cache** check.
+  - *Expected*: 🟢 Green.
+
+- [ ] **I6** — Verify the **Scheduler heartbeats** summary.
+  - *Expected*: 🔴 Red when scheduler has never run; 🟢 Green after running `php artisan schedule:run`.
+  - After running the scheduler, refresh the page and verify each command's status turns green.
+
+- [ ] **I7** — Verify the **Postal code coordinates** check.
+  - *Expected*: 🟢 Green with a count > 0 if the PostalCodeCoordinates seeder has been run; 🔴 Red otherwise.
+
+- [ ] **I8** — Verify the **Admin with MFA** check.
+  - *Expected*: 🟢 Green if at least one admin has MFA configured (use `admin@motivya.test` with MFA enabled).
+
+- [ ] **I9** — Verify the **Accountant user** check.
+  - *Expected*: 🟢 Green (accountant@motivya.test was seeded).
+
+- [ ] **I10** — Verify the **Activity images** check.
+  - *Expected*: 🟡 Yellow (no images seeded by default) or 🟢 Green if images were uploaded.
+
+- [ ] **I11** — Verify the **Billing config page** check.
+  - *Expected*: 🟢 Green (route admin.configuration.billing is registered).
+
+---
+
+## 14. Notes & Screenshot Placeholders
 
 Use this section to attach screenshots, notes, and observations during testing.
 
@@ -458,7 +524,8 @@ Use this section to attach screenshots, notes, and observations during testing.
 | E — Reminders + Invoices | ☐ Pass ☐ Fail ☐ Partial | |
 | F — Accountant Verification | ☐ Pass ☐ Fail ☐ Partial | |
 | G — Cancellation + Refund | ☐ Pass ☐ Fail ☐ Partial | |
-| H — Admin Recovery Queue | ☐ Pass ☐ Fail ☐ Partial | |
+| H — Recovery Queue & Anomalies | ☐ Pass ☐ Fail ☐ Partial | |
+| I — MVP Readiness Checklist | ☐ Pass ☐ Fail ☐ Partial | |
 
 ### Known Limitations / Out-of-Scope for This Checklist
 

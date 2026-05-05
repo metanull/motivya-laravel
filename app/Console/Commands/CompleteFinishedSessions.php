@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Enums\SessionStatus;
+use App\Models\SchedulerHeartbeat;
 use App\Models\SportSession;
 use App\Services\SessionService;
 use Illuminate\Console\Command;
@@ -47,6 +48,8 @@ final class CompleteFinishedSessions extends Command
         foreach ($sessions as $session) {
             $service->complete($session);
         }
+
+        SchedulerHeartbeat::record('sessions:complete-finished');
 
         return self::SUCCESS;
     }

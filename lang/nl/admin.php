@@ -277,6 +277,74 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Admin — MVP-gereedheidscontrolelijst
+    |--------------------------------------------------------------------------
+    */
+
+    'dashboard_card_readiness' => 'MVP-gereedheid',
+    'dashboard_card_readiness_desc' => 'Controleer de gereedheid van het platform vóór de lancering.',
+
+    'readiness_title' => 'MVP-gereedheid',
+    'readiness_heading' => 'MVP-gereedheidscontrolelijst',
+    'readiness_subtitle' => 'Groen/geel/rood status voor elke kritieke platformvereiste. Er worden geen geheimen blootgesteld.',
+    'readiness_back_to_dashboard' => 'Terug naar dashboard',
+
+    'readiness_status_ok' => 'OK',
+    'readiness_status_warning' => 'Waarschuwing',
+    'readiness_status_error' => 'Fout',
+
+    'readiness_check_stripe' => 'Stripe-sleutels geconfigureerd',
+    'readiness_check_mail' => 'E-mail geconfigureerd',
+    'readiness_check_database' => 'Database bereikbaar',
+    'readiness_check_cache' => 'Cache bereikbaar',
+    'readiness_check_queue' => 'Wachtrij geconfigureerd',
+    'readiness_check_scheduler' => 'Plannerheartbeats',
+    'readiness_check_postal_codes' => 'Postcode-coördinaten geladen',
+    'readiness_check_admin_mfa' => 'Beheerder met MFA',
+    'readiness_check_accountant' => 'Accountantgebruiker bestaat',
+    'readiness_check_activity_images' => 'Activiteitsafbeeldingen geüpload',
+    'readiness_check_billing_config' => 'Factuurconfiguratiepagina bereikbaar',
+
+    'readiness_stripe_ok' => 'Stripe publiceerbare en geheime sleutels zijn geconfigureerd.',
+    'readiness_stripe_missing' => 'Stripe-sleutels zijn niet geconfigureerd. Stel STRIPE_KEY en STRIPE_SECRET in.',
+    'readiness_stripe_unexpected_format' => 'Stripe-sleutels zijn ingesteld maar komen niet overeen met het verwachte pk_/sk_-formaat.',
+    'readiness_mail_ok' => 'E-maildriver ":driver" is geconfigureerd.',
+    'readiness_mail_log_driver' => 'E-mail gebruikt de "log"-driver. Stel een echte mailprovider in voor productie.',
+    'readiness_mail_smtp_missing_host' => 'SMTP-driver is geselecteerd maar MAIL_HOST is niet geconfigureerd.',
+    'readiness_database_ok' => 'Databaseverbinding is gezond.',
+    'readiness_database_error' => 'Kan geen verbinding maken met de database.',
+    'readiness_cache_ok' => 'Cachedriver ":driver" is bereikbaar.',
+    'readiness_cache_error' => 'Cache is niet bereikbaar.',
+    'readiness_queue_ok' => 'Wachtrijdriver ":driver" is geconfigureerd.',
+    'readiness_queue_error' => 'Wachtrijdriver is niet geconfigureerd.',
+    'readiness_scheduler_all_ok' => 'Alle kritieke geplande taken zijn recentelijk uitgevoerd.',
+    'readiness_scheduler_warning' => 'Sommige geplande taken zijn niet recentelijk uitgevoerd.',
+    'readiness_scheduler_error' => 'Een of meer kritieke geplande taken zijn nooit uitgevoerd.',
+    'readiness_scheduler_ok' => 'Laatste uitvoering :time.',
+    'readiness_scheduler_stale' => 'Laatste uitvoering :time — kan verouderd zijn.',
+    'readiness_scheduler_never_run' => 'Nooit uitgevoerd. Zorg ervoor dat de planner actief is.',
+    'readiness_postal_codes_ok' => ':count postcode-coördinaten geladen.',
+    'readiness_postal_codes_missing' => 'Geen postcode-coördinaten gevonden. Voer de coördinaten-seeder uit.',
+    'readiness_admin_mfa_ok' => ':count actieve beheerder(s) met MFA geconfigureerd.',
+    'readiness_admin_mfa_missing' => 'Geen actieve beheerder heeft MFA geconfigureerd.',
+    'readiness_accountant_ok' => ':count actieve accountant(s) bestaat/bestaan.',
+    'readiness_accountant_missing' => 'Geen actieve accountantgebruiker gevonden. Maak er een aan in gebruikersbeheer.',
+    'readiness_activity_images_ok' => ':count activiteitsafbeelding(en) geüpload.',
+    'readiness_activity_images_missing' => 'Geen activiteitsafbeeldingen geüpload. Voeg afbeeldingen toe in Activiteitsafbeeldingen.',
+    'readiness_billing_config_ok' => 'Factuurconfiguratiepagina is bereikbaar.',
+    'readiness_billing_config_missing' => 'Factuurconfiguratieroute is niet geregistreerd.',
+
+    'readiness_scheduler_detail_heading' => 'Plannerheartbeats',
+    'readiness_scheduler_detail_subtitle' => 'Laatste geregistreerde uitvoering voor elke kritieke geplande taak.',
+    'readiness_scheduler_col_command' => 'Opdracht',
+    'readiness_scheduler_col_status' => 'Laatste uitvoering',
+
+    'readiness_action_billing' => 'Factuurconfiguratie bekijken',
+    'readiness_action_users' => 'Gebruikers beheren',
+    'readiness_action_activity_images' => 'Afbeeldingen beheren',
+
+    /*
+    |--------------------------------------------------------------------------
     | Admin — Auditlogboek-viewer
     |--------------------------------------------------------------------------
     */

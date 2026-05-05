@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Enums\CoachProfileStatus;
 use App\Enums\UserRole;
+use App\Models\SchedulerHeartbeat;
 use App\Models\User;
 use App\Services\SubscriptionService;
 use Illuminate\Console\Command;
@@ -56,6 +57,8 @@ final class ComputeMonthlySubscriptions extends Command
         foreach ($coaches as $coach) {
             $service->computeForMonth($coach, $month);
         }
+
+        SchedulerHeartbeat::record('subscriptions:compute-monthly');
 
         return self::SUCCESS;
     }

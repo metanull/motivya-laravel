@@ -6,15 +6,19 @@ namespace Database\Seeders;
 
 use App\Enums\ActivityType;
 use App\Enums\BookingStatus;
+use App\Enums\CoachPayoutStatementStatus;
 use App\Enums\CoachProfileStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
+use App\Enums\PaymentAnomalyType;
 use App\Enums\SessionLevel;
 use App\Enums\SessionStatus;
 use App\Enums\UserRole;
 use App\Models\Booking;
+use App\Models\CoachPayoutStatement;
 use App\Models\CoachProfile;
 use App\Models\Invoice;
+use App\Models\PaymentAnomaly;
 use App\Models\SportSession;
 use App\Models\User;
 use Carbon\Carbon;
@@ -27,13 +31,18 @@ use Illuminate\Support\Facades\Hash;
  * Scenario overview:
  *  - Admin user (approves coaches, manages platform)
  *  - Coach 1 (Sophie): profile pending admin approval — used to test the approval flow
- *  - Coach 2 (Marc): approved + Stripe-ready, has a published session with 2/3 bookings
- *  - Athletes: Alice and Bob (confirmed bookings), Charlie (fresh tester)
+ *  - Coach 2 (Marc): approved + Stripe-ready, sessions in multiple Brussels postal codes
+ *  - Athletes: Alice (confirmed bookings), Bob (confirmed + cancelled), Charlie (fresh tester),
+ *              Diana (pending-payment booking for recovery testing)
  *  - Accountant: read-only financial dashboard access
- *  - Draft invoice for Marc's previous completed session
+ *  - Payout statements and payment anomalies for accountant/admin review
+ *  - Suspended user and unverified user for admin user management testing
  *
  * All passwords: "password" (local dev only — never use in production).
  * All Stripe account IDs are placeholders; replace with real test IDs.
+ *
+ * ⚠  NEVER run this seeder in a production environment.
+ *    It creates predictable demo credentials that are a security risk.
  */
 final class MvpJourneySeeder extends Seeder
 {
@@ -42,6 +51,15 @@ final class MvpJourneySeeder extends Seeder
      */
     public function run(): void
     {
+        // Production guard — never seed demo credentials in production.
+        if (app()->isProduction()) {
+            if ($this->command !== null) {
+                $this->command->warn('⛔  MvpJourneySeeder: skipped in production environment.');
+            }
+
+            return;
+        }
+
         $password = Hash::make('password');
 
         // ── Admin ─────────────────────────────────────────────────────────────
@@ -153,8 +171,43 @@ final class MvpJourneySeeder extends Seeder
             ]
         );
 
-        // ── Marc's published session (2 bookings, needs 1 more to confirm) ────
-        // Price: €20.00 per person (2000 cents)
+        // Diana has a pending-payment booking (for payment recovery testing #273).
+        $diana = User::firstOrCreate(
+            ['email' => 'diana@motivya.test'],
+            [
+                'name' => 'Diana Kohl',
+                'password' => $password,
+                'role' => UserRole::Athlete->value,
+                'email_verified_at' => now(),
+            ]
+        );
+
+        // ── Suspended user (for admin user management) ────────────────────────
+        User::firstOrCreate(
+            ['email' => 'suspended@motivya.test'],
+            [
+                'name' => 'Suspended User',
+                'password' => $password,
+                'role' => UserRole::Athlete->value,
+                'email_verified_at' => now(),
+                'suspended_at' => now()->subDays(3),
+                'suspension_reason' => 'Demo: suspended account for admin testing.',
+            ]
+        );
+
+        // ── Unverified email user (for admin user management) ─────────────────
+        User::firstOrCreate(
+            ['email' => 'unverified@motivya.test'],
+            [
+                'name' => 'Unverified User',
+                'password' => $password,
+                'role' => UserRole::Athlete->value,
+                'email_verified_at' => null,
+            ]
+        );
+
+        // ── Marc's published session near Cinquantenaire (postal 1000) ────────
+        // Price: €20.00 per person — 2 bookings, needs 1 more to confirm
         $sessionDate = Carbon::now()->addDays(10)->format('Y-m-d');
 
         /** @var SportSession $activeSession */
@@ -166,7 +219,7 @@ final class MvpJourneySeeder extends Seeder
             [
                 'activity_type' => ActivityType::Cardio->value,
                 'level' => SessionLevel::Beginner->value,
-                'description' => 'Séance de running débutant dans le Parc du Cinquantenaire. Rythme accessible, conseils techniques inclus. Chaussures de sport requises.',
+                'description' => 'Séance de running débutant dans le Parc du Cinquantenaire. Rythme accessible, conseils techniques inclus.',
                 'location' => 'Parc du Cinquantenaire, Bruxelles',
                 'postal_code' => '1000',
                 'latitude' => '50.8390',
@@ -208,11 +261,26 @@ final class MvpJourneySeeder extends Seeder
             ]
         );
 
-        // ── Marc's previous completed session + draft invoice ─────────────────
-        $completedDate = Carbon::now()->subDays(30)->format('Y-m-d');
+        // Diana's pending-payment booking (payment window expires in 20 min — for recovery flow)
+        Booking::firstOrCreate(
+            [
+                'sport_session_id' => $activeSession->id,
+                'athlete_id' => $diana->id,
+            ],
+            [
+                'status' => BookingStatus::PendingPayment->value,
+                'amount_paid' => 0,
+                'stripe_payment_intent_id' => 'pi_mvp_smoke_diana_pending',
+                'stripe_checkout_session_id' => 'cs_mvp_smoke_diana',
+                'payment_expires_at' => now()->addMinutes(20),
+            ]
+        );
 
-        /** @var SportSession $completedSession */
-        $completedSession = SportSession::firstOrCreate(
+        // ── Marc's session in Laeken (postal 1020) — confirmed ────────────────
+        $laekenDate = Carbon::now()->addDays(7)->format('Y-m-d');
+
+        /** @var SportSession $laekenSession */
+        $laekenSession = SportSession::firstOrCreate(
             [
                 'coach_id' => $marc->id,
                 'title' => 'Running Laeken — Cardio Intermédiaire',
@@ -225,6 +293,113 @@ final class MvpJourneySeeder extends Seeder
                 'postal_code' => '1020',
                 'latitude' => '50.8930',
                 'longitude' => '4.3570',
+                'date' => $laekenDate,
+                'start_time' => '07:30:00',
+                'end_time' => '08:30:00',
+                'price_per_person' => 2500,
+                'min_participants' => 2,
+                'max_participants' => 8,
+                'current_participants' => 3,
+                'status' => SessionStatus::Confirmed->value,
+            ]
+        );
+
+        Booking::firstOrCreate(
+            [
+                'sport_session_id' => $laekenSession->id,
+                'athlete_id' => $alice->id,
+            ],
+            [
+                'status' => BookingStatus::Confirmed->value,
+                'amount_paid' => 2500,
+                'stripe_payment_intent_id' => 'pi_mvp_smoke_laeken_alice',
+            ]
+        );
+
+        // ── Marc's session in Ixelles (postal 1050) — published ───────────────
+        $ixellesDate = Carbon::now()->addDays(14)->format('Y-m-d');
+
+        SportSession::firstOrCreate(
+            [
+                'coach_id' => $marc->id,
+                'title' => 'Yoga Bois de la Cambre — Stretching',
+            ],
+            [
+                'activity_type' => ActivityType::Yoga->value,
+                'level' => SessionLevel::Beginner->value,
+                'description' => 'Séance de yoga matinal dans le Bois de la Cambre. Tous niveaux bienvenus.',
+                'location' => 'Bois de la Cambre, Ixelles',
+                'postal_code' => '1050',
+                'latitude' => '50.8130',
+                'longitude' => '4.3840',
+                'date' => $ixellesDate,
+                'start_time' => '08:00:00',
+                'end_time' => '09:00:00',
+                'price_per_person' => 1500,
+                'min_participants' => 3,
+                'max_participants' => 12,
+                'current_participants' => 1,
+                'status' => SessionStatus::Published->value,
+            ]
+        );
+
+        // ── Marc's cancelled session (Bob booked, then it was cancelled) ──────
+        $cancelledDate = Carbon::now()->subDays(5)->format('Y-m-d');
+
+        /** @var SportSession $cancelledSession */
+        $cancelledSession = SportSession::firstOrCreate(
+            [
+                'coach_id' => $marc->id,
+                'title' => 'Running Scharbeek — Piste de vitesse',
+            ],
+            [
+                'activity_type' => ActivityType::Running->value,
+                'level' => SessionLevel::Advanced->value,
+                'description' => 'Séance de running avancée à Scharbeek. Piste de vitesse.',
+                'location' => 'Parc Josaphat, Scharbeek',
+                'postal_code' => '1030',
+                'latitude' => '50.8650',
+                'longitude' => '4.3810',
+                'date' => $cancelledDate,
+                'start_time' => '06:30:00',
+                'end_time' => '07:30:00',
+                'price_per_person' => 3000,
+                'min_participants' => 5,
+                'max_participants' => 15,
+                'current_participants' => 1,
+                'status' => SessionStatus::Cancelled->value,
+            ]
+        );
+
+        Booking::firstOrCreate(
+            [
+                'sport_session_id' => $cancelledSession->id,
+                'athlete_id' => $bob->id,
+            ],
+            [
+                'status' => BookingStatus::Refunded->value,
+                'amount_paid' => 3000,
+                'stripe_payment_intent_id' => 'pi_mvp_smoke_scharbeek_bob',
+            ]
+        );
+
+        // ── Marc's previous completed session + draft invoice ─────────────────
+        $completedDate = Carbon::now()->subDays(30)->format('Y-m-d');
+
+        /** @var SportSession $completedSession */
+        $completedSession = SportSession::firstOrCreate(
+            [
+                'coach_id' => $marc->id,
+                'title' => 'Running Etterbeek — Cardio Avancé',
+            ],
+            [
+                'activity_type' => ActivityType::Running->value,
+                'level' => SessionLevel::Advanced->value,
+                'description' => 'Séance de running avancée à Etterbeek. Intervalles intensifs.',
+                'location' => 'Parc du Cinquantenaire, Etterbeek',
+                'postal_code' => '1040',
+                'latitude' => '50.8370',
+                'longitude' => '4.3920',
                 'date' => $completedDate,
                 'start_time' => '07:30:00',
                 'end_time' => '08:30:00',
@@ -275,18 +450,65 @@ final class MvpJourneySeeder extends Seeder
             ]
         );
 
-        $this->command->info('✅ MvpJourneySeeder: scenario created successfully.');
-        $this->command->info('');
-        $this->command->info('  Test accounts (password: "password"):');
-        $this->command->info('    admin@motivya.test              — Admin');
-        $this->command->info('    sophie.coach@motivya.test       — Coach (pending approval)');
-        $this->command->info('    marc.coach@motivya.test         — Coach (approved + Stripe-ready)');
-        $this->command->info('    alice@motivya.test              — Athlete (confirmed booking)');
-        $this->command->info('    bob@motivya.test                — Athlete (confirmed booking)');
-        $this->command->info('    charlie@motivya.test            — Athlete (no bookings — use for journey test)');
-        $this->command->info('    accountant@motivya.test         — Accountant');
-        $this->command->info('');
-        $this->command->info('  ⚠  Replace stripe_account_id "acct_mvp_smoke_test" with a real Stripe test Express account ID.');
-        $this->command->info('  📖 See doc/MVP-Smoke-Test.md for the full manual QA checklist.');
+        // ── Payout statement for Marc (previous month, draft) ─────────────────
+        $prevMonth = Carbon::now()->subMonth();
+
+        CoachPayoutStatement::firstOrCreate(
+            [
+                'coach_id' => $marc->id,
+                'period_month' => $prevMonth->month,
+                'period_year' => $prevMonth->year,
+            ],
+            [
+                'status' => CoachPayoutStatementStatus::Draft->value,
+                'sessions_count' => 1,
+                'paid_bookings_count' => 5,
+                'revenue_ttc' => $revenueTtc,
+                'revenue_htva' => $revenueHtva,
+                'vat_amount' => $vatAmount,
+                'payment_fees' => $stripeFee,
+                'subscription_tier' => 'freemium',
+                'commission_rate' => 30,
+                'commission_amount' => $commissionAmount,
+                'coach_payout' => $coachPayout,
+                'is_vat_subject' => true,
+            ]
+        );
+
+        // ── Payment anomaly (open, for admin/accountant anomaly queue) ─────────
+        PaymentAnomaly::firstOrCreate(
+            [
+                'anomaly_type' => PaymentAnomalyType::CompletedSessionWithoutInvoice->value,
+                'related_coach_id' => $marc->id,
+            ],
+            [
+                'anomalous_model_type' => SportSession::class,
+                'anomalous_model_id' => $completedSession->id,
+                'related_session_id' => $completedSession->id,
+                'resolution_status' => 'open',
+                'description' => 'Demo anomaly: completed session without a finalized invoice. Used for smoke testing the anomaly queue.',
+                'recommended_action' => 'Generate and finalise the invoice via the accountant dashboard.',
+            ]
+        );
+
+        if ($this->command !== null) {
+            $this->command->info('✅ MvpJourneySeeder: scenario created successfully.');
+            $this->command->info('');
+            $this->command->info('  Test accounts (password: "password"):');
+            $this->command->info('    admin@motivya.test              — Admin');
+            $this->command->info('    accountant@motivya.test         — Accountant');
+            $this->command->info('    sophie.coach@motivya.test       — Coach (pending approval)');
+            $this->command->info('    marc.coach@motivya.test         — Coach (approved + Stripe-ready)');
+            $this->command->info('    alice@motivya.test              — Athlete (confirmed bookings)');
+            $this->command->info('    bob@motivya.test                — Athlete (confirmed booking + refund)');
+            $this->command->info('    charlie@motivya.test            — Athlete (no bookings — use for journey test)');
+            $this->command->info('    diana@motivya.test              — Athlete (pending-payment booking)');
+            $this->command->info('    suspended@motivya.test          — Athlete (suspended account)');
+            $this->command->info('    unverified@motivya.test         — Athlete (unverified email)');
+            $this->command->info('');
+            $this->command->info('  Sessions across Brussels postal codes: 1000, 1020, 1030, 1040, 1050');
+            $this->command->info('  ⚠  Replace stripe_account_id "acct_mvp_smoke_test" with a real Stripe test Express account ID.');
+            $this->command->info('  📖 See doc/MVP-Smoke-Test.md for the full manual QA checklist.');
+        }
     }
 }

@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use App\Enums\BookingStatus;
 use App\Enums\SessionStatus;
+use App\Models\SchedulerHeartbeat;
 use App\Models\SportSession;
 use App\Notifications\SessionReminderNotification;
 use Illuminate\Console\Command;
@@ -67,6 +68,8 @@ final class SendSessionReminders extends Command
             $session->reminder_sent_at = now()->toDateTimeString();
             $session->save();
         }
+
+        SchedulerHeartbeat::record('sessions:send-reminders');
 
         return self::SUCCESS;
     }
