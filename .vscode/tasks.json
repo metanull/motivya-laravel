@@ -1,0 +1,69 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "PHP: Lint (Pint)",
+            "type": "shell",
+            "command": "docker run --rm -v \"${workspaceFolder}:/var/www/html\" -w /var/www/html motivya-composer php vendor/bin/pint",
+            "group": "build",
+            "presentation": { "reveal": "always", "panel": "shared" },
+            "problemMatcher": []
+        },
+        {
+            "label": "PHP: Lint --test (dry run)",
+            "type": "shell",
+            "command": "docker run --rm -v \"${workspaceFolder}:/var/www/html\" -w /var/www/html motivya-composer php vendor/bin/pint --test",
+            "group": "build",
+            "presentation": { "reveal": "always", "panel": "shared" },
+            "problemMatcher": []
+        },
+        {
+            "label": "PHP: Test (all)",
+            "type": "shell",
+            "command": "docker run --rm -v \"${workspaceFolder}:/var/www/html\" -w /var/www/html -e APP_ENV=testing -e DB_CONNECTION=sqlite -e DB_DATABASE=:memory: motivya-composer php artisan test",
+            "group": { "kind": "test", "isDefault": true },
+            "presentation": { "reveal": "always", "panel": "shared" },
+            "problemMatcher": []
+        },
+        {
+            "label": "PHP: Test (MVP only)",
+            "type": "shell",
+            "command": "docker run --rm -v \"${workspaceFolder}:/var/www/html\" -w /var/www/html -e APP_ENV=testing -e DB_CONNECTION=sqlite -e DB_DATABASE=:memory: motivya-composer php artisan test tests/Feature/Mvp/",
+            "group": "test",
+            "presentation": { "reveal": "always", "panel": "shared" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Composer: audit",
+            "type": "shell",
+            "command": "docker run --rm -v \"${workspaceFolder}:/app\" -w /app composer:2 audit",
+            "group": "build",
+            "presentation": { "reveal": "always", "panel": "shared" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Composer: update (via project image)",
+            "type": "shell",
+            "command": "docker run --rm -v \"${workspaceFolder}:/var/www/html\" -w /var/www/html motivya-composer sh -c \"curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer --quiet && composer update --no-interaction --prefer-dist\"",
+            "group": "build",
+            "presentation": { "reveal": "always", "panel": "shared" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Docker: open shell in app container",
+            "type": "shell",
+            "command": "docker run --rm -it -v \"${workspaceFolder}:/var/www/html\" -w /var/www/html motivya-composer sh",
+            "group": "none",
+            "presentation": { "reveal": "always", "panel": "new" },
+            "problemMatcher": []
+        },
+        {
+            "label": "Docker: build app image",
+            "type": "shell",
+            "command": "docker build -t motivya-composer -f .docker/php/Dockerfile .",
+            "group": "build",
+            "presentation": { "reveal": "always", "panel": "shared" },
+            "problemMatcher": []
+        }
+    ]
+}
