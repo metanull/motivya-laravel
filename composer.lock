@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "93aa0b9a1f59f633e7e5e37b8b914840",
+    "content-hash": "a22ece50731e52c27b35c16378fa7b5b",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -3521,16 +3521,16 @@
         },
         {
             "name": "phpseclib/phpseclib",
-            "version": "3.0.51",
+            "version": "3.0.52",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpseclib/phpseclib.git",
-                "reference": "d59c94077f9c9915abb51ddb52ce85188ece1748"
+                "reference": "2adaefc83df2ec548558307690f376dd7d4f4fce"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/d59c94077f9c9915abb51ddb52ce85188ece1748",
-                "reference": "d59c94077f9c9915abb51ddb52ce85188ece1748",
+                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/2adaefc83df2ec548558307690f376dd7d4f4fce",
+                "reference": "2adaefc83df2ec548558307690f376dd7d4f4fce",
                 "shasum": ""
             },
             "require": {
@@ -3611,7 +3611,7 @@
             ],
             "support": {
                 "issues": "https://github.com/phpseclib/phpseclib/issues",
-                "source": "https://github.com/phpseclib/phpseclib/tree/3.0.51"
+                "source": "https://github.com/phpseclib/phpseclib/tree/3.0.52"
             },
             "funding": [
                 {
@@ -3627,7 +3627,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-04-10T01:33:53+00:00"
+            "time": "2026-04-27T07:02:15+00:00"
         },
         {
             "name": "pragmarx/google2fa",
@@ -10543,7 +10543,7 @@
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
-        "php": "^8.2"
+        "php": "^8.3"
     },
     "platform-dev": {},
     "plugin-api-version": "2.9.0"
