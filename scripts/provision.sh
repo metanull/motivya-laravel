@@ -412,6 +412,8 @@ WorkingDirectory=${APP_DIR}/current
 ExecStart=/usr/bin/php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600 --memory=128
 Restart=always
 RestartSec=5
+# Create log files as 664 so both www-data and deploy can read/write them.
+UMask=0002
 StandardOutput=append:${APP_DIR}/shared/storage/logs/queue-worker.log
 StandardError=append:${APP_DIR}/shared/storage/logs/queue-worker.log
 
@@ -451,6 +453,8 @@ User=www-data
 Group=www-data
 WorkingDirectory=${APP_DIR}/current
 ExecStart=/usr/bin/php artisan schedule:run --no-interaction
+# Create log files as 664 so both www-data and deploy can read/write them.
+UMask=0002
 StandardOutput=append:${APP_DIR}/shared/storage/logs/scheduler.log
 StandardError=append:${APP_DIR}/shared/storage/logs/scheduler.log
 # Do not restart on failure — the timer will fire again in 60 seconds.

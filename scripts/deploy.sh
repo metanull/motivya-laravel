@@ -194,6 +194,10 @@ health_check() {
 # =============================================================================
 # Main
 # =============================================================================
+# Ensure artisan-created files (migrations, caches, logs) are group-writable so
+# www-data (queue worker / scheduler) can also write to them without sudo.
+umask 002
+
 info "Starting deployment as $(whoami)..."
 preflight
 deploy_release
