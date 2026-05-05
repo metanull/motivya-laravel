@@ -5,8 +5,13 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Contracts\PaymentServiceContract;
+use App\Enums\AuditEventType;
+use App\Enums\AuditOperation;
 use App\Models\Booking;
+use App\Services\Audit\AuditService;
+use App\Services\Audit\AuditSubject;
 use Closure;
+use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use RuntimeException;
 use Stripe\Checkout\Session as CheckoutSession;
@@ -15,6 +20,7 @@ use Stripe\Stripe;
 final class PaymentService implements PaymentServiceContract
 {
     public function __construct(
+        private readonly AuditService $auditService,
         private readonly ?Closure $createCheckoutSessionUsing = null,
         private readonly ?Closure $calculateCoachPayoutUsing = null,
     ) {}
@@ -77,9 +83,19 @@ final class PaymentService implements PaymentServiceContract
             throw new RuntimeException('Stripe did not return a checkout session identifier.');
         }
 
-        $booking->forceFill([
-            'stripe_checkout_session_id' => $checkoutSession->id,
-        ])->save();
+        DB::transaction(function () use ($booking, $checkoutSession): void {
+            $booking->forceFill([
+                'stripe_checkout_session_id' => $checkoutSession->id,
+            ])->save();
+
+            $this->auditService->record(
+                AuditEventType::BookingPaymentStarted,
+                AuditOperation::Payment,
+                $booking,
+                subjects: [AuditSubject::primary($booking)],
+                newValues: ['stripe_checkout_session_id' => $checkoutSession->id],
+            );
+        });
 
         return $checkoutSession;
     }

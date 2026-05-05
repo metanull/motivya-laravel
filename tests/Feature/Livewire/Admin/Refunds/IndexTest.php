@@ -9,6 +9,7 @@ use App\Models\AdminRefundAudit;
 use App\Models\Booking;
 use App\Models\SportSession;
 use App\Models\User;
+use App\Services\Audit\AuditService;
 use App\Services\RefundService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -40,6 +41,7 @@ function makeConfirmedPaidBooking(): Booking
 function bindSuccessfulRefundService(): void
 {
     app()->instance(RefundService::class, new RefundService(
+        auditService: app(AuditService::class),
         createRefundUsing: function (array $payload): Refund {
             return Refund::constructFrom(['id' => 're_test_'.now()->timestamp]);
         },
@@ -52,6 +54,7 @@ function bindSuccessfulRefundService(): void
 function bindFailingRefundService(): void
 {
     app()->instance(RefundService::class, new RefundService(
+        auditService: app(AuditService::class),
         createRefundUsing: function (array $payload): never {
             throw new RuntimeException('Stripe refund failed (test).');
         },

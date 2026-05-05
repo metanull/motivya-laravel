@@ -6,6 +6,7 @@ namespace App\Livewire\Admin\Users;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use App\Services\UserAdminService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
@@ -79,7 +80,7 @@ final class Index extends Component
         $this->suspensionReason = '';
     }
 
-    public function suspend(): void
+    public function suspend(UserAdminService $service): void
     {
         Gate::authorize('viewAny', User::class);
 
@@ -94,10 +95,7 @@ final class Index extends Component
         $user = User::findOrFail($this->suspendingUserId);
         Gate::authorize('suspend', $user);
 
-        $user->update([
-            'suspended_at' => now(),
-            'suspension_reason' => $this->suspensionReason,
-        ]);
+        $service->suspend($user, $this->suspensionReason);
 
         $this->suspendingUserId = null;
         $this->suspensionReason = '';
@@ -105,17 +103,14 @@ final class Index extends Component
         $this->dispatch('notify', type: 'success', message: __('admin.user_suspended'));
     }
 
-    public function reactivate(int $userId): void
+    public function reactivate(int $userId, UserAdminService $service): void
     {
         Gate::authorize('viewAny', User::class);
 
         $user = User::findOrFail($userId);
         Gate::authorize('reactivate', $user);
 
-        $user->update([
-            'suspended_at' => null,
-            'suspension_reason' => null,
-        ]);
+        $service->reactivate($user);
 
         $this->dispatch('notify', type: 'success', message: __('admin.user_reactivated'));
     }
@@ -132,7 +127,7 @@ final class Index extends Component
         $this->newRole = '';
     }
 
-    public function changeRole(): void
+    public function changeRole(UserAdminService $service): void
     {
         Gate::authorize('viewAny', User::class);
 
@@ -171,7 +166,7 @@ final class Index extends Component
             }
         }
 
-        $user->update(['role' => $targetRole]);
+        $service->changeRole($user, $targetRole);
 
         $this->changingRoleUserId = null;
         $this->newRole = '';

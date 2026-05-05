@@ -5,12 +5,9 @@ declare(strict_types=1);
 namespace App\Livewire\Admin\Sessions;
 
 use App\Enums\ActivityType;
-use App\Enums\AuditEventType;
-use App\Enums\AuditOperation;
 use App\Enums\BookingStatus;
 use App\Enums\SessionStatus;
 use App\Models\SportSession;
-use App\Services\Audit\AuditService;
 use App\Services\SessionService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -136,7 +133,7 @@ final class Index extends Component
      * try/catch so that unexpected failures dispatch an error notification
      * rather than rendering an unhandled exception page.
      */
-    public function cancelSession(int $sessionId, SessionService $service, AuditService $auditService): void
+    public function cancelSession(int $sessionId, SessionService $service): void
     {
         $this->validate([
             'cancelReason' => ['required', 'string', 'max:1000'],
@@ -149,14 +146,7 @@ final class Index extends Component
                 throw new InvalidArgumentException('Only published or confirmed sessions can be cancelled.');
             }
 
-            $service->cancel($session);
-
-            $auditService->record(
-                AuditEventType::SessionCancelled,
-                AuditOperation::StateChange,
-                $session,
-                metadata: ['reason' => $this->cancelReason, 'admin_id' => auth()->id()],
-            );
+            $service->cancel($session, $this->cancelReason);
 
             $this->cancellingSessionId = null;
             $this->cancelReason = '';
@@ -180,7 +170,7 @@ final class Index extends Component
      * Both the "wrong status" and "not past end time" checks throw inside the
      * try/catch so the error notification is always dispatched on failure.
      */
-    public function completeSession(int $sessionId, SessionService $service, AuditService $auditService): void
+    public function completeSession(int $sessionId, SessionService $service): void
     {
         $session = SportSession::findOrFail($sessionId);
 
@@ -194,13 +184,6 @@ final class Index extends Component
             }
 
             $service->complete($session);
-
-            $auditService->record(
-                AuditEventType::SessionCompleted,
-                AuditOperation::StateChange,
-                $session,
-                metadata: ['admin_id' => auth()->id()],
-            );
 
             $this->dispatch('notify', type: 'success', message: __('admin.sessions_completed_success'));
         } catch (\Throwable $e) {

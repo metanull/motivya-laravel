@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\AuditEventType;
+use App\Enums\AuditOperation;
 use App\Enums\BookingStatus;
 use App\Enums\PaymentAnomalyType;
 use App\Enums\SessionStatus;
@@ -13,9 +15,14 @@ use App\Models\Invoice;
 use App\Models\PaymentAnomaly;
 use App\Models\SportSession;
 use App\Models\User;
+use App\Services\Audit\AuditService;
+use App\Services\Audit\AuditSubject;
+use Illuminate\Support\Facades\DB;
 
 final class AnomalyDetectorService
 {
+    public function __construct(private readonly AuditService $auditService) {}
+
     /**
      * Run all five detection routines and persist newly discovered anomalies.
      */
@@ -148,12 +155,29 @@ final class AnomalyDetectorService
      */
     public function resolve(PaymentAnomaly $anomaly, User $actor, string $reason): void
     {
-        $anomaly->update([
-            'resolution_status' => 'resolved',
-            'resolution_reason' => $reason,
-            'resolved_by' => $actor->id,
-            'resolved_at' => now(),
-        ]);
+        DB::transaction(function () use ($anomaly, $actor, $reason): void {
+            $oldStatus = $anomaly->resolution_status;
+
+            $anomaly->update([
+                'resolution_status' => 'resolved',
+                'resolution_reason' => $reason,
+                'resolved_by' => $actor->id,
+                'resolved_at' => now(),
+            ]);
+
+            $this->auditService->record(
+                AuditEventType::AnomalyResolved,
+                AuditOperation::StateChange,
+                $anomaly,
+                subjects: [
+                    AuditSubject::primary($anomaly),
+                    AuditSubject::related($actor, 'actor'),
+                ],
+                oldValues: ['resolution_status' => $oldStatus],
+                newValues: ['resolution_status' => 'resolved'],
+                metadata: ['reason' => $reason],
+            );
+        });
     }
 
     /**
@@ -161,12 +185,29 @@ final class AnomalyDetectorService
      */
     public function ignore(PaymentAnomaly $anomaly, User $actor, string $reason): void
     {
-        $anomaly->update([
-            'resolution_status' => 'ignored',
-            'resolution_reason' => $reason,
-            'resolved_by' => $actor->id,
-            'resolved_at' => now(),
-        ]);
+        DB::transaction(function () use ($anomaly, $actor, $reason): void {
+            $oldStatus = $anomaly->resolution_status;
+
+            $anomaly->update([
+                'resolution_status' => 'ignored',
+                'resolution_reason' => $reason,
+                'resolved_by' => $actor->id,
+                'resolved_at' => now(),
+            ]);
+
+            $this->auditService->record(
+                AuditEventType::AnomalyIgnored,
+                AuditOperation::StateChange,
+                $anomaly,
+                subjects: [
+                    AuditSubject::primary($anomaly),
+                    AuditSubject::related($actor, 'actor'),
+                ],
+                oldValues: ['resolution_status' => $oldStatus],
+                newValues: ['resolution_status' => 'ignored'],
+                metadata: ['reason' => $reason],
+            );
+        });
     }
 
     /**

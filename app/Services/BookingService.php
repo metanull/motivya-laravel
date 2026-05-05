@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Contracts\BookingServiceContract;
+use App\Enums\AuditEventType;
+use App\Enums\AuditOperation;
 use App\Enums\BookingStatus;
 use App\Enums\SessionStatus;
 use App\Events\BookingCancelled;
@@ -14,6 +16,8 @@ use App\Exceptions\SessionNotBookableException;
 use App\Models\Booking;
 use App\Models\SportSession;
 use App\Models\User;
+use App\Services\Audit\AuditService;
+use App\Services\Audit\AuditSubject;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +25,8 @@ use InvalidArgumentException;
 
 final class BookingService implements BookingServiceContract
 {
+    public function __construct(private readonly AuditService $auditService) {}
+
     /**
      * Create a booking atomically and update session capacity.
      */
@@ -52,6 +58,18 @@ final class BookingService implements BookingServiceContract
             $lockedSession->forceFill([
                 'current_participants' => $lockedSession->current_participants + 1,
             ])->save();
+
+            $this->auditService->record(
+                AuditEventType::BookingCreated,
+                AuditOperation::Create,
+                $booking,
+                subjects: [
+                    AuditSubject::primary($booking),
+                    AuditSubject::related($lockedSession, 'session'),
+                    AuditSubject::related($athlete, 'athlete'),
+                ],
+                newValues: ['status' => BookingStatus::PendingPayment->value],
+            );
 
             return $booking;
         });
@@ -96,6 +114,19 @@ final class BookingService implements BookingServiceContract
             $lockedSession->forceFill([
                 'current_participants' => max($lockedSession->current_participants - 1, 0),
             ])->save();
+
+            $this->auditService->record(
+                AuditEventType::BookingCancelled,
+                AuditOperation::StateChange,
+                $lockedBooking,
+                subjects: [
+                    AuditSubject::primary($lockedBooking),
+                    AuditSubject::related($lockedSession, 'session'),
+                    AuditSubject::related($athlete, 'athlete'),
+                ],
+                oldValues: ['status' => BookingStatus::Confirmed->value],
+                newValues: ['status' => BookingStatus::Cancelled->value],
+            );
 
             return [
                 'booking_id' => $lockedBooking->getKey(),

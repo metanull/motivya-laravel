@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Enums\AuditEventType;
+use App\Enums\AuditOperation;
 use App\Enums\BookingStatus;
 use App\Enums\SessionStatus;
 use App\Events\BookingCancelled;
@@ -19,6 +21,9 @@ use App\Models\Booking;
 use App\Models\CoachProfile;
 use App\Models\ProcessedWebhook;
 use App\Models\SportSession;
+use App\Services\Audit\AuditContextResolver;
+use App\Services\Audit\AuditService;
+use App\Services\Audit\AuditSubject;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,6 +34,11 @@ use Stripe\Webhook;
 
 final class StripeWebhookController extends Controller
 {
+    public function __construct(
+        private readonly AuditService $auditService,
+        private readonly AuditContextResolver $contextResolver,
+    ) {}
+
     public function __invoke(Request $request): JsonResponse
     {
         $payload = $request->getContent();
@@ -149,6 +159,19 @@ final class StripeWebhookController extends Controller
             'amount_paid' => $amountPaid ?? $lockedBooking->amount_paid,
         ])->save();
 
+        $this->auditService->record(
+            AuditEventType::BookingPaymentConfirmed,
+            AuditOperation::Payment,
+            $lockedBooking,
+            subjects: [AuditSubject::primary($lockedBooking)],
+            oldValues: ['status' => BookingStatus::PendingPayment->value],
+            newValues: [
+                'status' => BookingStatus::Confirmed->value,
+                'amount_paid' => $amountPaid,
+            ],
+            context: $this->contextResolver->forWebhook('stripe', $event->id),
+        );
+
         // Check whether the session should now be confirmed based on paid booking count.
         $lockedSession = SportSession::query()
             ->lockForUpdate()
@@ -198,6 +221,16 @@ final class StripeWebhookController extends Controller
             'status' => BookingStatus::Cancelled,
             'cancelled_at' => now(),
         ])->save();
+
+        $this->auditService->record(
+            AuditEventType::BookingPaymentFailed,
+            AuditOperation::Payment,
+            $lockedBooking,
+            subjects: [AuditSubject::primary($lockedBooking)],
+            oldValues: ['status' => BookingStatus::PendingPayment->value],
+            newValues: ['status' => BookingStatus::Cancelled->value],
+            context: $this->contextResolver->forWebhook('stripe', $event->id),
+        );
 
         BookingCancelled::dispatch($lockedBooking->getKey(), 'payment_failed', false);
     }
@@ -310,6 +343,19 @@ final class StripeWebhookController extends Controller
             'amount_paid' => $amountTotal ?? $lockedBooking->amount_paid,
             'stripe_payment_intent_id' => $paymentIntentId ?? $lockedBooking->stripe_payment_intent_id,
         ])->save();
+
+        $this->auditService->record(
+            AuditEventType::BookingPaymentConfirmed,
+            AuditOperation::Payment,
+            $lockedBooking,
+            subjects: [AuditSubject::primary($lockedBooking)],
+            oldValues: ['status' => BookingStatus::PendingPayment->value],
+            newValues: [
+                'status' => BookingStatus::Confirmed->value,
+                'amount_paid' => $amountTotal,
+            ],
+            context: $this->contextResolver->forWebhook('stripe', $event->id),
+        );
 
         // Check whether the session should now be confirmed based on paid booking count.
         $lockedSession = SportSession::query()

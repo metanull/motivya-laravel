@@ -6,6 +6,7 @@ use App\Enums\BookingStatus;
 use App\Events\SessionCancelled;
 use App\Models\Booking;
 use App\Models\SportSession;
+use App\Services\Audit\AuditService;
 use App\Services\RefundService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Stripe\Refund as StripeRefund;
@@ -16,6 +17,7 @@ describe('RefundAllBookingsOnSessionCancellation', function () {
     it('refunds all confirmed bookings for a cancelled session', function () {
         $refundPayloads = [];
         app()->instance(RefundService::class, new RefundService(
+            auditService: app(AuditService::class),
             createRefundUsing: function (array $payload) use (&$refundPayloads): StripeRefund {
                 $refundPayloads[] = $payload;
 

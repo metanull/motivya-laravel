@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\AuditEventType;
+use App\Enums\AuditOperation;
 use App\Enums\BookingStatus;
 use App\Enums\CoachPayoutStatementStatus;
 use App\Enums\SessionStatus;
@@ -11,12 +13,16 @@ use App\Models\CoachPayoutStatement;
 use App\Models\CoachProfile;
 use App\Models\SportSession;
 use App\Models\User;
+use App\Services\Audit\AuditService;
+use App\Services\Audit\AuditSubject;
+use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 final class CoachPayoutStatementService
 {
     public function __construct(
         private readonly PayoutService $payoutService,
+        private readonly AuditService $auditService,
     ) {}
 
     /**
@@ -84,10 +90,30 @@ final class CoachPayoutStatementService
             'is_vat_subject' => $isVatSubject,
         ];
 
-        return CoachPayoutStatement::updateOrCreate(
-            ['coach_id' => $coach->id, 'period_year' => $year, 'period_month' => $month],
-            $data,
-        );
+        return DB::transaction(function () use ($coach, $year, $month, $data): CoachPayoutStatement {
+            $statement = CoachPayoutStatement::updateOrCreate(
+                ['coach_id' => $coach->id, 'period_year' => $year, 'period_month' => $month],
+                $data,
+            );
+
+            $this->auditService->record(
+                AuditEventType::PayoutStatementGenerated,
+                AuditOperation::Create,
+                $statement,
+                subjects: [
+                    AuditSubject::primary($statement),
+                    AuditSubject::related($coach, 'coach'),
+                ],
+                newValues: [
+                    'period_year' => $year,
+                    'period_month' => $month,
+                    'coach_payout' => $data['coach_payout'],
+                    'status' => CoachPayoutStatementStatus::Draft->value,
+                ],
+            );
+
+            return $statement;
+        });
     }
 
     /**
@@ -115,10 +141,23 @@ final class CoachPayoutStatementService
             );
         }
 
-        $statement->update([
-            'status' => CoachPayoutStatementStatus::InvoiceSubmitted->value,
-            'invoice_submitted_at' => now(),
-        ]);
+        DB::transaction(function () use ($statement): void {
+            $oldStatus = $statement->status;
+
+            $statement->update([
+                'status' => CoachPayoutStatementStatus::InvoiceSubmitted->value,
+                'invoice_submitted_at' => now(),
+            ]);
+
+            $this->auditService->record(
+                AuditEventType::PayoutStatementSubmitted,
+                AuditOperation::StateChange,
+                $statement,
+                subjects: [AuditSubject::primary($statement)],
+                oldValues: ['status' => $oldStatus->value],
+                newValues: ['status' => CoachPayoutStatementStatus::InvoiceSubmitted->value],
+            );
+        });
     }
 
     /**
@@ -132,11 +171,27 @@ final class CoachPayoutStatementService
             );
         }
 
-        $statement->update([
-            'status' => CoachPayoutStatementStatus::Approved->value,
-            'approved_at' => now(),
-            'approved_by' => $approver->id,
-        ]);
+        DB::transaction(function () use ($statement, $approver): void {
+            $oldStatus = $statement->status;
+
+            $statement->update([
+                'status' => CoachPayoutStatementStatus::Approved->value,
+                'approved_at' => now(),
+                'approved_by' => $approver->id,
+            ]);
+
+            $this->auditService->record(
+                AuditEventType::PayoutStatementApproved,
+                AuditOperation::StateChange,
+                $statement,
+                subjects: [
+                    AuditSubject::primary($statement),
+                    AuditSubject::related($approver, 'approver'),
+                ],
+                oldValues: ['status' => $oldStatus->value],
+                newValues: ['status' => CoachPayoutStatementStatus::Approved->value],
+            );
+        });
     }
 
     /**
@@ -148,11 +203,28 @@ final class CoachPayoutStatementService
             throw new InvalidArgumentException('A block reason is required.');
         }
 
-        $statement->update([
-            'status' => CoachPayoutStatementStatus::Blocked->value,
-            'block_reason' => $reason,
-            'approved_by' => $approver->id,
-        ]);
+        DB::transaction(function () use ($statement, $approver, $reason): void {
+            $oldStatus = $statement->status;
+
+            $statement->update([
+                'status' => CoachPayoutStatementStatus::Blocked->value,
+                'block_reason' => $reason,
+                'approved_by' => $approver->id,
+            ]);
+
+            $this->auditService->record(
+                AuditEventType::PayoutStatementBlocked,
+                AuditOperation::StateChange,
+                $statement,
+                subjects: [
+                    AuditSubject::primary($statement),
+                    AuditSubject::related($approver, 'approver'),
+                ],
+                oldValues: ['status' => $oldStatus->value],
+                newValues: ['status' => CoachPayoutStatementStatus::Blocked->value],
+                metadata: ['reason' => $reason],
+            );
+        });
     }
 
     /**
@@ -166,10 +238,26 @@ final class CoachPayoutStatementService
             );
         }
 
-        $statement->update([
-            'status' => CoachPayoutStatementStatus::Paid->value,
-            'paid_at' => now(),
-            'approved_by' => $approver->id,
-        ]);
+        DB::transaction(function () use ($statement, $approver): void {
+            $oldStatus = $statement->status;
+
+            $statement->update([
+                'status' => CoachPayoutStatementStatus::Paid->value,
+                'paid_at' => now(),
+                'approved_by' => $approver->id,
+            ]);
+
+            $this->auditService->record(
+                AuditEventType::PayoutStatementPaid,
+                AuditOperation::StateChange,
+                $statement,
+                subjects: [
+                    AuditSubject::primary($statement),
+                    AuditSubject::related($approver, 'approver'),
+                ],
+                oldValues: ['status' => $oldStatus->value],
+                newValues: ['status' => CoachPayoutStatementStatus::Paid->value],
+            );
+        });
     }
 }

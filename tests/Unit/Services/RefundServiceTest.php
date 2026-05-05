@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\BookingStatus;
 use App\Events\BookingRefunded;
 use App\Models\Booking;
+use App\Services\Audit\AuditService;
 use App\Services\RefundService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
@@ -22,6 +23,7 @@ describe('refund', function () {
         ]);
 
         $service = new RefundService(
+            auditService: app(AuditService::class),
             createRefundUsing: function (array $payload) use (&$payloads): StripeRefund {
                 $payloads[] = $payload;
 
@@ -54,6 +56,7 @@ describe('refund', function () {
         ]);
 
         $service = new RefundService(
+            auditService: app(AuditService::class),
             createRefundUsing: function (array $payload) use (&$payloads): StripeRefund {
                 $payloads[] = $payload;
 

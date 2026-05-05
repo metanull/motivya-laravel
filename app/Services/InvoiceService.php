@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\AuditEventType;
+use App\Enums\AuditOperation;
 use App\Enums\BookingStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
 use App\Models\Booking;
 use App\Models\Invoice;
 use App\Models\SportSession;
+use App\Services\Audit\AuditService;
+use App\Services\Audit\AuditSubject;
 use Illuminate\Support\Facades\DB;
 
 final class InvoiceService
@@ -18,6 +22,7 @@ final class InvoiceService
         private readonly PayoutService $payoutService,
         private readonly VatService $vatService,
         private readonly PeppolXmlService $peppolXmlService,
+        private readonly AuditService $auditService,
     ) {}
 
     /**
@@ -85,6 +90,23 @@ final class InvoiceService
 
             $this->peppolXmlService->generate($invoice);
 
+            $this->auditService->record(
+                AuditEventType::InvoiceGenerated,
+                AuditOperation::Create,
+                $invoice,
+                subjects: [
+                    AuditSubject::primary($invoice),
+                    AuditSubject::related($session, 'session'),
+                    AuditSubject::related($coach, 'coach'),
+                ],
+                newValues: [
+                    'type' => InvoiceType::Invoice->value,
+                    'revenue_ttc' => $breakdown->revenue_ttc,
+                    'coach_payout' => $breakdown->coach_payout,
+                    'status' => InvoiceStatus::Draft->value,
+                ],
+            );
+
             return $invoice;
         });
     }
@@ -119,7 +141,8 @@ final class InvoiceService
                 return $existing;
             }
 
-            $coachProfile = $originalInvoice->coach->coachProfile;
+            $coach = $originalInvoice->coach;
+            $coachProfile = $coach->coachProfile;
 
             $revenueTtc = $booking->amount_paid;
             // Estimate Stripe processing fee at the standard 1.5% rate.
@@ -153,6 +176,23 @@ final class InvoiceService
             ]);
 
             $this->peppolXmlService->generate($creditNote);
+
+            $this->auditService->record(
+                AuditEventType::InvoiceCreditNoteGenerated,
+                AuditOperation::Create,
+                $creditNote,
+                subjects: [
+                    AuditSubject::primary($creditNote),
+                    AuditSubject::related($originalInvoice, 'original_invoice'),
+                    AuditSubject::related($coach, 'coach'),
+                ],
+                newValues: [
+                    'type' => InvoiceType::CreditNote->value,
+                    'related_invoice_id' => $originalInvoice->id,
+                    'revenue_ttc' => $breakdown->revenue_ttc,
+                    'status' => InvoiceStatus::Draft->value,
+                ],
+            );
 
             return $creditNote;
         });
