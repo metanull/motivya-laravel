@@ -109,7 +109,7 @@ describe('Admin — Exceptional Refund Queue', function () {
             ->assertSee('#'.$booking->id);
     });
 
-    it('shows refunded bookings', function () {
+    it('shows refunded bookings when filtered by refunded status', function () {
         $admin = User::factory()->admin()->withTwoFactor()->create();
         $coach = User::factory()->coach()->create();
         $session = SportSession::factory()->confirmed()->for($coach, 'coach')->create();
@@ -120,6 +120,7 @@ describe('Admin — Exceptional Refund Queue', function () {
 
         Livewire::actingAs($admin)
             ->test(Index::class)
+            ->set('statusFilter', 'refunded')
             ->assertSee('#'.$booking->id);
     });
 
@@ -271,6 +272,89 @@ describe('Admin — Exceptional Refund Queue', function () {
         // Booking must NOT be marked as refunded
         $booking->refresh();
         expect($booking->status)->toBe(BookingStatus::Confirmed);
+    });
+
+    // Story 1.4: per-case error messages for each ineligible scenario.
+
+    it('dispatches the already-refunded message when booking is refunded', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+        $coach = User::factory()->coach()->create();
+        $session = SportSession::factory()->confirmed()->for($coach, 'coach')->create();
+        $booking = Booking::factory()
+            ->refunded()
+            ->for($session, 'sportSession')
+            ->create(['amount_paid' => 2000, 'stripe_payment_intent_id' => 'pi_already']);
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->call('confirmRefund', $booking->id)
+            ->set('refundReason', 'Double refund attempt')
+            ->call('processRefund', $booking->id)
+            ->assertDispatched('notify', message: __('admin.refunds_error_already_refunded'));
+    });
+
+    it('dispatches the not-confirmed message when booking is still pending', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+        $coach = User::factory()->coach()->create();
+        $session = SportSession::factory()->confirmed()->for($coach, 'coach')->create();
+        $booking = Booking::factory()
+            ->pendingPayment()
+            ->for($session, 'sportSession')
+            ->create(['amount_paid' => 0]);
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->call('confirmRefund', $booking->id)
+            ->set('refundReason', 'Wrong status attempt')
+            ->call('processRefund', $booking->id)
+            ->assertDispatched('notify', message: __('admin.refunds_error_not_confirmed'));
+    });
+
+    it('dispatches the no-amount message when amount_paid is zero', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+        $coach = User::factory()->coach()->create();
+        $session = SportSession::factory()->confirmed()->for($coach, 'coach')->create();
+        $booking = Booking::factory()
+            ->confirmed()
+            ->for($session, 'sportSession')
+            ->create(['amount_paid' => 0, 'stripe_payment_intent_id' => null]);
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->call('confirmRefund', $booking->id)
+            ->set('refundReason', 'Zero amount attempt')
+            ->call('processRefund', $booking->id)
+            ->assertDispatched('notify', message: __('admin.refunds_error_no_amount'));
+    });
+
+    it('dispatches the missing-payment-intent message when stripe_payment_intent_id is null', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+        $coach = User::factory()->coach()->create();
+        $session = SportSession::factory()->confirmed()->for($coach, 'coach')->create();
+        $booking = Booking::factory()
+            ->confirmed()
+            ->for($session, 'sportSession')
+            ->create(['amount_paid' => 3000, 'stripe_payment_intent_id' => null]);
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->call('confirmRefund', $booking->id)
+            ->set('refundReason', 'Reconciliation needed')
+            ->call('processRefund', $booking->id)
+            ->assertDispatched('notify', message: __('admin.refunds_error_missing_payment_intent'));
+    });
+
+    it('dispatches the stripe-failure message when Stripe rejects the refund', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+        $booking = makeConfirmedPaidBooking();
+        bindFailingRefundService();
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->call('confirmRefund', $booking->id)
+            ->set('refundReason', 'Stripe failure test')
+            ->call('processRefund', $booking->id)
+            ->assertDispatched('notify', message: __('admin.refunds_error_stripe_failure'));
     });
 
 });

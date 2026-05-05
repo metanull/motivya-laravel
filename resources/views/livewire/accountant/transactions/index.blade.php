@@ -262,9 +262,22 @@
                                 @endif
                             </td>
 
-                            {{-- Anomaly (placeholder — always No anomaly) --}}
-                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-                                {{ __('accountant.transactions_missing_value') }}
+                            {{-- Anomaly flags (Story 1.5) --}}
+                            <td class="whitespace-nowrap px-4 py-3 text-sm">
+                                @php $flags = $bookingFlags[$booking->id] ?? []; @endphp
+                                @if (!empty($flags['has_anomaly']))
+                                    <span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-900 dark:text-red-200">
+                                        @if (!empty($flags['missing_payment_intent']))
+                                            {{ __('accountant.anomaly_missing_payment_intent') }}
+                                        @elseif (!empty($flags['confirmed_without_payment']))
+                                            {{ __('accountant.anomaly_confirmed_without_payment') }}
+                                        @elseif (!empty($flags['paid_cancelled_without_refund']))
+                                            {{ __('accountant.anomaly_paid_cancelled_without_refund') }}
+                                        @endif
+                                    </span>
+                                @else
+                                    <span class="text-gray-400 dark:text-gray-500">{{ __('accountant.transactions_missing_value') }}</span>
+                                @endif
                             </td>
                         </tr>
                     @empty

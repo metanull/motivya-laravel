@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Booking;
 
+use App\Enums\BookingStatus;
 use App\Enums\SessionStatus;
 use App\Enums\UserRole;
 use App\Exceptions\AlreadyBookedException;
@@ -16,12 +17,9 @@ use App\Services\BookingService;
 use App\Services\PaymentService;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use InvalidArgumentException;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
-use RuntimeException;
-use Stripe\Checkout\Session as CheckoutSession;
 
 final class Book extends Component
 {
@@ -78,23 +76,70 @@ final class Book extends Component
 
         $this->showConfirmModal = false;
 
+        // Story 1.2: Create the booking hold atomically, but outside the Stripe call.
+        // A failed Stripe session must not roll back the capacity reservation.
+        $booking = null;
+
         try {
-            $checkoutSession = DB::transaction(function () use ($athlete, $bookingService, $paymentService): CheckoutSession {
-                $booking = $bookingService->book($this->sportSession, $athlete);
-                $checkoutSession = $paymentService->createCheckoutSession($booking);
+            $booking = $bookingService->book($this->sportSession, $athlete);
+        } catch (AlreadyBookedException) {
+            // Story 1.2: Reuse a valid, non-expired pending hold rather than failing.
+            $existingPending = Booking::query()
+                ->where('sport_session_id', $this->sportSession->id)
+                ->where('athlete_id', $athlete->id)
+                ->where('status', BookingStatus::PendingPayment->value)
+                ->first();
 
-                $this->existingBooking = $booking->fresh();
+            if ($existingPending !== null && ! $existingPending->isPaymentExpired()) {
+                $booking = $existingPending;
+            } else {
+                $this->syncState();
+                $this->dispatch('notify', type: 'error', message: __('bookings.error_already_booked'));
 
-                return $checkoutSession;
-            });
-        } catch (AlreadyBookedException|SessionFullException|SessionNotBookableException|InvalidArgumentException|RuntimeException $exception) {
+                return null;
+            }
+        } catch (SessionFullException|SessionNotBookableException $exception) {
             $this->syncState();
-
             $this->dispatch('notify', type: 'error', message: $exception->getMessage());
 
             return null;
         }
 
+        // Story 1.2: Stripe checkout call is outside the booking transaction.
+        // Story 1.1: Catch all Throwable to prevent silent failures.
+        try {
+            $checkoutSession = $paymentService->createCheckoutSession($booking);
+        } catch (\Throwable $exception) {
+            Log::error('Payment start failed', [
+                'booking_id' => $booking->id,
+                'sport_session_id' => $this->sportSession->id,
+                'athlete_id' => $athlete->id,
+                'exception_class' => $exception::class,
+                'message' => $exception->getMessage(),
+            ]);
+            $this->existingBooking = $booking->fresh();
+            $this->syncState();
+            $this->dispatch('notify', type: 'error', message: __('bookings.error_payment_redirect_unavailable'));
+
+            return null;
+        }
+
+        // Story 1.1: Validate that the returned URL is non-empty before redirecting.
+        if (! is_string($checkoutSession->url) || $checkoutSession->url === '') {
+            Log::error('Stripe checkout session returned no URL', [
+                'booking_id' => $booking->id,
+                'sport_session_id' => $this->sportSession->id,
+                'athlete_id' => $athlete->id,
+                'checkout_session_id' => $checkoutSession->id ?? null,
+            ]);
+            $this->existingBooking = $booking->fresh();
+            $this->syncState();
+            $this->dispatch('notify', type: 'error', message: __('bookings.error_payment_redirect_unavailable'));
+
+            return null;
+        }
+
+        $this->existingBooking = $booking->fresh();
         $this->syncState();
 
         return redirect()->away($checkoutSession->url);

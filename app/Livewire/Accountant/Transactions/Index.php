@@ -10,6 +10,7 @@ use App\Enums\UserRole;
 use App\Models\Booking;
 use App\Models\Invoice;
 use App\Models\User;
+use App\Services\AnomalyDetectorService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
@@ -37,7 +38,7 @@ final class Index extends Component
     #[Url]
     public string $bookingStatus = '';
 
-    /** Anomaly flag filter — placeholder (no real anomaly detection yet). */
+    /** Anomaly flag filter — 'anomalies_only' shows only bookings with a computed anomaly flag. */
     #[Url]
     public string $anomalyFlag = '';
 
@@ -88,7 +89,7 @@ final class Index extends Component
         $this->resetPage();
     }
 
-    public function render(): View
+    public function render(AnomalyDetectorService $anomalyDetector): View
     {
         $bookings = Booking::query()
             ->with(['sportSession.coach', 'athlete', 'sportSession.invoices'])
@@ -118,11 +119,40 @@ final class Index extends Component
                 $this->bookingStatus !== '',
                 fn ($q) => $q->where('status', BookingStatus::from($this->bookingStatus)),
             )
+            ->when(
+                $this->anomalyFlag === 'anomalies_only',
+                // Story 1.5: Filter to bookings that have at least one known anomaly flag.
+                fn ($q) => $q->where(function ($q): void {
+                    // Confirmed + paid + missing payment intent
+                    $q->where(fn ($s) => $s
+                        ->where('status', BookingStatus::Confirmed->value)
+                        ->where('amount_paid', '>', 0)
+                        ->whereNull('stripe_payment_intent_id'),
+                    )
+                    // Confirmed + amount_paid = 0
+                        ->orWhere(fn ($s) => $s
+                            ->where('status', BookingStatus::Confirmed->value)
+                            ->where('amount_paid', '<=', 0),
+                        )
+                    // Cancelled + paid + no refund
+                        ->orWhere(fn ($s) => $s
+                            ->where('status', BookingStatus::Cancelled->value)
+                            ->where('amount_paid', '>', 0)
+                            ->whereNull('refunded_at'),
+                        );
+                }),
+            )
             ->orderBy('bookings.created_at', 'desc')
             ->paginate(25);
 
+        // Story 1.5: Compute anomaly flags for each booking on the current page.
+        $bookingFlags = $bookings->getCollection()->mapWithKeys(
+            fn (Booking $booking): array => [$booking->id => $anomalyDetector->classifyBooking($booking)],
+        );
+
         return view('livewire.accountant.transactions.index', [
             'bookings' => $bookings,
+            'bookingFlags' => $bookingFlags,
         ])->title(__('accountant.transactions_title'));
     }
 }

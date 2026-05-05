@@ -180,3 +180,91 @@ describe('ignore', function () {
             ->and($fresh->resolved_at)->not->toBeNull();
     });
 });
+
+// Story 1.5: classifyBooking must derive per-booking anomaly flags from booking fields.
+describe('classifyBooking', function () {
+
+    it('flags a confirmed booking with amount_paid > 0 and no payment intent', function () {
+        $session = SportSession::factory()->published()->create();
+        $booking = Booking::factory()->create([
+            'sport_session_id' => $session->id,
+            'athlete_id' => User::factory()->athlete()->create()->id,
+            'status' => BookingStatus::Confirmed,
+            'amount_paid' => 2500,
+            'stripe_payment_intent_id' => null,
+        ]);
+
+        $flags = app(AnomalyDetectorService::class)->classifyBooking($booking);
+
+        expect($flags['missing_payment_intent'])->toBeTrue();
+        expect($flags['has_anomaly'])->toBeTrue();
+    });
+
+    it('does not flag a confirmed booking that has a payment intent', function () {
+        $session = SportSession::factory()->published()->create();
+        $booking = Booking::factory()->create([
+            'sport_session_id' => $session->id,
+            'athlete_id' => User::factory()->athlete()->create()->id,
+            'status' => BookingStatus::Confirmed,
+            'amount_paid' => 2500,
+            'stripe_payment_intent_id' => 'pi_test_ok',
+        ]);
+
+        $flags = app(AnomalyDetectorService::class)->classifyBooking($booking);
+
+        expect($flags['missing_payment_intent'])->toBeFalse();
+        expect($flags['has_anomaly'])->toBeFalse();
+    });
+
+    it('flags a confirmed booking with amount_paid 0', function () {
+        $session = SportSession::factory()->published()->create();
+        $booking = Booking::factory()->create([
+            'sport_session_id' => $session->id,
+            'athlete_id' => User::factory()->athlete()->create()->id,
+            'status' => BookingStatus::Confirmed,
+            'amount_paid' => 0,
+            'stripe_payment_intent_id' => null,
+        ]);
+
+        $flags = app(AnomalyDetectorService::class)->classifyBooking($booking);
+
+        expect($flags['confirmed_without_payment'])->toBeTrue();
+        expect($flags['has_anomaly'])->toBeTrue();
+    });
+
+    it('flags a cancelled booking with a positive amount_paid and no refund date', function () {
+        $session = SportSession::factory()->published()->create();
+        $booking = Booking::factory()->create([
+            'sport_session_id' => $session->id,
+            'athlete_id' => User::factory()->athlete()->create()->id,
+            'status' => BookingStatus::Cancelled,
+            'amount_paid' => 3000,
+            'stripe_payment_intent_id' => 'pi_cancelled',
+            'refunded_at' => null,
+            'cancelled_at' => now(),
+        ]);
+
+        $flags = app(AnomalyDetectorService::class)->classifyBooking($booking);
+
+        expect($flags['paid_cancelled_without_refund'])->toBeTrue();
+        expect($flags['has_anomaly'])->toBeTrue();
+    });
+
+    it('does not flag a refunded booking', function () {
+        $session = SportSession::factory()->published()->create();
+        $booking = Booking::factory()->create([
+            'sport_session_id' => $session->id,
+            'athlete_id' => User::factory()->athlete()->create()->id,
+            'status' => BookingStatus::Refunded,
+            'amount_paid' => 2000,
+            'stripe_payment_intent_id' => 'pi_refunded',
+            'refunded_at' => now(),
+            'cancelled_at' => now(),
+        ]);
+
+        $flags = app(AnomalyDetectorService::class)->classifyBooking($booking);
+
+        expect($flags['paid_cancelled_without_refund'])->toBeFalse();
+        expect($flags['has_anomaly'])->toBeFalse();
+    });
+});

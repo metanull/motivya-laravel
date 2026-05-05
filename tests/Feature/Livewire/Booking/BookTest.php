@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\BookingStatus;
 use App\Livewire\Booking\Book;
 use App\Models\Booking;
 use App\Models\CoachProfile;
@@ -152,6 +153,102 @@ describe('booking widget', function () {
             return [$session, $athlete, 0];
         },
     ]);
+
+    // Story 1.1: Stripe checkout failure dispatches the localized error.
+    it('dispatches error and keeps booking hold when Stripe checkout creation throws', function () {
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->approved()->for($coach)->create([
+            'stripe_account_id' => 'acct_stripe_fail',
+            'stripe_onboarding_complete' => true,
+        ]);
+
+        $session = SportSession::factory()->published()->for($coach, 'coach')->create([
+            'price_per_person' => 1500,
+        ]);
+        $athlete = User::factory()->athlete()->create();
+
+        app()->instance(PaymentService::class, new PaymentService(
+            auditService: app(AuditService::class),
+            createCheckoutSessionUsing: fn (array $payload): never => throw new RuntimeException('Stripe unavailable'),
+        ));
+
+        Livewire::actingAs($athlete)
+            ->test(Book::class, ['sportSession' => $session])
+            ->call('book')
+            ->assertDispatched('notify');
+
+        // The capacity hold must survive the Stripe failure.
+        $booking = Booking::query()->where('sport_session_id', $session->id)->first();
+        expect($booking)->not->toBeNull();
+        expect($booking?->status)->toBe(BookingStatus::PendingPayment);
+    });
+
+    // Story 1.1: Checkout session returning an empty URL dispatches an error.
+    it('dispatches error when Stripe checkout session returns an empty URL', function () {
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->approved()->for($coach)->create([
+            'stripe_account_id' => 'acct_empty_url',
+            'stripe_onboarding_complete' => true,
+        ]);
+
+        $session = SportSession::factory()->published()->for($coach, 'coach')->create([
+            'price_per_person' => 1000,
+        ]);
+        $athlete = User::factory()->athlete()->create();
+
+        app()->instance(PaymentService::class, new PaymentService(
+            auditService: app(AuditService::class),
+            createCheckoutSessionUsing: fn (array $payload): CheckoutSession => CheckoutSession::constructFrom([
+                'id' => 'cs_no_url',
+                'url' => '',
+            ]),
+        ));
+
+        Livewire::actingAs($athlete)
+            ->test(Book::class, ['sportSession' => $session])
+            ->call('book')
+            ->assertDispatched('notify');
+
+        // Booking hold still created.
+        expect(Booking::query()->where('sport_session_id', $session->id)->exists())->toBeTrue();
+    });
+
+    // Story 1.2: Valid pending hold is reused without creating a duplicate.
+    it('reuses an existing valid pending booking instead of creating a duplicate', function () {
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->approved()->for($coach)->create([
+            'stripe_account_id' => 'acct_reuse_hold',
+            'stripe_onboarding_complete' => true,
+        ]);
+
+        $session = SportSession::factory()->published()->for($coach, 'coach')->create([
+            'price_per_person' => 2000,
+            'current_participants' => 1,
+        ]);
+        $athlete = User::factory()->athlete()->create();
+
+        // Pre-existing pending booking (no checkout session yet — Stripe failed last time).
+        $existing = Booking::factory()->pendingPayment()
+            ->for($session, 'sportSession')
+            ->for($athlete, 'athlete')
+            ->create(['payment_expires_at' => now()->addMinutes(30)]);
+
+        app()->instance(PaymentService::class, new PaymentService(
+            auditService: app(AuditService::class),
+            createCheckoutSessionUsing: fn (array $payload): CheckoutSession => CheckoutSession::constructFrom([
+                'id' => 'cs_reused_hold',
+                'url' => 'https://checkout.stripe.com/pay/cs_reused_hold',
+            ]),
+        ));
+
+        Livewire::actingAs($athlete)
+            ->test(Book::class, ['sportSession' => $session])
+            ->call('book')
+            ->assertRedirect('https://checkout.stripe.com/pay/cs_reused_hold');
+
+        // Exactly one booking must exist — the reused one.
+        expect(Booking::query()->where('sport_session_id', $session->id)->count())->toBe(1);
+    });
 });
 
 describe('booking confirmation modal (story 6.2)', function () {
