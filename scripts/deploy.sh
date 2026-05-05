@@ -16,6 +16,8 @@
 #   - Nginx vhost pointing to /opt/motivya/current/public
 #   - MySQL credentials in /root/.motivya-db-credentials
 #   - motivya-queue.service systemd unit installed
+#   - motivya-scheduler.service + motivya-scheduler.timer systemd units installed
+#   - motivya-scheduler.service + motivya-scheduler.timer systemd units installed
 #
 # This script is idempotent — safe to re-run.
 # This script uses NO sudo — all operations are within /opt/motivya/.
@@ -192,6 +194,10 @@ health_check() {
 # =============================================================================
 # Main
 # =============================================================================
+# Ensure artisan-created files (migrations, caches, logs) are group-writable so
+# www-data (queue worker / scheduler) can also write to them without sudo.
+umask 002
+
 info "Starting deployment as $(whoami)..."
 preflight
 deploy_release

@@ -4,10 +4,16 @@ declare(strict_types=1);
 
 namespace App\Livewire\Admin;
 
+use App\Enums\BookingStatus;
+use App\Enums\CoachProfileStatus;
+use App\Enums\SessionStatus;
 use App\Enums\UserRole;
 use App\Models\ActivityImage;
+use App\Models\Booking;
+use App\Models\CoachProfile;
 use App\Models\PostalCodeCoordinate;
 use App\Models\SchedulerHeartbeat;
+use App\Models\SportSession;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Cache;
@@ -49,14 +55,17 @@ final class Readiness extends Component
             'cache' => $this->checkCache(),
             'queue' => $this->checkQueue(),
             'scheduler' => $this->checkScheduler(),
-            'postal_codes' => $this->checkPostalCodes(),
+            'public_storage' => $this->checkPublicStorage(),
+            'postal_code_reference' => $this->checkPostalCodeReference(),
+            'session_coordinates' => $this->checkSessionCoordinates(),
+            'payment_anomalies' => $this->checkPaymentAnomalies(),
+            'stripe_connect' => $this->checkStripeConnect(),
             'admin_mfa' => $this->checkAdminWithMfa(),
             'accountant' => $this->checkAccountant(),
             'activity_images' => $this->checkActivityImages(),
             'billing_config' => $this->checkBillingConfig(),
             'google_maps_key' => $this->checkGoogleMapsKey(),
             'geocoding_cache' => $this->checkGeocodingCache(),
-            'public_storage' => $this->checkPublicStorage(),
         ];
     }
 
@@ -201,15 +210,106 @@ final class Readiness extends Component
     /**
      * @return array{status: string, message: string}
      */
-    private function checkPostalCodes(): array
+    private function checkPublicStorage(): array
+    {
+        $linkPath = public_path('storage');
+
+        if (! is_link($linkPath)) {
+            return ['status' => 'red', 'message' => __('admin.readiness_public_storage_missing')];
+        }
+
+        $target = readlink($linkPath);
+        if (! is_dir($target !== false ? $target : $linkPath)) {
+            return ['status' => 'red', 'message' => __('admin.readiness_public_storage_broken', ['target' => (string) $target])];
+        }
+
+        // Verify at least one stored activity image URL is reachable when images exist.
+        $image = ActivityImage::first();
+        if ($image !== null) {
+            $publicUrl = url('storage/'.ltrim($image->path, '/'));
+            $localFile = public_path('storage/'.ltrim($image->path, '/'));
+            if (! file_exists($localFile)) {
+                return ['status' => 'yellow', 'message' => __('admin.readiness_public_storage_image_missing', ['url' => $publicUrl])];
+            }
+        }
+
+        return ['status' => 'green', 'message' => __('admin.readiness_public_storage_ok')];
+    }
+
+    /**
+     * @return array{status: string, message: string}
+     */
+    private function checkPostalCodeReference(): array
     {
         $count = PostalCodeCoordinate::count();
 
         if ($count === 0) {
-            return ['status' => 'red', 'message' => __('admin.readiness_postal_codes_missing')];
+            return ['status' => 'red', 'message' => __('admin.readiness_postal_code_reference_missing')];
         }
 
-        return ['status' => 'green', 'message' => __('admin.readiness_postal_codes_ok', ['count' => $count])];
+        return ['status' => 'green', 'message' => __('admin.readiness_postal_code_reference_ok', ['count' => $count])];
+    }
+
+    /**
+     * @return array{status: string, message: string}
+     */
+    private function checkSessionCoordinates(): array
+    {
+        $total = SportSession::count();
+
+        if ($total === 0) {
+            return ['status' => 'yellow', 'message' => __('admin.readiness_session_coordinates_no_sessions')];
+        }
+
+        $missing = SportSession::whereNull('latitude')->orWhereNull('longitude')->count();
+
+        if ($missing === $total) {
+            return ['status' => 'red', 'message' => __('admin.readiness_session_coordinates_all_missing', ['count' => $missing])];
+        }
+
+        if ($missing > 0) {
+            return ['status' => 'yellow', 'message' => __('admin.readiness_session_coordinates_some_missing', ['missing' => $missing, 'total' => $total])];
+        }
+
+        return ['status' => 'green', 'message' => __('admin.readiness_session_coordinates_ok', ['count' => $total])];
+    }
+
+    /**
+     * @return array{status: string, message: string}
+     */
+    private function checkPaymentAnomalies(): array
+    {
+        $count = Booking::where('status', BookingStatus::Confirmed->value)
+            ->where('amount_paid', '>', 0)
+            ->whereNull('stripe_payment_intent_id')
+            ->count();
+
+        if ($count > 0) {
+            return ['status' => 'red', 'message' => __('admin.readiness_payment_anomalies_found', ['count' => $count])];
+        }
+
+        return ['status' => 'green', 'message' => __('admin.readiness_payment_anomalies_ok')];
+    }
+
+    /**
+     * @return array{status: string, message: string}
+     */
+    private function checkStripeConnect(): array
+    {
+        // Count approved coaches who have published or confirmed sessions
+        // but have an incomplete Stripe Connect onboarding.
+        $count = CoachProfile::where('status', CoachProfileStatus::Approved->value)
+            ->where('stripe_onboarding_complete', false)
+            ->whereHas('user.sportSessions', function ($query): void {
+                $query->whereIn('status', [SessionStatus::Published->value, SessionStatus::Confirmed->value]);
+            })
+            ->count();
+
+        if ($count > 0) {
+            return ['status' => 'yellow', 'message' => __('admin.readiness_stripe_connect_incomplete', ['count' => $count])];
+        }
+
+        return ['status' => 'green', 'message' => __('admin.readiness_stripe_connect_ok')];
     }
 
     /**
@@ -301,24 +401,6 @@ final class Readiness extends Component
         } catch (\Throwable) {
             return ['status' => 'red', 'message' => __('admin.readiness_geocoding_cache_missing')];
         }
-    }
-
-    /**
-     * @return array{status: string, message: string}
-     */
-    private function checkPublicStorage(): array
-    {
-        $linkPath = public_path('storage');
-
-        if (! file_exists($linkPath)) {
-            return ['status' => 'red', 'message' => __('admin.readiness_public_storage_missing')];
-        }
-
-        if (! is_link($linkPath)) {
-            return ['status' => 'yellow', 'message' => __('admin.readiness_public_storage_not_symlink')];
-        }
-
-        return ['status' => 'green', 'message' => __('admin.readiness_public_storage_ok')];
     }
 
     public function render(): View
