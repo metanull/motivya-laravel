@@ -7,9 +7,11 @@ namespace App\Providers;
 use App\Contracts\BookingServiceContract;
 use App\Contracts\PaymentServiceContract;
 use App\Enums\UserRole;
+use App\Models\AuditEvent;
 use App\Models\Invoice;
 use App\Models\SportSession;
 use App\Models\User;
+use App\Policies\AuditEventPolicy;
 use App\Policies\InvoicePolicy;
 use App\Policies\SessionPolicy;
 use App\Services\Audit\AuditContextResolver;
@@ -39,6 +41,7 @@ final class AppServiceProvider extends ServiceProvider
     {
         Gate::policy(SportSession::class, SessionPolicy::class);
         Gate::policy(Invoice::class, InvoicePolicy::class);
+        Gate::policy(AuditEvent::class, AuditEventPolicy::class);
 
         Gate::define('apply-as-coach', function (User $user): bool {
             return $user->role === UserRole::Athlete

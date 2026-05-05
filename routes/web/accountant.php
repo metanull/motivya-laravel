@@ -6,6 +6,8 @@ use App\Http\Controllers\Accountant\FinancialExportController;
 use App\Http\Controllers\Accountant\InvoiceXmlController;
 use App\Http\Controllers\Accountant\LedgerExportController;
 use App\Livewire\Accountant\Anomalies\Index as AccountantAnomaliesIndex;
+use App\Livewire\Accountant\AuditEvents\Index as AccountantAuditEventsIndex;
+use App\Livewire\Accountant\AuditEvents\Show as AccountantAuditEventsShow;
 use App\Livewire\Accountant\Dashboard as AccountantDashboard;
 use App\Livewire\Accountant\InvoiceDetail as AccountantInvoiceDetail;
 use App\Livewire\Accountant\PayoutStatements\Index as AccountantPayoutStatementsIndex;
@@ -20,3 +22,5 @@ Route::get('/transactions', TransactionsIndex::class)->name('transactions.index'
 Route::get('/transactions/export', [LedgerExportController::class, 'download'])->name('transactions.export');
 Route::get('/payout-statements', AccountantPayoutStatementsIndex::class)->name('payout-statements.index');
 Route::get('/anomalies', AccountantAnomaliesIndex::class)->name('anomalies.index');
+Route::get('/audit-events', AccountantAuditEventsIndex::class)->name('audit-events.index');
+Route::get('/audit-events/{auditEvent}', AccountantAuditEventsShow::class)->name('audit-events.show');

@@ -5,6 +5,8 @@ declare(strict_types=1);
 use App\Http\Controllers\Admin\DatabaseExportController;
 use App\Livewire\Admin\ActivityImages;
 use App\Livewire\Admin\Anomalies\Index as AdminAnomaliesIndex;
+use App\Livewire\Admin\AuditEvents\Index as AdminAuditEventsIndex;
+use App\Livewire\Admin\AuditEvents\Show as AdminAuditEventsShow;
 use App\Livewire\Admin\CoachApproval;
 use App\Livewire\Admin\Configuration\Billing as BillingConfiguration;
 use App\Livewire\Admin\Dashboard;
@@ -26,3 +28,5 @@ Route::get('/configuration/billing', BillingConfiguration::class)->name('configu
 Route::get('/sessions', AdminSessionsIndex::class)->name('sessions.index');
 Route::get('/refunds', AdminRefundsIndex::class)->name('refunds.index');
 Route::get('/anomalies', AdminAnomaliesIndex::class)->name('anomalies.index');
+Route::get('/audit-events', AdminAuditEventsIndex::class)->name('audit-events.index');
+Route::get('/audit-events/{auditEvent}', AdminAuditEventsShow::class)->name('audit-events.show');
