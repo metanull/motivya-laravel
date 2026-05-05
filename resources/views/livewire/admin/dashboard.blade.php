@@ -131,5 +131,28 @@
             </p>
         </a>
 
+        {{-- Payment Anomalies --}}
+        @if (Route::has('admin.anomalies.index'))
+            <a
+                href="{{ route('admin.anomalies.index') }}"
+                class="block rounded-lg bg-white p-6 shadow transition hover:shadow-md dark:bg-gray-800"
+                wire:navigate
+            >
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                        {{ __('admin.dashboard_card_anomalies') }}
+                    </h2>
+                    @if ($this->anomalyCount > 0)
+                        <span class="inline-flex items-center justify-center rounded-full bg-orange-100 px-2.5 py-0.5 text-sm font-semibold text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                            {{ $this->anomalyCount }}
+                        </span>
+                    @endif
+                </div>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    {{ __('admin.dashboard_card_anomalies_desc') }}
+                </p>
+            </a>
+        @endif
+
     </div>
 </div>

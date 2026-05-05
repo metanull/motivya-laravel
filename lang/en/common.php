@@ -61,6 +61,7 @@ return [
     'back' => 'Back',
     'next' => 'Next',
     'previous' => 'Previous',
+    'view_all' => 'View all',
     'uploading' => 'Uploading…',
     'welcome' => 'Welcome to :app',
     'welcome_subtitle' => 'The Brussels sports marketplace — find a coach, book a session, get moving.',

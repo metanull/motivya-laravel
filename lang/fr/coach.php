@@ -172,4 +172,21 @@ return [
     'plan_active' => 'Actif',
     'plan_premium' => 'Premium',
 
+    // Relevés de paiement mensuel (Story #268)
+    'payout_statement_heading' => 'Relevés de paiement mensuels',
+    'payout_statement_subtitle' => 'Suivez le statut de vos relevés de paiement mensuels.',
+    'payout_statement_col_period' => 'Période',
+    'payout_statement_col_status' => 'Statut',
+    'payout_statement_col_payout' => 'Votre paiement',
+    'payout_statement_col_actions' => 'Actions',
+    'payout_statement_action_request_payout' => 'Demander le paiement',
+    'payout_statement_action_submit_invoice' => 'Soumettre la facture',
+    'payout_statement_no_results' => 'Aucun relevé de paiement trouvé.',
+    'payout_statement_status_draft' => 'Brouillon',
+    'payout_statement_status_ready_for_invoice' => 'Prêt pour facturation',
+    'payout_statement_status_invoice_submitted' => 'Facture soumise',
+    'payout_statement_status_approved' => 'Approuvé',
+    'payout_statement_status_paid' => 'Payé',
+    'payout_statement_status_blocked' => 'Bloqué',
+
 ];

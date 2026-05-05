@@ -7,14 +7,17 @@ namespace App\Livewire\Coach;
 use App\Enums\BookingStatus;
 use App\Enums\CoachProfileStatus;
 use App\Enums\SessionStatus;
+use App\Models\CoachPayoutStatement;
 use App\Models\CoachProfile;
 use App\Models\SportSession;
 use App\Models\User;
 use App\Services\SessionService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 final class Dashboard extends Component
@@ -121,6 +124,24 @@ final class Dashboard extends Component
                 'url' => route('coach.sessions.create'),
             ],
         ];
+    }
+
+    /**
+     * Recent payout statements for the coach (last 12, latest first).
+     *
+     * @return Collection<int, CoachPayoutStatement>
+     */
+    #[Computed]
+    public function payoutStatements(): Collection
+    {
+        /** @var User $coach */
+        $coach = auth()->user();
+
+        return CoachPayoutStatement::where('coach_id', $coach->id)
+            ->orderByDesc('period_year')
+            ->orderByDesc('period_month')
+            ->limit(12)
+            ->get();
     }
 
     public function publishSession(int $sessionId, SessionService $service): void

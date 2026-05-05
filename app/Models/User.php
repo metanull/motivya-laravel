@@ -90,6 +90,22 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * @return HasMany<SportSession, $this>
+     */
+    public function sportSessions(): HasMany
+    {
+        return $this->hasMany(SportSession::class, 'coach_id');
+    }
+
+    /**
+     * @return HasMany<CoachPayoutStatement, $this>
+     */
+    public function payoutStatements(): HasMany
+    {
+        return $this->hasMany(CoachPayoutStatement::class, 'coach_id');
+    }
+
+    /**
      * @return BelongsToMany<SportSession, $this>
      */
     public function favouriteSessions(): BelongsToMany

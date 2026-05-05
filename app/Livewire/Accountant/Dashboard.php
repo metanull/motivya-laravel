@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace App\Livewire\Accountant;
 
+use App\Enums\BookingStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
+use App\Enums\SessionStatus;
 use App\Enums\UserRole;
+use App\Models\Booking;
 use App\Models\Invoice;
+use App\Models\SportSession;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
@@ -77,6 +82,98 @@ final class Dashboard extends Component
         return User::where('role', UserRole::Coach)
             ->orderBy('name')
             ->get(['id', 'name']);
+    }
+
+    // ─── Summary card metrics (current calendar month) ──────────────────────
+
+    #[Computed]
+    public function summaryRevenueTtc(): int
+    {
+        return (int) Invoice::query()
+            ->where('type', InvoiceType::Invoice)
+            ->whereMonth('billing_period_start', now()->month)
+            ->whereYear('billing_period_start', now()->year)
+            ->sum('revenue_ttc');
+    }
+
+    #[Computed]
+    public function summaryRevenueHtva(): int
+    {
+        return (int) Invoice::query()
+            ->where('type', InvoiceType::Invoice)
+            ->whereMonth('billing_period_start', now()->month)
+            ->whereYear('billing_period_start', now()->year)
+            ->sum('revenue_htva');
+    }
+
+    #[Computed]
+    public function summaryVat(): int
+    {
+        return (int) Invoice::query()
+            ->where('type', InvoiceType::Invoice)
+            ->whereMonth('billing_period_start', now()->month)
+            ->whereYear('billing_period_start', now()->year)
+            ->sum('vat_amount');
+    }
+
+    /** Sum of coach_payout on all unpaid invoices (any period). */
+    #[Computed]
+    public function summaryPayoutPending(): int
+    {
+        return (int) Invoice::query()
+            ->where('status', '!=', InvoiceStatus::Paid)
+            ->sum('coach_payout');
+    }
+
+    #[Computed]
+    public function summaryInvoicesCount(): int
+    {
+        return Invoice::query()
+            ->where('type', InvoiceType::Invoice)
+            ->whereMonth('billing_period_start', now()->month)
+            ->whereYear('billing_period_start', now()->year)
+            ->count();
+    }
+
+    #[Computed]
+    public function summaryCreditNotesCount(): int
+    {
+        return Invoice::query()
+            ->where('type', InvoiceType::CreditNote)
+            ->whereMonth('billing_period_start', now()->month)
+            ->whereYear('billing_period_start', now()->year)
+            ->count();
+    }
+
+    #[Computed]
+    public function summaryRefundsCount(): int
+    {
+        return Booking::query()
+            ->where('status', BookingStatus::Refunded)
+            ->whereMonth('refunded_at', now()->month)
+            ->whereYear('refunded_at', now()->year)
+            ->count();
+    }
+
+    /**
+     * Count confirmed sessions whose end time has already passed (stuck sessions).
+     * Replicates the query logic from StuckSessionsQueue for the summary card.
+     */
+    #[Computed]
+    public function summaryStuckSessionsCount(): int
+    {
+        $now = now();
+
+        return SportSession::query()
+            ->where('status', SessionStatus::Confirmed)
+            ->whereDate('date', '<=', $now->toDateString())
+            ->get(['id', 'date', 'end_time'])
+            ->filter(function (SportSession $session) use ($now): bool {
+                return Carbon::parse(
+                    $session->date->format('Y-m-d').' '.$session->end_time,
+                )->lte($now);
+            })
+            ->count();
     }
 
     public function sort(string $column): void

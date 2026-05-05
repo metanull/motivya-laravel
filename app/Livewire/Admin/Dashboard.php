@@ -7,6 +7,7 @@ namespace App\Livewire\Admin;
 use App\Enums\CoachProfileStatus;
 use App\Enums\UserRole;
 use App\Models\CoachProfile;
+use App\Models\PaymentAnomaly;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
@@ -50,6 +51,12 @@ final class Dashboard extends Component
         return User::whereIn('role', [UserRole::Admin->value, UserRole::Accountant->value])
             ->whereNull('two_factor_confirmed_at')
             ->count();
+    }
+
+    #[Computed]
+    public function anomalyCount(): int
+    {
+        return PaymentAnomaly::where('resolution_status', 'open')->count();
     }
 
     public function render(): View

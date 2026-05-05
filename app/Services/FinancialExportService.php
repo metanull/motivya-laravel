@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Enums\BookingStatus;
 use App\Enums\InvoiceType;
+use App\Enums\SessionStatus;
+use App\Models\Booking;
 use App\Models\Invoice;
 use Illuminate\Database\Eloquent\Builder;
 use OpenSpout\Common\Entity\Row;
@@ -164,5 +167,157 @@ final class FinancialExportService
     private function filename(string $extension): string
     {
         return 'financial_export_'.now()->format('Y-m-d').'.'.$extension;
+    }
+
+    // ─── Ledger exports ──────────────────────────────────────────────────────
+
+    /**
+     * Export filtered booking ledger as a streamed CSV download.
+     */
+    public function exportLedgerCsv(
+        string $dateFrom = '',
+        string $dateTo = '',
+        string $coachId = '',
+        string $sessionStatus = '',
+        string $bookingStatus = '',
+    ): StreamedResponse {
+        $bookings = $this->buildLedgerQuery($dateFrom, $dateTo, $coachId, $sessionStatus, $bookingStatus)->get();
+
+        return response()->streamDownload(function () use ($bookings): void {
+            $writer = new CsvWriter;
+            $writer->openToFile('php://output');
+            $writer->addRow(Row::fromValues($this->ledgerHeaders()));
+
+            foreach ($bookings as $booking) {
+                $writer->addRow(Row::fromValues($this->ledgerRow($booking)));
+            }
+
+            $writer->close();
+        }, $this->ledgerFilename('csv'), ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    /**
+     * Export filtered booking ledger as a streamed Excel (.xlsx) download.
+     */
+    public function exportLedgerExcel(
+        string $dateFrom = '',
+        string $dateTo = '',
+        string $coachId = '',
+        string $sessionStatus = '',
+        string $bookingStatus = '',
+    ): StreamedResponse {
+        $bookings = $this->buildLedgerQuery($dateFrom, $dateTo, $coachId, $sessionStatus, $bookingStatus)->get();
+
+        return response()->streamDownload(function () use ($bookings): void {
+            $writer = new XlsxWriter;
+            $writer->openToFile('php://output');
+            $writer->addRow(Row::fromValues($this->ledgerHeaders()));
+
+            foreach ($bookings as $booking) {
+                $writer->addRow(Row::fromValues($this->ledgerRow($booking)));
+            }
+
+            $writer->close();
+        }, $this->ledgerFilename('xlsx'), [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
+    /**
+     * Build the base Booking query for the ledger with optional filters.
+     *
+     * @return Builder<Booking>
+     */
+    public function buildLedgerQuery(
+        string $dateFrom = '',
+        string $dateTo = '',
+        string $coachId = '',
+        string $sessionStatus = '',
+        string $bookingStatus = '',
+    ): Builder {
+        $parsedSessionStatus = $sessionStatus !== '' ? SessionStatus::tryFrom($sessionStatus) : null;
+        $parsedBookingStatus = $bookingStatus !== '' ? BookingStatus::tryFrom($bookingStatus) : null;
+
+        return Booking::query()
+            ->with(['sportSession.coach', 'athlete', 'sportSession.invoices'])
+            ->when($dateFrom !== '', fn (Builder $q) => $q->where('bookings.created_at', '>=', $dateFrom.' 00:00:00'))
+            ->when($dateTo !== '', fn (Builder $q) => $q->where('bookings.created_at', '<=', $dateTo.' 23:59:59'))
+            ->when(
+                $coachId !== '',
+                fn (Builder $q) => $q->whereHas(
+                    'sportSession',
+                    fn (Builder $sq) => $sq->where('coach_id', $coachId),
+                ),
+            )
+            ->when(
+                $parsedSessionStatus !== null,
+                fn (Builder $q) => $q->whereHas(
+                    'sportSession',
+                    fn (Builder $sq) => $sq->where('status', $parsedSessionStatus),
+                ),
+            )
+            ->when($parsedBookingStatus !== null, fn (Builder $q) => $q->where('status', $parsedBookingStatus))
+            ->orderBy('bookings.created_at', 'desc');
+    }
+
+    /**
+     * Column headers for the ledger export.
+     *
+     * @return list<string>
+     */
+    private function ledgerHeaders(): array
+    {
+        return [
+            'date',
+            'type',
+            'athlete',
+            'coach',
+            'session_title',
+            'booking_status',
+            'amount_ttc_eur',
+            'commission_eur',
+            'payment_fee_eur',
+            'coach_payout_eur',
+            'stripe_payment_intent_id',
+            'stripe_checkout_session_id',
+            'refunded_at',
+        ];
+    }
+
+    /**
+     * Map a single Booking to a ledger export row.
+     *
+     * Monetary amounts are converted from integer cents to decimal EUR.
+     * Missing invoice values are exported as empty strings.
+     *
+     * @return list<string|float|null>
+     */
+    private function ledgerRow(Booking $booking): array
+    {
+        $invoice = $booking->sportSession?->invoices?->first();
+
+        return [
+            $booking->created_at?->format('Y-m-d H:i:s') ?? '',
+            $booking->status === BookingStatus::Refunded ? 'refund' : 'booking',
+            $booking->athlete?->name ?? '',
+            $booking->sportSession?->coach?->name ?? '',
+            $booking->sportSession?->title ?? '',
+            $booking->status->value,
+            $this->toEur($booking->amount_paid ?? 0),
+            $invoice !== null ? $this->toEur($invoice->commission_amount) : null,
+            $invoice !== null ? $this->toEur($invoice->stripe_fee) : null,
+            $invoice !== null ? $this->toEur($invoice->coach_payout) : null,
+            $booking->stripe_payment_intent_id ?? '',
+            $booking->stripe_checkout_session_id ?? '',
+            $booking->refunded_at?->format('Y-m-d H:i:s') ?? '',
+        ];
+    }
+
+    /**
+     * Generate a timestamped filename for the ledger export.
+     */
+    private function ledgerFilename(string $extension): string
+    {
+        return 'ledger_export_'.now()->format('Y-m-d').'.'.$extension;
     }
 }
