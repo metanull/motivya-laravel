@@ -60,7 +60,7 @@
                 wire:loading.class="opacity-50 cursor-not-allowed"
                 class="inline-flex items-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 transition-opacity">
                 <span wire:loading.remove wire:target="image,save">{{ __('admin.upload_button') }}</span>
-                <span wire:loading wire:target="save">{{ __('admin.uploading') }}</span>
+                <span wire:loading wire:target="image,save">{{ __('admin.uploading') }}</span>
             </button>
         </div>
     </form>

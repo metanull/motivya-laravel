@@ -67,7 +67,7 @@ final class Show extends Component
             'latitude' => $this->sportSession->latitude,
             'longitude' => $this->sportSession->longitude,
             'coach' => $this->sportSession->coach->name,
-            'date' => $this->sportSession->date->format('d/m/Y'),
+            'date' => $this->sportSession->date->translatedFormat('d/m/Y'),
             'time' => Carbon::parse($this->sportSession->start_time)->format('H:i'),
             'price' => $this->sportSession->price_per_person,
             'url' => route('sessions.show', $this->sportSession),

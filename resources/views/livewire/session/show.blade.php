@@ -118,23 +118,21 @@
     {{-- Share buttons --}}
     <div class="mt-6 flex flex-wrap gap-3">
         {{-- Directions --}}
-        @if ($sportSession->latitude && $sportSession->longitude)
-            <a href="{{ config('maps.google_directions_base_url') }}?api=1&amp;destination={{ $sportSession->latitude }},{{ $sportSession->longitude }}"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
-                <x-icon.directions />
-                {{ __('sessions.directions') }}
-            </a>
-        @else
-            <a href="{{ config('maps.google_directions_base_url') }}?api=1&amp;destination={{ urlencode(($sportSession->location ?? '') . ' ' . ($sportSession->postal_code ?? '') . ' Belgium') }}"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
-                <x-icon.directions />
-                {{ __('sessions.directions') }}
-            </a>
-        @endif
+        @php
+            $directionsBase = config('maps.google_directions_base_url');
+            if ($sportSession->latitude && $sportSession->longitude) {
+                $directionsUrl = $directionsBase.'?api=1&destination='.$sportSession->latitude.','.$sportSession->longitude;
+            } else {
+                $directionsUrl = $directionsBase.'?api=1&destination='.urlencode(($sportSession->location ?? '').' '.($sportSession->postal_code ?? '').' Belgium');
+            }
+        @endphp
+        <a href="{{ $directionsUrl }}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500">
+            <x-icon.directions />
+            {{ __('sessions.directions') }}
+        </a>
 
         <a href="https://wa.me/?text={{ urlencode($sportSession->title . ' — ' . request()->url()) }}"
             target="_blank"
