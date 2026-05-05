@@ -104,6 +104,47 @@ STRIPE_WEBHOOK_SECRET=whsec_XXXXXXXXXXXXXXXXXXXX
 - [ ] `stripe listen` is running and forwarding to `localhost:8000/stripe/webhook`
 - [ ] Test card payment works on a simple Stripe checkout flow
 
+### Stripe Express Test Accounts (for Coach Payouts)
+
+The `MvpJourneySeeder` uses `acct_mvp_smoke_test` as a placeholder Stripe Express account ID for Marc's coach profile. This ID does not exist in Stripe and will cause any real payout attempt to fail. Replace it with a real Stripe test-mode Express account before exercising the payout flow.
+
+**To create a real Stripe test-mode Express account:**
+
+1. In the [Stripe Dashboard](https://dashboard.stripe.com), ensure **Test mode** is active.
+2. Go to **Connect → Accounts** (or navigate to `https://dashboard.stripe.com/test/connect/accounts`).
+3. Click **+ Create** → select **Express** → country **Belgium**.
+4. Fill in the test details (use any test business name, e.g. `Marc Dupont Test`).
+5. Complete onboarding with test data:
+   - Use a test phone number (Stripe provides one in the flow).
+   - Bank account: Belgian IBAN `BE89370400440532013000` (Stripe test IBAN).
+6. After onboarding, the account ID appears at the top of the account detail page: `acct_XXXXXXXXXXXXXXXX`.
+
+**Alternatively, use the Stripe CLI** to create a test Express account programmatically:
+
+```bash
+stripe accounts create \
+  --type=express \
+  --country=BE \
+  --capabilities[transfers][requested]=true \
+  --test-mode
+```
+
+The response contains `"id": "acct_XXXXXXXXXXXXXXXX"` — use that value below.
+
+**Replace the placeholder in the seeder output:**
+
+After running `php artisan db:seed --class=MvpJourneySeeder`, update Marc's profile in the database:
+
+```bash
+php artisan tinker --execute="
+  \$profile = \App\Models\CoachProfile::whereHas('user', fn(\$q) => \$q->where('email', 'marc.coach@motivya.test'))->first();
+  \$profile->update(['stripe_account_id' => 'acct_XXXXXXXXXXXXXXXX', 'stripe_onboarding_complete' => true]);
+  echo 'Updated: ' . \$profile->stripe_account_id;
+"
+```
+
+> **Note**: This step is only required if you need to test actual Stripe payouts. For the booking/payment flow alone, the placeholder ID is sufficient.
+
 ---
 
 ## 3. Seeding the MVP Scenario
