@@ -373,7 +373,7 @@ return [
     'readiness_public_storage_not_symlink' => 'public/storage exists but is not a symlink. Activity images may not be served correctly.',
 
     'readiness_scheduler_detail_heading' => 'Scheduled Task Status',
-    'readiness_scheduler_detail_subtitle' => 'Last recorded execution for each critical scheduled command. If a command has never run, verify that motivya-scheduler.timer is active on the server.',
+    'readiness_scheduler_detail_subtitle' => 'Last recorded successful execution for each critical scheduled command. If a command has never run, verify that motivya-scheduler.timer is active on the server.',
     'readiness_scheduler_col_command' => 'Command',
     'readiness_scheduler_col_status' => 'Last Run',
 

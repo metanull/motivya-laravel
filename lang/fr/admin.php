@@ -373,7 +373,7 @@ return [
     'readiness_public_storage_not_symlink' => 'public/storage existe mais n\'est pas un lien symbolique. Les images d\'activité peuvent ne pas être servies correctement.',
 
     'readiness_scheduler_detail_heading' => 'Exécution des tâches planifiées',
-    'readiness_scheduler_detail_subtitle' => 'Dernière exécution enregistrée pour chaque commande planifiée critique. Si une commande n\'a jamais été exécutée, vérifiez que le service motivya-scheduler.timer est actif sur le serveur.',
+    'readiness_scheduler_detail_subtitle' => 'Dernière exécution réussie enregistrée pour chaque commande planifiée critique. Si une commande n\'a jamais été exécutée, vérifiez que le service motivya-scheduler.timer est actif sur le serveur.',
     'readiness_scheduler_col_command' => 'Commande',
     'readiness_scheduler_col_status' => 'Dernière exécution',
 
