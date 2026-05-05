@@ -195,6 +195,11 @@ final class Readiness extends Component
         $schedulerChecks = $this->schedulerChecks;
         $anyRed = collect($schedulerChecks)->contains(fn ($c) => $c['status'] === 'red');
         $anyYellow = collect($schedulerChecks)->contains(fn ($c) => $c['status'] === 'yellow');
+        $allRed = collect($schedulerChecks)->every(fn ($c) => $c['status'] === 'red');
+
+        if ($allRed) {
+            return ['status' => 'red', 'message' => __('admin.readiness_scheduler_service_not_configured')];
+        }
 
         if ($anyRed) {
             return ['status' => 'red', 'message' => __('admin.readiness_scheduler_error')];
@@ -223,14 +228,16 @@ final class Readiness extends Component
             return ['status' => 'red', 'message' => __('admin.readiness_public_storage_broken', ['target' => (string) $target])];
         }
 
-        // Verify at least one stored activity image URL is reachable when images exist.
+        // When no activity images exist, reachability cannot be verified yet.
         $image = ActivityImage::first();
-        if ($image !== null) {
-            $publicUrl = url('storage/'.ltrim($image->path, '/'));
-            $localFile = public_path('storage/'.ltrim($image->path, '/'));
-            if (! file_exists($localFile)) {
-                return ['status' => 'yellow', 'message' => __('admin.readiness_public_storage_image_missing', ['url' => $publicUrl])];
-            }
+        if ($image === null) {
+            return ['status' => 'yellow', 'message' => __('admin.readiness_public_storage_no_images')];
+        }
+
+        $publicUrl = url('storage/'.ltrim($image->path, '/'));
+        $localFile = public_path('storage/'.ltrim($image->path, '/'));
+        if (! file_exists($localFile)) {
+            return ['status' => 'yellow', 'message' => __('admin.readiness_public_storage_image_missing', ['url' => $publicUrl])];
         }
 
         return ['status' => 'green', 'message' => __('admin.readiness_public_storage_ok')];
@@ -296,17 +303,33 @@ final class Readiness extends Component
      */
     private function checkStripeConnect(): array
     {
-        // Count approved coaches who have published or confirmed sessions
-        // but have an incomplete Stripe Connect onboarding.
-        $count = CoachProfile::where('status', CoachProfileStatus::Approved->value)
+        $activeSessionStatuses = [SessionStatus::Published->value, SessionStatus::Confirmed->value];
+
+        $baseQuery = CoachProfile::where('status', CoachProfileStatus::Approved->value)
+            ->whereHas('user.sportSessions', function ($query) use ($activeSessionStatuses): void {
+                $query->whereIn('status', $activeSessionStatuses);
+            });
+
+        // Count approved coaches with active sessions who have not completed onboarding.
+        $incompleteCount = (clone $baseQuery)
             ->where('stripe_onboarding_complete', false)
-            ->whereHas('user.sportSessions', function ($query): void {
-                $query->whereIn('status', [SessionStatus::Published->value, SessionStatus::Confirmed->value]);
-            })
             ->count();
 
-        if ($count > 0) {
-            return ['status' => 'yellow', 'message' => __('admin.readiness_stripe_connect_incomplete', ['count' => $count])];
+        // Count approved coaches with active sessions whose account ID looks like a placeholder
+        // (marked as complete but account ID does not match a real Stripe format: acct_[16+ alphanum]).
+        $placeholderCount = (clone $baseQuery)
+            ->where('stripe_onboarding_complete', true)
+            ->whereNotNull('stripe_account_id')
+            ->get()
+            ->filter(fn ($profile) => ! preg_match('/^acct_[a-zA-Z0-9]{16,}$/', (string) $profile->stripe_account_id))
+            ->count();
+
+        if ($incompleteCount > 0) {
+            return ['status' => 'yellow', 'message' => __('admin.readiness_stripe_connect_incomplete', ['count' => $incompleteCount])];
+        }
+
+        if ($placeholderCount > 0) {
+            return ['status' => 'yellow', 'message' => __('admin.readiness_stripe_connect_placeholder', ['count' => $placeholderCount])];
         }
 
         return ['status' => 'green', 'message' => __('admin.readiness_stripe_connect_ok')];

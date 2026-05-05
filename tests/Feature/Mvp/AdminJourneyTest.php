@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\BookingStatus;
 use App\Livewire\Admin\Readiness;
 use App\Models\Booking;
+use App\Models\CoachProfile;
 use App\Models\SportSession;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -202,7 +203,122 @@ describe('MVP Admin Journey', function () {
         $component = Livewire::actingAs($admin)->test(Readiness::class);
         $check = $component->instance()->checks()['public_storage'];
 
-        expect($check['status'])->toBeIn(['red', 'green']); // valid status value
+        expect($check['status'])->toBeIn(['red', 'yellow', 'green']); // valid status value
+    });
+
+    it('readiness reports yellow when public storage symlink present but no images uploaded', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+
+        $storagePath = storage_path('app/public');
+        @mkdir($storagePath, 0755, true);
+        $linkPath = public_path('storage');
+        $created = false;
+
+        if (! is_link($linkPath) && ! file_exists($linkPath)) {
+            symlink($storagePath, $linkPath);
+            $created = true;
+        }
+
+        $component = Livewire::actingAs($admin)->test(Readiness::class);
+        $check = $component->instance()->checks()['public_storage'];
+
+        if ($created) {
+            unlink($linkPath);
+            expect($check['status'])->toBe('yellow');
+        } else {
+            // Symlink was pre-existing; result depends on whether images also exist
+            expect($check['status'])->toBeIn(['yellow', 'green']);
+        }
+    });
+
+    it('readiness reports yellow when some sessions are missing GPS coordinates', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+        $coach = User::factory()->coach()->create();
+
+        SportSession::factory()->create(['coach_id' => $coach->id, 'latitude' => null, 'longitude' => null]);
+        SportSession::factory()->withCoordinates()->create(['coach_id' => $coach->id]);
+
+        $component = Livewire::actingAs($admin)->test(Readiness::class);
+
+        expect($component->instance()->checks()['session_coordinates']['status'])->toBe('yellow');
+    });
+
+    it('readiness reports red when all sessions are missing GPS coordinates', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+        $coach = User::factory()->coach()->create();
+
+        SportSession::factory()->count(2)->create(['coach_id' => $coach->id, 'latitude' => null, 'longitude' => null]);
+
+        $component = Livewire::actingAs($admin)->test(Readiness::class);
+
+        expect($component->instance()->checks()['session_coordinates']['status'])->toBe('red');
+    });
+
+    it('readiness reports green for session coordinates when all sessions have GPS coordinates', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+        $coach = User::factory()->coach()->create();
+
+        SportSession::factory()->withCoordinates()->count(2)->create(['coach_id' => $coach->id]);
+
+        $component = Livewire::actingAs($admin)->test(Readiness::class);
+
+        expect($component->instance()->checks()['session_coordinates']['status'])->toBe('green');
+    });
+
+    it('readiness reports yellow for stripe connect when approved coach has incomplete onboarding', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->approved()->create([
+            'user_id' => $coach->id,
+            'stripe_onboarding_complete' => false,
+        ]);
+        SportSession::factory()->published()->withCoordinates()->create(['coach_id' => $coach->id]);
+
+        $component = Livewire::actingAs($admin)->test(Readiness::class);
+
+        expect($component->instance()->checks()['stripe_connect']['status'])->toBe('yellow');
+    });
+
+    it('readiness reports yellow for stripe connect when approved coach has placeholder account id', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->approved()->create([
+            'user_id' => $coach->id,
+            'stripe_account_id' => 'acct_mvp_smoke_test',
+            'stripe_onboarding_complete' => true,
+        ]);
+        SportSession::factory()->published()->withCoordinates()->create(['coach_id' => $coach->id]);
+
+        $component = Livewire::actingAs($admin)->test(Readiness::class);
+
+        expect($component->instance()->checks()['stripe_connect']['status'])->toBe('yellow');
+    });
+
+    it('readiness reports green for stripe connect when all approved coaches with active sessions have real accounts', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->approved()->create([
+            'user_id' => $coach->id,
+            'stripe_account_id' => 'acct_1ABCdefGHI2jklmno',
+            'stripe_onboarding_complete' => true,
+        ]);
+        SportSession::factory()->published()->withCoordinates()->create(['coach_id' => $coach->id]);
+
+        $component = Livewire::actingAs($admin)->test(Readiness::class);
+
+        expect($component->instance()->checks()['stripe_connect']['status'])->toBe('green');
+    });
+
+    it('readiness reports red for scheduler when all commands have never run', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+
+        // No SchedulerHeartbeat rows exist (fresh DB), so all commands are red.
+        $component = Livewire::actingAs($admin)->test(Readiness::class);
+
+        expect($component->instance()->checks()['scheduler']['status'])->toBe('red');
     });
 
     it('cannot access the accountant dashboard', function () {
