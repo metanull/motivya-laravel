@@ -141,6 +141,20 @@
                                             </button>
                                         </div>
                                     </div>
+                                @elseif ($booking->status === \App\Enums\BookingStatus::Confirmed && $booking->amount_paid > 0 && !empty($bookingFlags[$booking->id]['missing_payment_intent']))
+                                    {{-- Story 1.4: Confirmed paid but missing payment intent — reconciliation needed. --}}
+                                    <div class="flex flex-col items-end gap-1">
+                                        <span class="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                            {{ __('admin.refunds_missing_payment_intent_label') }}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            wire:click="confirmRefund({{ $booking->id }})"
+                                            class="rounded-md border border-orange-300 bg-white px-2 py-1 text-xs font-medium text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:bg-gray-700 dark:text-orange-300"
+                                        >
+                                            {{ __('admin.refunds_action_refund') }}
+                                        </button>
+                                    </div>
                                 @elseif ($booking->status === \App\Enums\BookingStatus::Confirmed && $booking->amount_paid > 0)
                                     <button
                                         type="button"
@@ -235,6 +249,20 @@
                                     {{ __('common.cancel') }}
                                 </button>
                             </div>
+                        </div>
+                    @elseif ($booking->status === \App\Enums\BookingStatus::Confirmed && $booking->amount_paid > 0 && !empty($bookingFlags[$booking->id]['missing_payment_intent']))
+                        {{-- Story 1.4: Confirmed paid but missing payment intent — reconciliation needed. --}}
+                        <div class="mt-3 flex flex-col gap-1">
+                            <span class="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+                                {{ __('admin.refunds_missing_payment_intent_label') }}
+                            </span>
+                            <button
+                                type="button"
+                                wire:click="confirmRefund({{ $booking->id }})"
+                                class="rounded-md border border-orange-300 bg-white px-2 py-1 text-xs font-medium text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:bg-gray-700 dark:text-orange-300"
+                            >
+                                {{ __('admin.refunds_action_refund') }}
+                            </button>
                         </div>
                     @elseif ($booking->status === \App\Enums\BookingStatus::Confirmed && $booking->amount_paid > 0)
                         <div class="mt-3">

@@ -26,6 +26,7 @@ enum AuditEventType: string
     case BookingPaymentStarted = 'booking.payment_started';
     case BookingPaymentConfirmed = 'booking.payment_confirmed';
     case BookingPaymentFailed = 'booking.payment_failed';
+    case BookingPaymentReconciled = 'booking.payment_reconciled';
     case BookingCancelled = 'booking.cancelled';
     case BookingExpired = 'booking.expired';
 

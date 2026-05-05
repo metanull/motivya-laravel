@@ -8,6 +8,7 @@ use App\Enums\BookingStatus;
 use App\Enums\RefundAuditStatus;
 use App\Models\AdminRefundAudit;
 use App\Models\Booking;
+use App\Services\AnomalyDetectorService;
 use App\Services\RefundService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Gate;
@@ -66,9 +67,16 @@ final class Index extends Component
     /**
      * Process an exceptional refund for a confirmed paid booking.
      *
-     * Validation is performed first so field-level errors surface in the
-     * inline form. Every attempt — regardless of outcome — is recorded in
-     * admin_refund_audits for a full audit trail.
+     * Distinguishes between five failure cases so each can be surfaced
+     * with a specific, actionable message:
+     *   1. Already refunded
+     *   2. Not confirmed (wrong status)
+     *   3. No amount paid
+     *   4. Missing Stripe payment intent (requires reconciliation first)
+     *   5. Stripe API failure
+     *
+     * Every attempt — regardless of outcome — is recorded in admin_refund_audits
+     * for a full audit trail.
      */
     public function processRefund(int $bookingId, RefundService $refundService): void
     {
@@ -80,18 +88,34 @@ final class Index extends Component
 
         Gate::authorize('refund', $booking);
 
-        // Guard: only confirmed bookings with a positive amount are eligible.
-        if ($booking->status !== BookingStatus::Confirmed || $booking->amount_paid <= 0) {
-            AdminRefundAudit::create([
-                'admin_id' => auth()->id(),
-                'booking_id' => $booking->id,
-                'refund_amount' => $booking->amount_paid,
-                'reason' => $this->refundReason,
-                'status' => RefundAuditStatus::Failed,
-                'error_message' => __('admin.refunds_ineligibility_reason'),
-            ]);
+        // Case 1: Already refunded — specific guard to prevent double-refund.
+        if ($booking->status === BookingStatus::Refunded) {
+            $this->recordRefundFailure($booking, 'admin.refunds_error_already_refunded');
+            $this->dispatch('notify', type: 'error', message: __('admin.refunds_error_already_refunded'));
 
-            $this->dispatch('notify', type: 'error', message: __('admin.refunds_error'));
+            return;
+        }
+
+        // Case 2: Not confirmed.
+        if ($booking->status !== BookingStatus::Confirmed) {
+            $this->recordRefundFailure($booking, 'admin.refunds_error_not_confirmed');
+            $this->dispatch('notify', type: 'error', message: __('admin.refunds_error_not_confirmed'));
+
+            return;
+        }
+
+        // Case 3: No amount paid.
+        if ($booking->amount_paid <= 0) {
+            $this->recordRefundFailure($booking, 'admin.refunds_error_no_amount');
+            $this->dispatch('notify', type: 'error', message: __('admin.refunds_error_no_amount'));
+
+            return;
+        }
+
+        // Case 4: Missing Stripe payment intent — reconciliation required before retrying.
+        if (empty($booking->stripe_payment_intent_id)) {
+            $this->recordRefundFailure($booking, 'admin.refunds_error_missing_payment_intent');
+            $this->dispatch('notify', type: 'warning', message: __('admin.refunds_error_missing_payment_intent'));
 
             return;
         }
@@ -118,6 +142,7 @@ final class Index extends Component
             Log::error('Admin exceptional refund failed', [
                 'booking_id' => $bookingId,
                 'admin_id' => auth()->id(),
+                'exception_class' => $e::class,
                 'error' => $e->getMessage(),
             ]);
 
@@ -126,26 +151,52 @@ final class Index extends Component
                 'error_message' => $e->getMessage(),
             ]);
 
-            $this->dispatch('notify', type: 'error', message: __('admin.refunds_error'));
+            $this->dispatch('notify', type: 'error', message: __('admin.refunds_error_stripe_failure'));
         }
     }
 
     // ── Render ────────────────────────────────────────────────────────────
 
-    public function render(): View
+    public function render(AnomalyDetectorService $anomalyDetector): View
     {
         $bookings = Booking::query()
             ->with(['athlete', 'sportSession.coach'])
             ->when(
                 $this->statusFilter !== '',
                 fn ($q) => $q->where('status', $this->statusFilter),
+                // Story 1.5: Default view shows confirmed paid bookings (the actionable refund queue).
+                fn ($q) => $q->where('status', BookingStatus::Confirmed)->where('amount_paid', '>', 0),
             )
             ->orderByDesc('created_at')
             ->paginate(15);
 
+        // Story 1.4/1.5: Pre-compute per-booking anomaly flags so the blade
+        // consumes computed data rather than duplicating classification logic.
+        $bookingFlags = $bookings->getCollection()->mapWithKeys(
+            fn (Booking $booking): array => [$booking->id => $anomalyDetector->classifyBooking($booking)],
+        );
+
         return view('livewire.admin.refunds.index', [
             'bookings' => $bookings,
+            'bookingFlags' => $bookingFlags,
             'statuses' => BookingStatus::cases(),
         ])->title(__('admin.refunds_title'));
+    }
+
+    // ── Private helpers ───────────────────────────────────────────────────
+
+    /**
+     * Record a failed refund attempt in the audit log.
+     */
+    private function recordRefundFailure(Booking $booking, string $messageKey): void
+    {
+        AdminRefundAudit::create([
+            'admin_id' => auth()->id(),
+            'booking_id' => $booking->id,
+            'refund_amount' => $booking->amount_paid,
+            'reason' => $this->refundReason,
+            'status' => RefundAuditStatus::Failed,
+            'error_message' => __($messageKey),
+        ]);
     }
 }

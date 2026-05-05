@@ -151,8 +151,39 @@ final class AnomalyDetectorService
     }
 
     /**
-     * Resolve an open anomaly with a reason.
+     * Classify a single booking and return a set of anomaly flags.
+     *
+     * Livewire components and Blade views MUST consume these flags rather
+     * than duplicating booking-anomaly query logic inline.
+     *
+     * @return array{
+     *   missing_payment_intent: bool,
+     *   confirmed_without_payment: bool,
+     *   paid_cancelled_without_refund: bool,
+     *   has_anomaly: bool,
+     * }
      */
+    public function classifyBooking(Booking $booking): array
+    {
+        $missingPaymentIntent = $booking->status === BookingStatus::Confirmed
+            && $booking->amount_paid > 0
+            && empty($booking->stripe_payment_intent_id);
+
+        $confirmedWithoutPayment = $booking->status === BookingStatus::Confirmed
+            && $booking->amount_paid <= 0;
+
+        $paidCancelledWithoutRefund = $booking->status === BookingStatus::Cancelled
+            && $booking->amount_paid > 0
+            && $booking->refunded_at === null;
+
+        return [
+            'missing_payment_intent' => $missingPaymentIntent,
+            'confirmed_without_payment' => $confirmedWithoutPayment,
+            'paid_cancelled_without_refund' => $paidCancelledWithoutRefund,
+            'has_anomaly' => $missingPaymentIntent || $confirmedWithoutPayment || $paidCancelledWithoutRefund,
+        ];
+    }
+
     public function resolve(PaymentAnomaly $anomaly, User $actor, string $reason): void
     {
         DB::transaction(function () use ($anomaly, $actor, $reason): void {
