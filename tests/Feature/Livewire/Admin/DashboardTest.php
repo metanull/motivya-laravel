@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Livewire\Admin\Dashboard;
+use App\Models\AuditEvent;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -51,6 +52,29 @@ describe('Admin — Dashboard', function () {
         Livewire::actingAs($admin)
             ->test(Dashboard::class)
             ->assertSee(__('admin.dashboard_card_users'));
+    });
+
+    it('shows audit log card on admin dashboard', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+
+        Livewire::actingAs($admin)
+            ->test(Dashboard::class)
+            ->assertSee(__('admin.dashboard_card_audit_events'));
+    });
+
+    it('recentAuditEventCount returns count of events from last 7 days', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+
+        AuditEvent::factory()->count(3)->create([
+            'occurred_at' => now()->subDays(2),
+        ]);
+        AuditEvent::factory()->count(2)->create([
+            'occurred_at' => now()->subDays(10),
+        ]);
+
+        $component = Livewire::actingAs($admin)->test(Dashboard::class);
+
+        expect($component->instance()->recentAuditEventCount)->toBe(3);
     });
 
 });

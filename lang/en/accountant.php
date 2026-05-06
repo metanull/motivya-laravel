@@ -240,5 +240,7 @@ return [
     'audit_events_detail_subject_relation_primary' => 'primary',
     'audit_events_detail_subject_type' => 'Subject type',
     'audit_events_detail_subject_id' => 'Subject ID',
+    'dashboard_card_audit_events' => 'Financial Audit Log',
+    'dashboard_card_audit_events_desc' => 'Browse recent financial and payment-related audit events.',
 
 ];

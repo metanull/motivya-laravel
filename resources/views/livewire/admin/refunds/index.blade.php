@@ -64,10 +64,16 @@
                             {{ __('admin.refunds_col_status') }}
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            {{ __('admin.refunds_col_eligibility') }}
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                             {{ __('admin.refunds_col_amount') }}
                         </th>
                         <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                             {{ __('admin.refunds_col_date') }}
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            {{ __('admin.refunds_col_last_audit') }}
                         </th>
                         <th class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                             {{ __('admin.refunds_col_actions') }}
@@ -76,6 +82,10 @@
                 </thead>
                 <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
                     @foreach ($bookings as $booking)
+                        @php
+                            $eligibility = $eligibilityBadges[$booking->id] ?? 'cancelled';
+                            $lastAudit = $lastAudits[$booking->id] ?? null;
+                        @endphp
                         <tr wire:key="booking-row-{{ $booking->id }}">
                             <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-gray-100">
                                 #{{ $booking->id }}
@@ -97,11 +107,44 @@
                                     {{ $booking->status->label() }}
                                 </span>
                             </td>
+                            <td class="whitespace-nowrap px-6 py-4">
+                                <span @class([
+                                    'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+                                    'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' => $eligibility === 'eligible',
+                                    'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' => $eligibility === 'missing_payment_intent',
+                                    'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' => in_array($eligibility, ['already_refunded', 'unpaid', 'pending_payment', 'cancelled']),
+                                ])>
+                                    {{ __('admin.refunds_badge_' . $eligibility) }}
+                                </span>
+                                @if ($eligibility === 'missing_payment_intent' && Route::has('admin.anomalies.index'))
+                                    <a href="{{ route('admin.anomalies.index') }}"
+                                       class="ml-1 text-xs text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+                                       aria-label="{{ __('admin.readiness_action_anomalies') }}"
+                                       wire:navigate>↗<span class="sr-only">{{ __('admin.readiness_action_anomalies') }}</span></a>
+                                @endif
+                            </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
                                 &euro;{{ number_format($booking->amount_paid / 100, 2) }}
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
                                 {{ $booking->created_at->format('d/m/Y H:i') }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500 dark:text-gray-400">
+                                @if ($lastAudit)
+                                    <span @class([
+                                        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                                        'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' => $lastAudit->status === \App\Enums\RefundAuditStatus::Succeeded,
+                                        'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' => $lastAudit->status === \App\Enums\RefundAuditStatus::Failed,
+                                        'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' => $lastAudit->status === \App\Enums\RefundAuditStatus::Attempted,
+                                    ])>
+                                        {{ $lastAudit->status->label() }}
+                                    </span>
+                                    @if ($lastAudit->error_message)
+                                        <p class="mt-0.5 text-xs text-red-600 dark:text-red-400">{{ Str::limit($lastAudit->error_message, 60) }}</p>
+                                    @endif
+                                @else
+                                    <span class="text-xs text-gray-400 dark:text-gray-500">{{ __('admin.refunds_no_attempts') }}</span>
+                                @endif
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-right text-sm">
 
@@ -141,25 +184,20 @@
                                             </button>
                                         </div>
                                     </div>
-                                @elseif ($booking->status === \App\Enums\BookingStatus::Confirmed && $booking->amount_paid > 0 && !empty($bookingFlags[$booking->id]['missing_payment_intent']))
-                                    {{-- Story 1.4: Confirmed paid but missing payment intent — reconciliation needed. --}}
-                                    <div class="flex flex-col items-end gap-1">
-                                        <span class="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                                            {{ __('admin.refunds_missing_payment_intent_label') }}
-                                        </span>
-                                        <button
-                                            type="button"
-                                            wire:click="confirmRefund({{ $booking->id }})"
-                                            class="rounded-md border border-orange-300 bg-white px-2 py-1 text-xs font-medium text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:bg-gray-700 dark:text-orange-300"
-                                        >
-                                            {{ __('admin.refunds_action_refund') }}
-                                        </button>
-                                    </div>
-                                @elseif ($booking->status === \App\Enums\BookingStatus::Confirmed && $booking->amount_paid > 0)
+                                @elseif ($eligibility === 'eligible')
                                     <button
                                         type="button"
                                         wire:click="confirmRefund({{ $booking->id }})"
                                         class="rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500"
+                                    >
+                                        {{ __('admin.refunds_action_refund') }}
+                                    </button>
+                                @elseif ($eligibility === 'missing_payment_intent')
+                                    {{-- Reconciliation needed — refund is technically possible but risky. --}}
+                                    <button
+                                        type="button"
+                                        wire:click="confirmRefund({{ $booking->id }})"
+                                        class="rounded-md border border-orange-300 bg-white px-2 py-1 text-xs font-medium text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:bg-gray-700 dark:text-orange-300"
                                     >
                                         {{ __('admin.refunds_action_refund') }}
                                     </button>
@@ -179,6 +217,10 @@
         {{-- Mobile card list --}}
         <div class="space-y-4 lg:hidden">
             @foreach ($bookings as $booking)
+                @php
+                    $eligibility = $eligibilityBadges[$booking->id] ?? 'cancelled';
+                    $lastAudit = $lastAudits[$booking->id] ?? null;
+                @endphp
                 <div
                     class="rounded-lg bg-white p-4 shadow dark:bg-gray-800"
                     wire:key="booking-card-{{ $booking->id }}"
@@ -203,6 +245,18 @@
                         </span>
                     </div>
 
+                    {{-- Eligibility badge --}}
+                    <div class="mt-2">
+                        <span @class([
+                            'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+                            'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' => $eligibility === 'eligible',
+                            'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' => $eligibility === 'missing_payment_intent',
+                            'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' => in_array($eligibility, ['already_refunded', 'unpaid', 'pending_payment', 'cancelled']),
+                        ])>
+                            {{ __('admin.refunds_badge_' . $eligibility) }}
+                        </span>
+                    </div>
+
                     <dl class="mt-3 grid grid-cols-2 gap-2 text-xs">
                         <div>
                             <dt class="font-medium text-gray-500 dark:text-gray-400">{{ __('admin.refunds_col_amount') }}</dt>
@@ -211,6 +265,26 @@
                         <div>
                             <dt class="font-medium text-gray-500 dark:text-gray-400">{{ __('admin.refunds_col_date') }}</dt>
                             <dd class="text-gray-900 dark:text-gray-100">{{ $booking->created_at->format('d/m/Y') }}</dd>
+                        </div>
+                        <div class="col-span-2">
+                            <dt class="font-medium text-gray-500 dark:text-gray-400">{{ __('admin.refunds_col_last_audit') }}</dt>
+                            <dd class="text-gray-900 dark:text-gray-100">
+                                @if ($lastAudit)
+                                    <span @class([
+                                        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                                        'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' => $lastAudit->status === \App\Enums\RefundAuditStatus::Succeeded,
+                                        'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' => $lastAudit->status === \App\Enums\RefundAuditStatus::Failed,
+                                        'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' => $lastAudit->status === \App\Enums\RefundAuditStatus::Attempted,
+                                    ])>
+                                        {{ $lastAudit->status->label() }}
+                                    </span>
+                                    @if ($lastAudit->error_message)
+                                        <p class="mt-0.5 text-xs text-red-600 dark:text-red-400">{{ Str::limit($lastAudit->error_message, 50) }}</p>
+                                    @endif
+                                @else
+                                    <span class="text-xs text-gray-400 dark:text-gray-500">{{ __('admin.refunds_no_attempts') }}</span>
+                                @endif
+                            </dd>
                         </div>
                     </dl>
 
@@ -250,26 +324,22 @@
                                 </button>
                             </div>
                         </div>
-                    @elseif ($booking->status === \App\Enums\BookingStatus::Confirmed && $booking->amount_paid > 0 && !empty($bookingFlags[$booking->id]['missing_payment_intent']))
-                        {{-- Story 1.4: Confirmed paid but missing payment intent — reconciliation needed. --}}
-                        <div class="mt-3 flex flex-col gap-1">
-                            <span class="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                                {{ __('admin.refunds_missing_payment_intent_label') }}
-                            </span>
-                            <button
-                                type="button"
-                                wire:click="confirmRefund({{ $booking->id }})"
-                                class="rounded-md border border-orange-300 bg-white px-2 py-1 text-xs font-medium text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:bg-gray-700 dark:text-orange-300"
-                            >
-                                {{ __('admin.refunds_action_refund') }}
-                            </button>
-                        </div>
-                    @elseif ($booking->status === \App\Enums\BookingStatus::Confirmed && $booking->amount_paid > 0)
+                    @elseif ($eligibility === 'eligible')
                         <div class="mt-3">
                             <button
                                 type="button"
                                 wire:click="confirmRefund({{ $booking->id }})"
                                 class="w-full rounded-md bg-orange-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-orange-500"
+                            >
+                                {{ __('admin.refunds_action_refund') }}
+                            </button>
+                        </div>
+                    @elseif ($eligibility === 'missing_payment_intent')
+                        <div class="mt-3 flex flex-col gap-1">
+                            <button
+                                type="button"
+                                wire:click="confirmRefund({{ $booking->id }})"
+                                class="rounded-md border border-orange-300 bg-white px-2 py-1 text-xs font-medium text-orange-700 hover:bg-orange-50 dark:border-orange-700 dark:bg-gray-700 dark:text-orange-300"
                             >
                                 {{ __('admin.refunds_action_refund') }}
                             </button>

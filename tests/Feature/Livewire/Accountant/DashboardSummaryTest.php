@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Enums\AuditEventType;
 use App\Livewire\Accountant\Dashboard;
+use App\Models\AuditEvent;
 use App\Models\Booking;
 use App\Models\Invoice;
 use App\Models\SportSession;
@@ -181,5 +183,33 @@ describe('accountant dashboard summary cards', function () {
         $this->actingAs($accountant)
             ->get(route('accountant.dashboard'))
             ->assertOk();
+    });
+
+    it('shows audit log card on accountant dashboard', function () {
+        $accountant = User::factory()->accountant()->withTwoFactor()->create();
+
+        Livewire::actingAs($accountant)
+            ->test(Dashboard::class)
+            ->assertSee(__('accountant.dashboard_card_audit_events'));
+    });
+
+    it('recentFinancialAuditEventCount includes only financial event types', function () {
+        $accountant = User::factory()->accountant()->withTwoFactor()->create();
+
+        // Financial event
+        AuditEvent::factory()->create([
+            'event_type' => AuditEventType::BookingPaymentConfirmed->value,
+            'occurred_at' => now()->subDay(),
+        ]);
+
+        // Non-financial event (should NOT be counted)
+        AuditEvent::factory()->create([
+            'event_type' => AuditEventType::CoachApproved->value,
+            'occurred_at' => now()->subDay(),
+        ]);
+
+        $component = Livewire::actingAs($accountant)->test(Dashboard::class);
+
+        expect($component->instance()->recentFinancialAuditEventCount)->toBe(1);
     });
 });

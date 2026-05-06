@@ -240,5 +240,7 @@ return [
     'audit_events_detail_subject_relation_primary' => 'primair',
     'audit_events_detail_subject_type' => 'Onderwerptype',
     'audit_events_detail_subject_id' => 'Onderwerp-ID',
+    'dashboard_card_audit_events' => 'Financieel auditlogboek',
+    'dashboard_card_audit_events_desc' => 'Bekijk recente financiële en betalingsgerelateerde audit-evenementen.',
 
 ];

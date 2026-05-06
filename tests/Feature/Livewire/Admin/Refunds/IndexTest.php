@@ -357,4 +357,93 @@ describe('Admin — Exceptional Refund Queue', function () {
             ->assertDispatched('notify', message: __('admin.refunds_error_stripe_failure'));
     });
 
+    // Story 4.3: Eligibility badge and last audit display.
+
+    it('shows eligible badge for confirmed paid booking with payment intent', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+        $booking = makeConfirmedPaidBooking();
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->assertSee(__('admin.refunds_badge_eligible'));
+    });
+
+    it('shows already_refunded badge for refunded booking', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+        $coach = User::factory()->coach()->create();
+        $session = SportSession::factory()->confirmed()->for($coach, 'coach')->create();
+        Booking::factory()->refunded()->for($session, 'sportSession')
+            ->create(['amount_paid' => 2000, 'stripe_payment_intent_id' => 'pi_test']);
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->set('statusFilter', 'refunded')
+            ->assertSee(__('admin.refunds_badge_already_refunded'));
+    });
+
+    it('shows missing_payment_intent badge for confirmed paid booking without payment intent', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+        $coach = User::factory()->coach()->create();
+        $session = SportSession::factory()->confirmed()->for($coach, 'coach')->create();
+        Booking::factory()->confirmed()->for($session, 'sportSession')
+            ->create(['amount_paid' => 3000, 'stripe_payment_intent_id' => null]);
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->assertSee(__('admin.refunds_badge_missing_payment_intent'));
+    });
+
+    it('shows no_attempts message when booking has no refund audit', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+        makeConfirmedPaidBooking();
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->assertSee(__('admin.refunds_no_attempts'));
+    });
+
+    it('shows last audit status after a refund attempt', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+        $booking = makeConfirmedPaidBooking();
+        bindSuccessfulRefundService();
+
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->call('confirmRefund', $booking->id)
+            ->set('refundReason', 'Last audit display test.')
+            ->call('processRefund', $booking->id);
+
+        // After refund, show the booking with status filter to see the succeeded audit
+        Livewire::actingAs($admin)
+            ->test(Index::class)
+            ->set('statusFilter', 'refunded')
+            ->assertSee(__('admin.refund_audit_status_succeeded'));
+    });
+
+    it('eligibilityBadge returns correct value for each booking state', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+        $coach = User::factory()->coach()->create();
+        $session = SportSession::factory()->confirmed()->for($coach, 'coach')->create();
+
+        // Eligible
+        $eligible = Booking::factory()->confirmed()->for($session, 'sportSession')
+            ->create(['amount_paid' => 2500, 'stripe_payment_intent_id' => 'pi_ok']);
+        // Already refunded
+        $refunded = Booking::factory()->refunded()->for($session, 'sportSession')
+            ->create(['amount_paid' => 2500, 'stripe_payment_intent_id' => 'pi_ref']);
+        // Missing payment intent
+        $noPi = Booking::factory()->confirmed()->for($session, 'sportSession')
+            ->create(['amount_paid' => 2500, 'stripe_payment_intent_id' => null]);
+        // Unpaid
+        $unpaid = Booking::factory()->confirmed()->for($session, 'sportSession')
+            ->create(['amount_paid' => 0, 'stripe_payment_intent_id' => null]);
+
+        $component = Livewire::actingAs($admin)->test(Index::class)->instance();
+
+        expect($component->eligibilityBadge($eligible, []))->toBe('eligible')
+            ->and($component->eligibilityBadge($refunded, []))->toBe('already_refunded')
+            ->and($component->eligibilityBadge($noPi, ['missing_payment_intent' => true]))->toBe('missing_payment_intent')
+            ->and($component->eligibilityBadge($unpaid, []))->toBe('unpaid');
+    });
+
 });
