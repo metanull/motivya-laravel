@@ -2,12 +2,10 @@
 
 declare(strict_types=1);
 
-use App\Enums\BookingStatus;
-use App\Models\Booking;
+use App\Models\PaymentAnomaly;
 use App\Models\PostalCodeCoordinate;
 use App\Models\SchedulerHeartbeat;
 use App\Models\SportSession;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -68,21 +66,11 @@ describe('mvp:health-snapshot', function () {
             ->assertExitCode(1);
     });
 
-    it('exits with failure when confirmed bookings are missing stripe_payment_intent_id', function (): void {
+    it('exits with failure when there are open payment anomalies', function (): void {
         // Load postal codes to isolate the payment anomaly check.
         $this->artisan('geo:load-postal-codes')->assertSuccessful();
 
-        $coach = User::factory()->coach()->create();
-        $session = SportSession::factory()->create(['coach_id' => $coach->id]);
-        $athlete = User::factory()->athlete()->create();
-
-        Booking::factory()->create([
-            'sport_session_id' => $session->id,
-            'athlete_id' => $athlete->id,
-            'status' => BookingStatus::Confirmed->value,
-            'amount_paid' => 2000,
-            'stripe_payment_intent_id' => null,
-        ]);
+        PaymentAnomaly::factory()->open()->create();
 
         $this->artisan('mvp:health-snapshot')
             ->assertExitCode(1);
@@ -100,14 +88,14 @@ describe('mvp:health-snapshot', function () {
     });
 
     it('does not write to the database during a check run', function (): void {
-        $countBefore = Booking::count()
+        $countBefore = PaymentAnomaly::count()
             + PostalCodeCoordinate::count()
             + SchedulerHeartbeat::count()
             + SportSession::count();
 
         $this->artisan('mvp:health-snapshot');
 
-        $countAfter = Booking::count()
+        $countAfter = PaymentAnomaly::count()
             + PostalCodeCoordinate::count()
             + SchedulerHeartbeat::count()
             + SportSession::count();

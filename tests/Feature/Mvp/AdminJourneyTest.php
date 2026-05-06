@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use App\Enums\BookingStatus;
+use App\Enums\PaymentAnomalyType;
 use App\Livewire\Admin\Readiness;
-use App\Models\Booking;
 use App\Models\CoachProfile;
+use App\Models\PaymentAnomaly;
 use App\Models\SportSession;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -168,20 +168,10 @@ describe('MVP Admin Journey', function () {
         expect($component->instance()->checks()['postal_code_reference']['status'])->toBe('red');
     });
 
-    it('readiness reports red when confirmed booking is missing payment intent', function () {
+    it('readiness reports red when there is an open ConfirmedBookingMissingPayment anomaly', function () {
         $admin = User::factory()->admin()->withTwoFactor()->create();
 
-        $coach = User::factory()->coach()->create();
-        $athlete = User::factory()->athlete()->create();
-        $session = SportSession::factory()->create(['coach_id' => $coach->id]);
-
-        Booking::factory()->create([
-            'sport_session_id' => $session->id,
-            'athlete_id' => $athlete->id,
-            'status' => BookingStatus::Confirmed->value,
-            'amount_paid' => 1000,
-            'stripe_payment_intent_id' => null,
-        ]);
+        PaymentAnomaly::factory()->open()->ofType(PaymentAnomalyType::ConfirmedBookingMissingPayment)->create();
 
         $component = Livewire::actingAs($admin)->test(Readiness::class);
 
