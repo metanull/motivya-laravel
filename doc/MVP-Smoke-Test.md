@@ -43,9 +43,6 @@ php artisan storage:link
 # (via PostalCodeCoordinatesSeeder) before creating demo users — no separate step needed.
 php artisan db:seed --class=MvpJourneySeeder
 
-# Backfill GPS coordinates for seeded sessions (uses the loaded postal codes)
-php artisan sessions:backfill-coordinates
-
 # Build assets
 npm install && npm run build
 
@@ -56,7 +53,7 @@ npm run dev
 ```
 
 > **Warning**: `MvpJourneySeeder` must **never** run in production. It creates predictable demo credentials.
-> In production, use `php artisan geo:load-postal-codes` and `php artisan sessions:backfill-coordinates` instead.
+> In production-like environments, use `php artisan geo:load-postal-codes`, `php artisan sessions:backfill-coordinates`, and `php artisan make:admin` instead of demo seeders.
 
 - [ ] App is reachable at `http://localhost:8000`
 - [ ] No errors in `storage/logs/laravel.log`
@@ -64,7 +61,34 @@ npm run dev
 - [ ] The seed completed without errors
 - [ ] `storage/app/public` symlink exists (`ls -la public/storage` shows a symlink)
 - [ ] `postal_code_coordinates` table has rows (`php artisan tinker --execute="echo \App\Models\PostalCodeCoordinate::count();"`)
-- [ ] Sessions have lat/lng after backfill (`php artisan tinker --execute="echo \App\Models\SportSession::whereNull('latitude')->count().' missing';"`)
+- [ ] Sessions have lat/lng (`php artisan tinker --execute="echo \App\Models\SportSession::whereNull('latitude')->orWhereNull('longitude')->count().' missing';"`)
+- [ ] Demo activity image files exist under `public/storage/activity-images/`
+
+### UAT / production bootstrap note
+
+The OVH host currently acts as UAT, but it runs with `APP_ENV=production`. Keep that guard in place: do not run `MvpJourneySeeder` there. Bootstrap operational data explicitly so the future production cutover remains visible and repeatable:
+
+```bash
+php artisan migrate --force
+php artisan geo:load-postal-codes
+php artisan sessions:backfill-coordinates
+php artisan storage:link
+php artisan make:admin
+php artisan mvp:health-snapshot
+```
+
+The only seed/reference data expected in UAT or production is non-secret operational reference data such as postal-code coordinates. Demo users, demo bookings, and predictable passwords stay local/testing only.
+
+### Automated smoke coverage
+
+Epic 6 intentionally avoids Playwright for the current milestone. The MVP smoke suite uses Pest feature tests instead:
+
+- `tests/Feature/Mvp/SeederSmokeTest.php` verifies seeded sessions have coordinates and public activity-image fixtures.
+- The same test file asserts the discovery page renders the session map container and image-backed cards.
+- It also asserts session detail renders the map container and a coordinate-based directions link.
+- `mvp:health-snapshot` remains the deployment-friendly check for missing public storage links, postal-code data, scheduler health, and payment anomalies.
+
+Full browser execution can be added later if the project needs pixel-level MapLibre validation, but it is not required for the partner-demo readiness gate.
 
 ---
 
@@ -171,9 +195,10 @@ This creates:
 - 1 **Suspended athlete** (`suspended@motivya.test`) — account suspended (for admin user management testing)
 - 1 **Unverified athlete** (`unverified@motivya.test`) — unverified email (for admin testing)
 - Sessions across 5 Brussels postal codes: **1000, 1020, 1030, 1040, 1050**
+- Activity cover images copied from committed fixtures to `storage/app/public/activity-images/`
 - 1 **draft invoice** for the previous month's completed session by Marc
 - 1 **payout statement** (Draft) for Marc's previous billing month
-- 1 **payment anomaly** (open, for accountant/admin anomaly queue review)
+- 2 **payment anomalies** (open, for accountant/admin anomaly queue review), including one deliberately anomalous confirmed booking with no captured payment
 
 > All passwords are `password` (bcrypt-hashed — safe for local/dev only).
 > Replace `stripe_account_id: acct_mvp_smoke_test` with a real Stripe Express test account ID.

@@ -14,6 +14,7 @@ use App\Enums\PaymentAnomalyType;
 use App\Enums\SessionLevel;
 use App\Enums\SessionStatus;
 use App\Enums\UserRole;
+use App\Models\ActivityImage;
 use App\Models\Booking;
 use App\Models\CoachPayoutStatement;
 use App\Models\CoachProfile;
@@ -23,7 +24,10 @@ use App\Models\SportSession;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use RuntimeException;
 
 /**
  * Seeds a realistic MVP journey scenario for manual QA smoke testing.
@@ -66,7 +70,7 @@ final class MvpJourneySeeder extends Seeder
         $password = Hash::make('password');
 
         // ── Admin ─────────────────────────────────────────────────────────────
-        User::firstOrCreate(
+        $admin = User::firstOrCreate(
             ['email' => 'admin@motivya.test'],
             [
                 'name' => 'Admin User',
@@ -209,12 +213,31 @@ final class MvpJourneySeeder extends Seeder
             ]
         );
 
+        $runningImage = $this->seedActivityImage(
+            activityType: ActivityType::Running,
+            uploadedBy: $admin,
+            path: 'activity-images/mvp-running.svg',
+            altText: 'Demo running session in a Brussels park',
+        );
+        $cardioImage = $this->seedActivityImage(
+            activityType: ActivityType::Cardio,
+            uploadedBy: $admin,
+            path: 'activity-images/mvp-cardio.svg',
+            altText: 'Demo cardio session in a Brussels park',
+        );
+        $yogaImage = $this->seedActivityImage(
+            activityType: ActivityType::Yoga,
+            uploadedBy: $admin,
+            path: 'activity-images/mvp-yoga.svg',
+            altText: 'Demo yoga session in a Brussels park',
+        );
+
         // ── Marc's published session near Cinquantenaire (postal 1000) ────────
         // Price: €20.00 per person — 2 bookings, needs 1 more to confirm
         $sessionDate = Carbon::now()->addDays(10)->format('Y-m-d');
 
         /** @var SportSession $activeSession */
-        $activeSession = SportSession::firstOrCreate(
+        $activeSession = SportSession::updateOrCreate(
             [
                 'coach_id' => $marc->id,
                 'title' => 'Running Cinquantenaire — Cardio Débutant',
@@ -235,11 +258,12 @@ final class MvpJourneySeeder extends Seeder
                 'max_participants' => 10,
                 'current_participants' => 2,
                 'status' => SessionStatus::Published->value,
+                'cover_image_id' => $cardioImage->id,
             ]
         );
 
         // Alice's confirmed booking
-        Booking::firstOrCreate(
+        Booking::updateOrCreate(
             [
                 'sport_session_id' => $activeSession->id,
                 'athlete_id' => $alice->id,
@@ -247,12 +271,13 @@ final class MvpJourneySeeder extends Seeder
             [
                 'status' => BookingStatus::Confirmed->value,
                 'amount_paid' => 2000,
+                'stripe_checkout_session_id' => 'cs_mvp_smoke_alice',
                 'stripe_payment_intent_id' => 'pi_mvp_smoke_alice',
             ]
         );
 
         // Bob's confirmed booking
-        Booking::firstOrCreate(
+        Booking::updateOrCreate(
             [
                 'sport_session_id' => $activeSession->id,
                 'athlete_id' => $bob->id,
@@ -260,12 +285,13 @@ final class MvpJourneySeeder extends Seeder
             [
                 'status' => BookingStatus::Confirmed->value,
                 'amount_paid' => 2000,
+                'stripe_checkout_session_id' => 'cs_mvp_smoke_bob',
                 'stripe_payment_intent_id' => 'pi_mvp_smoke_bob',
             ]
         );
 
         // Diana's pending-payment booking (payment window expires in 20 min — for recovery flow)
-        Booking::firstOrCreate(
+        Booking::updateOrCreate(
             [
                 'sport_session_id' => $activeSession->id,
                 'athlete_id' => $diana->id,
@@ -283,7 +309,7 @@ final class MvpJourneySeeder extends Seeder
         $laekenDate = Carbon::now()->addDays(7)->format('Y-m-d');
 
         /** @var SportSession $laekenSession */
-        $laekenSession = SportSession::firstOrCreate(
+        $laekenSession = SportSession::updateOrCreate(
             [
                 'coach_id' => $marc->id,
                 'title' => 'Running Laeken — Cardio Intermédiaire',
@@ -304,10 +330,11 @@ final class MvpJourneySeeder extends Seeder
                 'max_participants' => 8,
                 'current_participants' => 3,
                 'status' => SessionStatus::Confirmed->value,
+                'cover_image_id' => $runningImage->id,
             ]
         );
 
-        Booking::firstOrCreate(
+        Booking::updateOrCreate(
             [
                 'sport_session_id' => $laekenSession->id,
                 'athlete_id' => $alice->id,
@@ -315,6 +342,7 @@ final class MvpJourneySeeder extends Seeder
             [
                 'status' => BookingStatus::Confirmed->value,
                 'amount_paid' => 2500,
+                'stripe_checkout_session_id' => 'cs_mvp_smoke_laeken_alice',
                 'stripe_payment_intent_id' => 'pi_mvp_smoke_laeken_alice',
             ]
         );
@@ -322,7 +350,7 @@ final class MvpJourneySeeder extends Seeder
         // ── Marc's session in Ixelles (postal 1050) — published ───────────────
         $ixellesDate = Carbon::now()->addDays(14)->format('Y-m-d');
 
-        SportSession::firstOrCreate(
+        SportSession::updateOrCreate(
             [
                 'coach_id' => $marc->id,
                 'title' => 'Yoga Bois de la Cambre — Stretching',
@@ -343,6 +371,7 @@ final class MvpJourneySeeder extends Seeder
                 'max_participants' => 12,
                 'current_participants' => 1,
                 'status' => SessionStatus::Published->value,
+                'cover_image_id' => $yogaImage->id,
             ]
         );
 
@@ -350,7 +379,7 @@ final class MvpJourneySeeder extends Seeder
         $cancelledDate = Carbon::now()->subDays(5)->format('Y-m-d');
 
         /** @var SportSession $cancelledSession */
-        $cancelledSession = SportSession::firstOrCreate(
+        $cancelledSession = SportSession::updateOrCreate(
             [
                 'coach_id' => $marc->id,
                 'title' => 'Running Scharbeek — Piste de vitesse',
@@ -371,10 +400,11 @@ final class MvpJourneySeeder extends Seeder
                 'max_participants' => 15,
                 'current_participants' => 1,
                 'status' => SessionStatus::Cancelled->value,
+                'cover_image_id' => $runningImage->id,
             ]
         );
 
-        Booking::firstOrCreate(
+        Booking::updateOrCreate(
             [
                 'sport_session_id' => $cancelledSession->id,
                 'athlete_id' => $bob->id,
@@ -382,7 +412,10 @@ final class MvpJourneySeeder extends Seeder
             [
                 'status' => BookingStatus::Refunded->value,
                 'amount_paid' => 3000,
+                'stripe_checkout_session_id' => 'cs_mvp_smoke_scharbeek_bob',
                 'stripe_payment_intent_id' => 'pi_mvp_smoke_scharbeek_bob',
+                'cancelled_at' => now()->subDays(5),
+                'refunded_at' => now()->subDays(4),
             ]
         );
 
@@ -390,7 +423,7 @@ final class MvpJourneySeeder extends Seeder
         $completedDate = Carbon::now()->subDays(30)->format('Y-m-d');
 
         /** @var SportSession $completedSession */
-        $completedSession = SportSession::firstOrCreate(
+        $completedSession = SportSession::updateOrCreate(
             [
                 'coach_id' => $marc->id,
                 'title' => 'Running Etterbeek — Cardio Avancé',
@@ -411,6 +444,23 @@ final class MvpJourneySeeder extends Seeder
                 'max_participants' => 8,
                 'current_participants' => 5,
                 'status' => SessionStatus::Completed->value,
+                'cover_image_id' => $runningImage->id,
+            ]
+        );
+
+        // Deliberate demo anomaly: confirmed booking with no captured payment.
+        // This lets accountant/admin smoke tests verify the anomaly queue without
+        // corrupting the coherent paid/refunded booking examples above.
+        $anomalousBooking = Booking::updateOrCreate(
+            [
+                'sport_session_id' => $completedSession->id,
+                'athlete_id' => $diana->id,
+            ],
+            [
+                'status' => BookingStatus::Confirmed->value,
+                'amount_paid' => 0,
+                'stripe_checkout_session_id' => null,
+                'stripe_payment_intent_id' => null,
             ]
         );
 
@@ -494,6 +544,22 @@ final class MvpJourneySeeder extends Seeder
             ]
         );
 
+        PaymentAnomaly::firstOrCreate(
+            [
+                'anomaly_type' => PaymentAnomalyType::ConfirmedBookingMissingPayment->value,
+                'related_booking_id' => $anomalousBooking->id,
+            ],
+            [
+                'anomalous_model_type' => Booking::class,
+                'anomalous_model_id' => $anomalousBooking->id,
+                'related_session_id' => $completedSession->id,
+                'related_coach_id' => $marc->id,
+                'resolution_status' => 'open',
+                'description' => 'Demo anomaly: confirmed booking without amount_paid or Stripe payment intent. Used for accountant/admin anomaly testing.',
+                'recommended_action' => 'Investigate the booking payment state before payout or refund processing.',
+            ]
+        );
+
         if ($this->command !== null) {
             $this->command->info('✅ MvpJourneySeeder: scenario created successfully.');
             $this->command->info('');
@@ -512,6 +578,45 @@ final class MvpJourneySeeder extends Seeder
             $this->command->info('  Sessions across Brussels postal codes: 1000, 1020, 1030, 1040, 1050');
             $this->command->info('  ⚠  Replace stripe_account_id "acct_mvp_smoke_test" with a real Stripe test Express account ID.');
             $this->command->info('  📖 See doc/MVP-Smoke-Test.md for the full manual QA checklist.');
+        }
+    }
+
+    private function seedActivityImage(ActivityType $activityType, User $uploadedBy, string $path, string $altText): ActivityImage
+    {
+        $this->ensurePublicStorageLinked();
+
+        $fixturePath = database_path('seeders/fixtures/activity-images/mvp-outdoor-session.svg');
+
+        if (! File::exists($fixturePath)) {
+            throw new RuntimeException('MVP activity image fixture is missing: '.$fixturePath);
+        }
+
+        Storage::disk('public')->put($path, File::get($fixturePath));
+
+        return ActivityImage::updateOrCreate(
+            [
+                'activity_type' => $activityType->value,
+                'path' => $path,
+            ],
+            [
+                'alt_text' => $altText,
+                'uploaded_by' => $uploadedBy->id,
+            ]
+        );
+    }
+
+    private function ensurePublicStorageLinked(): void
+    {
+        $linkPath = public_path('storage');
+
+        if (! is_link($linkPath)) {
+            throw new RuntimeException('MvpJourneySeeder requires public/storage to be linked. Run: php artisan storage:link');
+        }
+
+        $target = readlink($linkPath);
+
+        if ($target === false || ! is_dir($target)) {
+            throw new RuntimeException('MvpJourneySeeder found a broken public/storage link. Re-run: php artisan storage:link');
         }
     }
 }

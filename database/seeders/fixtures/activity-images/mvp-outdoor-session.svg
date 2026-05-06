@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+    <title id="title">Outdoor sports session in Brussels</title>
+    <desc id="desc">A simple demo fixture image used by MVP smoke seed data.</desc>
+    <rect width="1200" height="675" fill="#f7fafc"/>
+    <rect y="430" width="1200" height="245" fill="#87b37a"/>
+    <rect y="375" width="1200" height="70" fill="#d7e5f0"/>
+    <circle cx="1010" cy="115" r="54" fill="#f7c948"/>
+    <path d="M0 385 C160 320 290 360 420 315 C560 265 680 330 805 290 C955 240 1065 295 1200 255 L1200 430 L0 430 Z" fill="#466a61"/>
+    <path d="M290 448 C415 418 520 420 640 448 C740 472 860 468 980 438" fill="none" stroke="#ffffff" stroke-width="22" stroke-linecap="round" opacity="0.85"/>
+    <circle cx="430" cy="355" r="35" fill="#244c5a"/>
+    <path d="M430 390 L400 485 M430 390 L470 470 M414 420 L355 448 M444 420 L505 430" fill="none" stroke="#244c5a" stroke-width="24" stroke-linecap="round"/>
+    <circle cx="680" cy="360" r="34" fill="#7c3f58"/>
+    <path d="M680 395 L640 495 M680 395 L720 495 M662 430 L600 410 M696 430 L760 408" fill="none" stroke="#7c3f58" stroke-width="24" stroke-linecap="round"/>
+    <rect x="70" y="535" width="1060" height="40" rx="20" fill="#385d57" opacity="0.22"/>
+</svg>
