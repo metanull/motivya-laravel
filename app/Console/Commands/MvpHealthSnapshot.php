@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Enums\BookingStatus;
 use App\Enums\CoachProfileStatus;
 use App\Enums\SessionStatus;
-use App\Models\Booking;
 use App\Models\CoachProfile;
+use App\Models\PaymentAnomaly;
 use App\Models\PostalCodeCoordinate;
 use App\Models\SchedulerHeartbeat;
 use App\Models\SportSession;
@@ -116,12 +115,9 @@ final class MvpHealthSnapshot extends Command
         }
 
         // ── 7. Payment anomalies ──────────────────────────────────────────
-        $anomalies = Booking::where('status', BookingStatus::Confirmed->value)
-            ->where('amount_paid', '>', 0)
-            ->whereNull('stripe_payment_intent_id')
-            ->count();
+        $anomalies = PaymentAnomaly::where('resolution_status', 'open')->count();
         if ($anomalies > 0) {
-            $rows[] = ['Payment anomalies', 'red', "{$anomalies} booking(s) — run: php artisan payments:reconcile-bookings --dry-run"];
+            $rows[] = ['Payment anomalies', 'red', "{$anomalies} open anomaly(ies) — visit /admin/anomalies to review"];
             $hasBlocker = true;
         } else {
             $rows[] = ['Payment anomalies', 'green', 'None'];

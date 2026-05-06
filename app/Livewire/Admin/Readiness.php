@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace App\Livewire\Admin;
 
-use App\Enums\BookingStatus;
 use App\Enums\CoachProfileStatus;
+use App\Enums\PaymentAnomalyType;
 use App\Enums\SessionStatus;
 use App\Enums\UserRole;
 use App\Models\ActivityImage;
-use App\Models\Booking;
 use App\Models\CoachProfile;
+use App\Models\PaymentAnomaly;
 use App\Models\PostalCodeCoordinate;
 use App\Models\SchedulerHeartbeat;
 use App\Models\SportSession;
@@ -286,9 +286,8 @@ final class Readiness extends Component
      */
     private function checkPaymentAnomalies(): array
     {
-        $count = Booking::where('status', BookingStatus::Confirmed->value)
-            ->where('amount_paid', '>', 0)
-            ->whereNull('stripe_payment_intent_id')
+        $count = PaymentAnomaly::where('resolution_status', 'open')
+            ->where('anomaly_type', PaymentAnomalyType::ConfirmedBookingMissingPayment->value)
             ->count();
 
         if ($count > 0) {
