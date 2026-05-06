@@ -6,6 +6,7 @@ namespace App\Livewire\Admin;
 
 use App\Enums\CoachProfileStatus;
 use App\Enums\UserRole;
+use App\Models\AuditEvent;
 use App\Models\CoachProfile;
 use App\Models\PaymentAnomaly;
 use App\Models\User;
@@ -57,6 +58,12 @@ final class Dashboard extends Component
     public function anomalyCount(): int
     {
         return PaymentAnomaly::where('resolution_status', 'open')->count();
+    }
+
+    #[Computed]
+    public function recentAuditEventCount(): int
+    {
+        return AuditEvent::where('occurred_at', '>=', now()->subDays(7))->count();
     }
 
     public function render(): View

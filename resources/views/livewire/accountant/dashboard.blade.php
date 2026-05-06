@@ -93,6 +93,31 @@
         </div>
     </div>
 
+    {{-- Audit Log Card --}}
+    @if (Route::has('accountant.audit-events.index'))
+        <div class="mb-6">
+            <a
+                href="{{ route('accountant.audit-events.index') }}"
+                class="block rounded-lg border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
+                wire:navigate
+            >
+                <div class="flex items-center justify-between">
+                    <h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">
+                        {{ __('accountant.dashboard_card_audit_events') }}
+                    </h2>
+                    @if ($this->recentFinancialAuditEventCount > 0)
+                        <span class="inline-flex items-center justify-center rounded-full bg-blue-100 px-2.5 py-0.5 text-sm font-semibold text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                            {{ $this->recentFinancialAuditEventCount }}
+                        </span>
+                    @endif
+                </div>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    {{ __('accountant.dashboard_card_audit_events_desc') }}
+                </p>
+            </a>
+        </div>
+    @endif
+
     {{-- Stuck sessions queue --}}
     <livewire:accountant.stuck-sessions-queue />
 

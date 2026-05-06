@@ -240,5 +240,7 @@ return [
     'audit_events_detail_subject_relation_primary' => 'principal',
     'audit_events_detail_subject_type' => 'Type de sujet',
     'audit_events_detail_subject_id' => 'ID du sujet',
+    'dashboard_card_audit_events' => 'Journal d\'audit financier',
+    'dashboard_card_audit_events_desc' => 'Parcourir les événements d\'audit financiers et de paiement récents.',
 
 ];

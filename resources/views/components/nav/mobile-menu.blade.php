@@ -53,6 +53,28 @@
                    wire:navigate>
                     {{ __('common.nav.admin_coach_approval') }}
                 </a>
+                <a href="{{ route('admin.sessions.index') }}"
+                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+                   wire:navigate>
+                    {{ __('common.nav.admin_sessions') }}
+                </a>
+                <a href="{{ route('admin.refunds.index') }}"
+                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+                   wire:navigate>
+                    {{ __('common.nav.admin_refunds') }}
+                </a>
+                @if (Route::has('admin.anomalies.index'))
+                    <a href="{{ route('admin.anomalies.index') }}"
+                       class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+                       wire:navigate>
+                        {{ __('common.nav.admin_anomalies') }}
+                    </a>
+                @endif
+                <a href="{{ route('admin.audit-events.index') }}"
+                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+                   wire:navigate>
+                    {{ __('common.nav.admin_audit_events') }}
+                </a>
                 <a href="{{ route('admin.activity-images') }}"
                    class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
                    wire:navigate>
@@ -63,16 +85,54 @@
                    wire:navigate>
                     {{ __('common.nav.admin_data_export') }}
                 </a>
+                <a href="{{ route('admin.configuration.billing') }}"
+                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+                   wire:navigate>
+                    {{ __('common.nav.admin_billing_config') }}
+                </a>
+                <a href="{{ route('admin.readiness') }}"
+                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+                   wire:navigate>
+                    {{ __('common.nav.admin_readiness') }}
+                </a>
             @endcan
 
             @can('access-accountant-panel')
-                @cannot('access-admin-panel')
-                    <a href="{{ route('accountant.dashboard') }}"
+                <p class="px-3 pt-2 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
+                    {{ __('common.nav.finance') }}
+                </p>
+                <a href="{{ route('accountant.dashboard') }}"
+                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+                   wire:navigate>
+                    {{ __('common.nav.accountant_dashboard') }}
+                </a>
+                <a href="{{ route('accountant.transactions.index') }}"
+                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+                   wire:navigate>
+                    {{ __('common.nav.accountant_transactions') }}
+                </a>
+                <a href="{{ route('accountant.payout-statements.index') }}"
+                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+                   wire:navigate>
+                    {{ __('common.nav.accountant_payout_statements') }}
+                </a>
+                @if (Route::has('accountant.anomalies.index'))
+                    <a href="{{ route('accountant.anomalies.index') }}"
                        class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
                        wire:navigate>
-                        {{ __('common.nav.accountant_dashboard') }}
+                        {{ __('common.nav.accountant_anomalies') }}
                     </a>
-                @endcannot
+                @endif
+                <a href="{{ route('accountant.audit-events.index') }}"
+                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+                   wire:navigate>
+                    {{ __('common.nav.accountant_audit_events') }}
+                </a>
+                <a href="{{ route('accountant.export') }}"
+                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+                   wire:navigate>
+                    {{ __('common.nav.accountant_export') }}
+                </a>
             @endcan
 
             @can('apply-as-coach')
@@ -104,6 +164,19 @@
                    wire:navigate>
                     {{ __('common.nav.payout_history') }}
                 </a>
+                @if (auth()->user()->coachProfile?->stripe_account_id)
+                    <a href="{{ route('coach.stripe.refresh') }}"
+                       class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+                       wire:navigate>
+                        {{ __('common.nav.coach_stripe_refresh') }}
+                    </a>
+                @else
+                    <a href="{{ route('coach.stripe.onboard') }}"
+                       class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+                       wire:navigate>
+                        {{ __('common.nav.coach_stripe_onboard') }}
+                    </a>
+                @endif
             @endcan
 
             @can('access-athlete-panel')
@@ -116,6 +189,11 @@
                    class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
                    wire:navigate>
                     {{ __('common.nav.athlete_favourites') }}
+                </a>
+                <a href="{{ route('sessions.index') }}"
+                   class="block rounded-md px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-200 dark:hover:bg-gray-700"
+                   wire:navigate>
+                    {{ __('common.nav.athlete_sessions') }}
                 </a>
             @endcan
 

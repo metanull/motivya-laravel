@@ -9,10 +9,12 @@ use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
 use App\Enums\SessionStatus;
 use App\Enums\UserRole;
+use App\Models\AuditEvent;
 use App\Models\Booking;
 use App\Models\Invoice;
 use App\Models\SportSession;
 use App\Models\User;
+use App\Policies\AuditEventPolicy;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
@@ -173,6 +175,18 @@ final class Dashboard extends Component
                     $session->date->format('Y-m-d').' '.$session->end_time,
                 )->lte($now);
             })
+            ->count();
+    }
+
+    #[Computed]
+    public function recentFinancialAuditEventCount(): int
+    {
+        return AuditEvent::query()
+            ->whereIn('event_type', array_map(
+                fn ($type) => $type->value,
+                AuditEventPolicy::financialTypes(),
+            ))
+            ->where('occurred_at', '>=', now()->subDays(7))
             ->count();
     }
 

@@ -176,9 +176,18 @@ final class Index extends Component
             fn (Booking $booking): array => [$booking->id => $anomalyDetector->classifyBooking($booking)],
         );
 
+        // Story 4.3: Load the most recent refund audit per booking for display.
+        $bookingIds = $bookings->getCollection()->pluck('id')->all();
+        $lastAudits = AdminRefundAudit::query()
+            ->whereIn('booking_id', $bookingIds)
+            ->orderByDesc('created_at')
+            ->get()
+            ->keyBy('booking_id');
+
         return view('livewire.admin.refunds.index', [
             'bookings' => $bookings,
             'bookingFlags' => $bookingFlags,
+            'lastAudits' => $lastAudits,
             'statuses' => BookingStatus::cases(),
         ])->title(__('admin.refunds_title'));
     }
@@ -198,5 +207,42 @@ final class Index extends Component
             'status' => RefundAuditStatus::Failed,
             'error_message' => __($messageKey),
         ]);
+    }
+
+    /**
+     * Return the eligibility badge key for a booking.
+     *
+     * Possible values:
+     *   eligible, already_refunded, missing_payment_intent, unpaid, pending_payment, cancelled
+     *
+     * @param  array<string, bool>  $flags  pre-computed anomaly flags for this booking
+     */
+    public function eligibilityBadge(Booking $booking, array $flags): string
+    {
+        if ($booking->status === BookingStatus::Refunded) {
+            return 'already_refunded';
+        }
+
+        if ($booking->status === BookingStatus::Cancelled) {
+            return 'cancelled';
+        }
+
+        if ($booking->status === BookingStatus::PendingPayment) {
+            return 'pending_payment';
+        }
+
+        if ($booking->status !== BookingStatus::Confirmed) {
+            return 'cancelled';
+        }
+
+        if ($booking->amount_paid <= 0) {
+            return 'unpaid';
+        }
+
+        if (! empty($flags['missing_payment_intent'])) {
+            return 'missing_payment_intent';
+        }
+
+        return 'eligible';
     }
 }
