@@ -12,6 +12,7 @@ use App\Enums\UserRole;
 use App\Models\AuditEvent;
 use App\Models\Booking;
 use App\Models\Invoice;
+use App\Models\PaymentAnomaly;
 use App\Models\SportSession;
 use App\Models\User;
 use App\Policies\AuditEventPolicy;
@@ -176,6 +177,13 @@ final class Dashboard extends Component
                 )->lte($now);
             })
             ->count();
+    }
+
+    /** Count of open payment anomalies (resolution_status = 'open'). */
+    #[Computed]
+    public function summaryOpenAnomalyCount(): int
+    {
+        return PaymentAnomaly::where('resolution_status', 'open')->count();
     }
 
     #[Computed]

@@ -45,6 +45,10 @@ final class Index extends Component
     public function mount(): void
     {
         Gate::authorize('viewAny', Invoice::class);
+
+        if ($this->dateFrom === '') {
+            $this->dateFrom = now()->subDays(30)->toDateString();
+        }
     }
 
     /**
@@ -62,6 +66,7 @@ final class Index extends Component
             'coachId' => $this->coachId ?: null,
             'sessionStatus' => $this->sessionStatus ?: null,
             'bookingStatus' => $this->bookingStatus ?: null,
+            'anomalyFlag' => $this->anomalyFlag ?: null,
         ]);
 
         $this->redirect(route('accountant.transactions.export', $params), navigate: false);
@@ -141,6 +146,20 @@ final class Index extends Component
                             ->whereNull('refunded_at'),
                         );
                 }),
+            )
+            ->when(
+                $this->anomalyFlag === 'paid_without_invoice',
+                fn ($q) => $q
+                    ->where('status', BookingStatus::Confirmed->value)
+                    ->where('amount_paid', '>', 0)
+                    ->whereDoesntHave('sportSession.invoices'),
+            )
+            ->when(
+                $this->anomalyFlag === 'paid_without_payment_intent',
+                fn ($q) => $q
+                    ->where('status', BookingStatus::Confirmed->value)
+                    ->where('amount_paid', '>', 0)
+                    ->whereNull('stripe_payment_intent_id'),
             )
             ->orderBy('bookings.created_at', 'desc')
             ->paginate(25);

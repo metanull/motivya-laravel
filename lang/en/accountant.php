@@ -83,6 +83,8 @@ return [
     'summary_credit_notes' => 'Credit Notes (this month)',
     'summary_refunds' => 'Refunds (this month)',
     'summary_anomalies' => 'Stuck Sessions',
+    'summary_stuck_sessions' => 'Stuck Sessions',
+    'summary_open_anomalies' => 'Open Anomalies',
     'summary_view_anomalies' => 'View all anomalies',
 
     // Transactions ledger
@@ -102,6 +104,9 @@ return [
     'transactions_col_stripe_cs' => 'Stripe CS',
     'transactions_col_refund_status' => 'Refund Status',
     'transactions_col_anomaly' => 'Anomaly',
+    'transactions_col_session_status' => 'Session Status',
+    'transactions_col_invoice_exists' => 'Invoice',
+    'transactions_col_payout_stmt_exists' => 'Payout Stmt',
     'transactions_no_results' => 'No transactions found.',
     'transactions_filter_reset' => 'Reset filters',
     'transactions_filter_all_coaches' => 'All coaches',
@@ -110,6 +115,8 @@ return [
     'transactions_filter_anomaly' => 'Anomaly flag',
     'transactions_filter_all' => 'All',
     'transactions_filter_anomalies_only' => 'Anomalies only',
+    'transactions_filter_paid_without_invoice' => 'Paid Without Invoice',
+    'transactions_filter_paid_without_payment_intent' => 'Paid Without Payment Intent',
     'transactions_missing_value' => '—',
     'anomaly_missing_payment_intent' => 'Missing PI',
     'anomaly_confirmed_without_payment' => 'No payment',

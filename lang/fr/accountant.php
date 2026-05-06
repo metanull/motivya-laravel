@@ -83,6 +83,8 @@ return [
     'summary_credit_notes' => 'Notes de crédit (ce mois)',
     'summary_refunds' => 'Remboursements (ce mois)',
     'summary_anomalies' => 'Séances bloquées',
+    'summary_stuck_sessions' => 'Séances bloquées',
+    'summary_open_anomalies' => 'Anomalies ouvertes',
     'summary_view_anomalies' => 'Voir toutes les anomalies',
 
     // Grand livre des transactions
@@ -102,6 +104,9 @@ return [
     'transactions_col_stripe_cs' => 'CS Stripe',
     'transactions_col_refund_status' => 'Statut remboursement',
     'transactions_col_anomaly' => 'Anomalie',
+    'transactions_col_session_status' => 'Statut séance',
+    'transactions_col_invoice_exists' => 'Facture',
+    'transactions_col_payout_stmt_exists' => 'Relevé',
     'transactions_no_results' => 'Aucune transaction trouvée.',
     'transactions_filter_reset' => 'Réinitialiser les filtres',
     'transactions_filter_all_coaches' => 'Tous les coachs',
@@ -110,6 +115,8 @@ return [
     'transactions_filter_anomaly' => 'Indicateur d\'anomalie',
     'transactions_filter_all' => 'Tous',
     'transactions_filter_anomalies_only' => 'Anomalies uniquement',
+    'transactions_filter_paid_without_invoice' => 'Payé sans facture',
+    'transactions_filter_paid_without_payment_intent' => 'Payé sans intention de paiement',
     'transactions_missing_value' => '—',
     'anomaly_missing_payment_intent' => 'PI manquant',
     'anomaly_confirmed_without_payment' => 'Sans paiement',

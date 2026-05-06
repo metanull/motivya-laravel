@@ -8,6 +8,7 @@ use App\Enums\BookingStatus;
 use App\Enums\InvoiceType;
 use App\Enums\SessionStatus;
 use App\Models\Booking;
+use App\Models\CoachPayoutStatement;
 use App\Models\Invoice;
 use Illuminate\Database\Eloquent\Builder;
 use OpenSpout\Common\Entity\Row;
@@ -180,8 +181,9 @@ final class FinancialExportService
         string $coachId = '',
         string $sessionStatus = '',
         string $bookingStatus = '',
+        string $anomalyFlag = '',
     ): StreamedResponse {
-        $bookings = $this->buildLedgerQuery($dateFrom, $dateTo, $coachId, $sessionStatus, $bookingStatus)->get();
+        $bookings = $this->buildLedgerQuery($dateFrom, $dateTo, $coachId, $sessionStatus, $bookingStatus, $anomalyFlag)->get();
 
         return response()->streamDownload(function () use ($bookings): void {
             $writer = new CsvWriter;
@@ -205,8 +207,9 @@ final class FinancialExportService
         string $coachId = '',
         string $sessionStatus = '',
         string $bookingStatus = '',
+        string $anomalyFlag = '',
     ): StreamedResponse {
-        $bookings = $this->buildLedgerQuery($dateFrom, $dateTo, $coachId, $sessionStatus, $bookingStatus)->get();
+        $bookings = $this->buildLedgerQuery($dateFrom, $dateTo, $coachId, $sessionStatus, $bookingStatus, $anomalyFlag)->get();
 
         return response()->streamDownload(function () use ($bookings): void {
             $writer = new XlsxWriter;
@@ -234,6 +237,7 @@ final class FinancialExportService
         string $coachId = '',
         string $sessionStatus = '',
         string $bookingStatus = '',
+        string $anomalyFlag = '',
     ): Builder {
         $parsedSessionStatus = $sessionStatus !== '' ? SessionStatus::tryFrom($sessionStatus) : null;
         $parsedBookingStatus = $bookingStatus !== '' ? BookingStatus::tryFrom($bookingStatus) : null;
@@ -257,6 +261,39 @@ final class FinancialExportService
                 ),
             )
             ->when($parsedBookingStatus !== null, fn (Builder $q) => $q->where('status', $parsedBookingStatus))
+            ->when(
+                $anomalyFlag === 'anomalies_only',
+                fn (Builder $q) => $q->where(function (Builder $q): void {
+                    $q->where(fn (Builder $s) => $s
+                        ->where('status', BookingStatus::Confirmed->value)
+                        ->where('amount_paid', '>', 0)
+                        ->whereNull('stripe_payment_intent_id'),
+                    )
+                        ->orWhere(fn (Builder $s) => $s
+                            ->where('status', BookingStatus::Confirmed->value)
+                            ->where('amount_paid', '<=', 0),
+                        )
+                        ->orWhere(fn (Builder $s) => $s
+                            ->where('status', BookingStatus::Cancelled->value)
+                            ->where('amount_paid', '>', 0)
+                            ->whereNull('refunded_at'),
+                        );
+                }),
+            )
+            ->when(
+                $anomalyFlag === 'paid_without_invoice',
+                fn (Builder $q) => $q
+                    ->where('status', BookingStatus::Confirmed->value)
+                    ->where('amount_paid', '>', 0)
+                    ->whereDoesntHave('sportSession.invoices'),
+            )
+            ->when(
+                $anomalyFlag === 'paid_without_payment_intent',
+                fn (Builder $q) => $q
+                    ->where('status', BookingStatus::Confirmed->value)
+                    ->where('amount_paid', '>', 0)
+                    ->whereNull('stripe_payment_intent_id'),
+            )
             ->orderBy('bookings.created_at', 'desc');
     }
 
@@ -281,6 +318,10 @@ final class FinancialExportService
             'stripe_payment_intent_id',
             'stripe_checkout_session_id',
             'refunded_at',
+            'session_status',
+            'has_invoice',
+            'has_payout_statement',
+            'anomaly_flag',
         ];
     }
 
@@ -296,6 +337,24 @@ final class FinancialExportService
     {
         $invoice = $booking->sportSession?->invoices?->first();
 
+        $payoutStatementExists = $booking->sportSession?->coach_id !== null
+            && CoachPayoutStatement::where('coach_id', $booking->sportSession->coach_id)
+                ->where('period_month', $booking->created_at->month)
+                ->where('period_year', $booking->created_at->year)
+                ->exists();
+
+        $anomalyFlag = match (true) {
+            $booking->status === BookingStatus::Confirmed
+                && ($booking->amount_paid ?? 0) > 0
+                && $booking->stripe_payment_intent_id === null => 'missing_payment_intent',
+            $booking->status === BookingStatus::Confirmed
+                && ($booking->amount_paid ?? 0) <= 0 => 'confirmed_without_payment',
+            $booking->status === BookingStatus::Cancelled
+                && ($booking->amount_paid ?? 0) > 0
+                && $booking->refunded_at === null => 'paid_cancelled_without_refund',
+            default => '',
+        };
+
         return [
             $booking->created_at?->format('Y-m-d H:i:s') ?? '',
             $booking->status === BookingStatus::Refunded ? 'refund' : 'booking',
@@ -310,6 +369,10 @@ final class FinancialExportService
             $booking->stripe_payment_intent_id ?? '',
             $booking->stripe_checkout_session_id ?? '',
             $booking->refunded_at?->format('Y-m-d H:i:s') ?? '',
+            $booking->sportSession?->status?->value ?? '',
+            $invoice !== null ? 'yes' : 'no',
+            $payoutStatementExists ? 'yes' : 'no',
+            $anomalyFlag,
         ];
     }
 

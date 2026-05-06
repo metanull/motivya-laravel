@@ -108,8 +108,32 @@
         </div>
     @endif
 
+    {{-- Story 5.2: Warning for bookings missing stripe_payment_intent_id --}}
+    @if ($hasMissingPaymentIntentBookings)
+        <div class="mb-6 rounded-md bg-amber-50 p-4 ring-1 ring-amber-200 dark:bg-amber-900/20 dark:ring-amber-700">
+            <div class="flex items-start gap-3">
+                <div class="mt-0.5 flex-shrink-0">
+                    <svg class="h-5 w-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-medium text-amber-800 dark:text-amber-300">
+                        {{ __('coach.anomaly_warning_missing_payment_intent') }}
+                    </p>
+                    @if (Route::has('accountant.transactions.index'))
+                        <a href="{{ route('accountant.transactions.index', ['anomalyFlag' => 'paid_without_payment_intent']) }}"
+                           class="mt-1 text-xs font-medium text-amber-700 underline hover:text-amber-600 dark:text-amber-400">
+                            {{ __('coach.anomaly_warning_view_details') }}
+                        </a>
+                    @endif
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- Stats cards --}}
-    <div class="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+    <div class="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
             <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ __('coach.stat_total_sessions') }}</p>
             <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100">{{ $totalSessions }}</p>
@@ -133,6 +157,15 @@
         <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
             <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ __('coach.stat_total_revenue') }}</p>
             <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100"><x-money :cents="$totalRevenueCents" /></p>
+        </div>
+        {{-- Story 5.2: Current-month revenue breakdown --}}
+        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ __('coach.stat_current_month_revenue') }}</p>
+            <p class="mt-1 text-2xl font-bold text-gray-900 dark:text-gray-100"><x-money :cents="$currentMonthRevenueCents" /></p>
+        </div>
+        <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ __('coach.stat_current_month_refunds') }}</p>
+            <p class="mt-1 text-2xl font-bold text-red-600 dark:text-red-400"><x-money :cents="$currentMonthRefundedCents" /></p>
         </div>
     </div>
 

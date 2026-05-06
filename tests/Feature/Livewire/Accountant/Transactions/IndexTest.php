@@ -268,7 +268,10 @@ describe('accountant transactions ledger', function () {
         Livewire::actingAs($accountant)
             ->test(Index::class)
             ->call('export', 'csv')
-            ->assertRedirect(route('accountant.transactions.export', ['format' => 'csv']));
+            ->assertRedirect(route('accountant.transactions.export', [
+                'format' => 'csv',
+                'dateFrom' => now()->subDays(30)->toDateString(),
+            ]));
     });
 
     it('export excel redirects to the ledger export route', function () {
@@ -277,7 +280,10 @@ describe('accountant transactions ledger', function () {
         Livewire::actingAs($accountant)
             ->test(Index::class)
             ->call('export', 'excel')
-            ->assertRedirect(route('accountant.transactions.export', ['format' => 'excel']));
+            ->assertRedirect(route('accountant.transactions.export', [
+                'format' => 'excel',
+                'dateFrom' => now()->subDays(30)->toDateString(),
+            ]));
     });
 
     it('export route streams a csv response for accountant', function () {
@@ -307,5 +313,87 @@ describe('accountant transactions ledger', function () {
         $this->actingAs($athlete)
             ->get(route('accountant.transactions.export', ['format' => 'csv']))
             ->assertForbidden();
+    });
+
+    // ─── Story 5.1: Paid Bookings in Ledger ─────────────────────────────────
+
+    it('sets a default date range on mount', function () {
+        $accountant = User::factory()->accountant()->withTwoFactor()->create();
+
+        Livewire::actingAs($accountant)
+            ->test(Index::class)
+            ->assertSet('dateFrom', now()->subDays(30)->toDateString());
+    });
+
+    it('filters paid_without_invoice to only confirmed bookings with payment but no invoice', function () {
+        $accountant = User::factory()->accountant()->withTwoFactor()->create();
+        $coach = User::factory()->coach()->create();
+        $sessionWithoutInvoice = SportSession::factory()->create(['coach_id' => $coach->id]);
+        $sessionWithInvoice = SportSession::factory()->create(['coach_id' => $coach->id]);
+        $athlete1 = User::factory()->athlete()->create(['name' => 'Paid No Invoice']);
+        $athlete2 = User::factory()->athlete()->create(['name' => 'Paid With Invoice']);
+
+        Booking::factory()->confirmed()->create([
+            'sport_session_id' => $sessionWithoutInvoice->id,
+            'athlete_id' => $athlete1->id,
+            'amount_paid' => 2000,
+        ]);
+        Booking::factory()->confirmed()->create([
+            'sport_session_id' => $sessionWithInvoice->id,
+            'athlete_id' => $athlete2->id,
+            'amount_paid' => 2000,
+        ]);
+        Invoice::factory()->invoice()->create([
+            'coach_id' => $coach->id,
+            'sport_session_id' => $sessionWithInvoice->id,
+        ]);
+
+        Livewire::actingAs($accountant)
+            ->test(Index::class)
+            ->set('dateFrom', '')
+            ->set('anomalyFlag', 'paid_without_invoice')
+            ->assertSee('Paid No Invoice')
+            ->assertDontSee('Paid With Invoice');
+    });
+
+    it('filters paid_without_payment_intent to confirmed bookings with amount but no intent', function () {
+        $accountant = User::factory()->accountant()->withTwoFactor()->create();
+        $session = SportSession::factory()->create();
+        $athlete1 = User::factory()->athlete()->create(['name' => 'Missing Intent']);
+        $athlete2 = User::factory()->athlete()->create(['name' => 'Has Intent']);
+
+        Booking::factory()->confirmed()->create([
+            'sport_session_id' => $session->id,
+            'athlete_id' => $athlete1->id,
+            'amount_paid' => 2000,
+            'stripe_payment_intent_id' => null,
+        ]);
+        Booking::factory()->confirmed()->create([
+            'sport_session_id' => $session->id,
+            'athlete_id' => $athlete2->id,
+            'amount_paid' => 2000,
+            'stripe_payment_intent_id' => 'pi_test_has',
+        ]);
+
+        Livewire::actingAs($accountant)
+            ->test(Index::class)
+            ->set('dateFrom', '')
+            ->set('anomalyFlag', 'paid_without_payment_intent')
+            ->assertSee('Missing Intent')
+            ->assertDontSee('Has Intent');
+    });
+
+    it('export passes anomalyFlag to the route', function () {
+        $accountant = User::factory()->accountant()->withTwoFactor()->create();
+
+        Livewire::actingAs($accountant)
+            ->test(Index::class)
+            ->set('anomalyFlag', 'paid_without_invoice')
+            ->call('export', 'csv')
+            ->assertRedirect(route('accountant.transactions.export', [
+                'format' => 'csv',
+                'dateFrom' => now()->subDays(30)->toDateString(),
+                'anomalyFlag' => 'paid_without_invoice',
+            ]));
     });
 });

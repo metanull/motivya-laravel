@@ -85,12 +85,41 @@
         {{-- Stuck sessions count --}}
         <div class="rounded-lg border border-red-200 bg-red-50 p-4 shadow-sm dark:border-red-700 dark:bg-red-900/20">
             <p class="text-xs font-medium uppercase tracking-wider text-red-600 dark:text-red-400">
-                {{ __('accountant.summary_anomalies') }}
+                {{ __('accountant.summary_stuck_sessions') }}
             </p>
             <p class="mt-2 text-2xl font-semibold text-red-700 dark:text-red-300">
                 {{ $this->summaryStuckSessionsCount }}
             </p>
         </div>
+
+        {{-- Open Payment Anomalies --}}
+        @if (Route::has('accountant.anomalies.index'))
+            <a href="{{ route('accountant.anomalies.index') }}"
+               class="block rounded-lg border border-orange-200 bg-orange-50 p-4 shadow-sm transition hover:shadow-md dark:border-orange-700 dark:bg-orange-900/20">
+                <div class="flex items-start justify-between">
+                    <p class="text-xs font-medium uppercase tracking-wider text-orange-600 dark:text-orange-400">
+                        {{ __('accountant.summary_open_anomalies') }}
+                    </p>
+                    @if ($this->summaryOpenAnomalyCount > 0)
+                        <span class="inline-flex items-center justify-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-semibold text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                            {{ $this->summaryOpenAnomalyCount }}
+                        </span>
+                    @endif
+                </div>
+                <p class="mt-2 text-2xl font-semibold text-orange-700 dark:text-orange-300">
+                    {{ $this->summaryOpenAnomalyCount }}
+                </p>
+            </a>
+        @else
+            <div class="rounded-lg border border-orange-200 bg-orange-50 p-4 shadow-sm dark:border-orange-700 dark:bg-orange-900/20">
+                <p class="text-xs font-medium uppercase tracking-wider text-orange-600 dark:text-orange-400">
+                    {{ __('accountant.summary_open_anomalies') }}
+                </p>
+                <p class="mt-2 text-2xl font-semibold text-orange-700 dark:text-orange-300">
+                    {{ $this->summaryOpenAnomalyCount }}
+                </p>
+            </div>
+        @endif
     </div>
 
     {{-- Audit Log Card --}}

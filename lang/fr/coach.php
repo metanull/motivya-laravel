@@ -95,6 +95,10 @@ return [
     'stripe_setup_start' => 'Connecter le compte Stripe',
     'stripe_setup_continue' => 'Continuer la configuration Stripe',
     'published_sessions_not_stripe_ready' => 'Vous avez des séances publiées qui ne sont pas réservables car votre compte Stripe n\'est pas encore configuré.',
+    'anomaly_warning_missing_payment_intent' => 'Certaines réservations confirmées et payées n\'ont pas d\'intention de paiement Stripe. Ces enregistrements peuvent indiquer une capture de paiement incomplète.',
+    'anomaly_warning_view_details' => 'Voir les réservations concernées →',
+    'stat_current_month_revenue' => 'Revenus du mois',
+    'stat_current_month_refunds' => 'Remboursements du mois',
 
     /*
     |--------------------------------------------------------------------------
