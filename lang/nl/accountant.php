@@ -83,6 +83,8 @@ return [
     'summary_credit_notes' => 'Creditnota\'s (deze maand)',
     'summary_refunds' => 'Terugbetalingen (deze maand)',
     'summary_anomalies' => 'Vastgelopen sessies',
+    'summary_stuck_sessions' => 'Vastgelopen sessies',
+    'summary_open_anomalies' => 'Openstaande afwijkingen',
     'summary_view_anomalies' => 'Alle anomalieën bekijken',
 
     // Dagboek transacties
@@ -102,6 +104,9 @@ return [
     'transactions_col_stripe_cs' => 'Stripe CS',
     'transactions_col_refund_status' => 'Terugbetalingsstatus',
     'transactions_col_anomaly' => 'Anomalie',
+    'transactions_col_session_status' => 'Sessiestatus',
+    'transactions_col_invoice_exists' => 'Factuur',
+    'transactions_col_payout_stmt_exists' => 'Uitbetalingsoverzicht',
     'transactions_no_results' => 'Geen transacties gevonden.',
     'transactions_filter_reset' => 'Filters resetten',
     'transactions_filter_all_coaches' => 'Alle coaches',
@@ -110,6 +115,8 @@ return [
     'transactions_filter_anomaly' => 'Anomalievlag',
     'transactions_filter_all' => 'Alles',
     'transactions_filter_anomalies_only' => 'Alleen anomalieën',
+    'transactions_filter_paid_without_invoice' => 'Betaald zonder factuur',
+    'transactions_filter_paid_without_payment_intent' => 'Betaald zonder betaalintentie',
     'transactions_missing_value' => '—',
     'anomaly_missing_payment_intent' => 'Ontbrekende PI',
     'anomaly_confirmed_without_payment' => 'Geen betaling',

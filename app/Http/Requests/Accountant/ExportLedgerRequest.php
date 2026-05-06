@@ -30,6 +30,7 @@ final class ExportLedgerRequest extends FormRequest
             'coachId' => ['sometimes', 'nullable', 'integer', 'exists:users,id'],
             'sessionStatus' => ['sometimes', 'nullable', Rule::in(array_column(SessionStatus::cases(), 'value'))],
             'bookingStatus' => ['sometimes', 'nullable', Rule::in(array_column(BookingStatus::cases(), 'value'))],
+            'anomalyFlag' => ['sometimes', 'nullable', Rule::in(['anomalies_only', 'paid_without_invoice', 'paid_without_payment_intent'])],
         ];
     }
 
@@ -61,5 +62,10 @@ final class ExportLedgerRequest extends FormRequest
     public function bookingStatus(): string
     {
         return (string) ($this->query('bookingStatus') ?? '');
+    }
+
+    public function anomalyFlag(): string
+    {
+        return $this->query('anomalyFlag', '') ?? '';
     }
 }

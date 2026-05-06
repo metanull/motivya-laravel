@@ -84,6 +84,8 @@
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm">
                     <option value="">{{ __('accountant.transactions_filter_all') }}</option>
                     <option value="anomalies_only">{{ __('accountant.transactions_filter_anomalies_only') }}</option>
+                    <option value="paid_without_invoice">{{ __('accountant.transactions_filter_paid_without_invoice') }}</option>
+                    <option value="paid_without_payment_intent">{{ __('accountant.transactions_filter_paid_without_payment_intent') }}</option>
                 </select>
             </div>
 
@@ -133,6 +135,15 @@
                         </th>
                         <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                             {{ __('accountant.transactions_col_booking_status') }}
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            {{ __('accountant.transactions_col_session_status') }}
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            {{ __('accountant.transactions_col_invoice_exists') }}
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            {{ __('accountant.transactions_col_payout_stmt_exists') }}
                         </th>
                         <th scope="col" class="px-4 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                             {{ __('accountant.transactions_col_amount_ttc') }}
@@ -205,6 +216,30 @@
                                 <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ $statusClasses }}">
                                     {{ $booking->status->label() }}
                                 </span>
+                            </td>
+
+                            {{-- Session status --}}
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                                {{ $booking->sportSession?->status?->label() ?? __('accountant.transactions_missing_value') }}
+                            </td>
+
+                            {{-- Invoice exists --}}
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                                @if ($invoice !== null)
+                                    <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200">{{ __('common.yes') }}</span>
+                                @else
+                                    <span class="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">{{ __('common.no') }}</span>
+                                @endif
+                            </td>
+
+                            {{-- Payout statement exists --}}
+                            @php $hasPayoutStmt = $bookingPayoutStatements[$booking->id] ?? false; @endphp
+                            <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
+                                @if ($hasPayoutStmt)
+                                    <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200">{{ __('common.yes') }}</span>
+                                @else
+                                    <span class="text-gray-400 dark:text-gray-500">{{ __('accountant.transactions_missing_value') }}</span>
+                                @endif
                             </td>
 
                             {{-- Gross TTC --}}
@@ -282,7 +317,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="14"
+                            <td colspan="17"
                                 class="px-4 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
                                 {{ __('accountant.transactions_no_results') }}
                             </td>

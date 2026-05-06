@@ -11,6 +11,7 @@ use App\Models\CoachPayoutStatement;
 use App\Models\CoachProfile;
 use App\Models\SportSession;
 use App\Models\User;
+use App\Services\AnomalyDetectorService;
 use App\Services\SessionService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
@@ -177,7 +178,7 @@ final class Dashboard extends Component
         $this->dispatch('notify', type: 'success', message: __('sessions.deleted'));
     }
 
-    public function render(): View
+    public function render(AnomalyDetectorService $anomalyDetector): View
     {
         /** @var User $coach */
         $coach = auth()->user();
@@ -272,6 +273,26 @@ final class Dashboard extends Component
                 ->exists();
         }
 
+        // Story 5.2: Warn when any confirmed paid booking is missing stripe_payment_intent_id
+        $hasMissingPaymentIntentBookings = $anomalyDetector->coachHasMissingPaymentIntents($coach);
+
+        // Story 5.2: Current-month revenue breakdown
+        $currentMonthRevenueCents = (int) DB::table('bookings')
+            ->join('sport_sessions', 'bookings.sport_session_id', '=', 'sport_sessions.id')
+            ->where('sport_sessions.coach_id', $coach->id)
+            ->where('bookings.status', BookingStatus::Confirmed->value)
+            ->whereMonth('bookings.created_at', now()->month)
+            ->whereYear('bookings.created_at', now()->year)
+            ->sum('bookings.amount_paid');
+
+        $currentMonthRefundedCents = (int) DB::table('bookings')
+            ->join('sport_sessions', 'bookings.sport_session_id', '=', 'sport_sessions.id')
+            ->where('sport_sessions.coach_id', $coach->id)
+            ->where('bookings.status', BookingStatus::Refunded->value)
+            ->whereMonth('bookings.refunded_at', now()->month)
+            ->whereYear('bookings.refunded_at', now()->year)
+            ->sum('bookings.amount_paid');
+
         $checklistItems = $this->checklistItems();
         $allChecklistDone = collect($checklistItems)->every(fn (array $item): bool => $item['done']);
 
@@ -288,6 +309,9 @@ final class Dashboard extends Component
             'avgFillRate' => $avgFillRate,
             'totalRevenueCents' => $totalRevenueCents,
             'publishedWithoutStripe' => $publishedWithoutStripe,
+            'hasMissingPaymentIntentBookings' => $hasMissingPaymentIntentBookings,
+            'currentMonthRevenueCents' => $currentMonthRevenueCents,
+            'currentMonthRefundedCents' => $currentMonthRefundedCents,
             'checklistItems' => $checklistItems,
             'allChecklistDone' => $allChecklistDone,
         ])->title(__('coach.dashboard_title'));

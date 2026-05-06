@@ -95,6 +95,10 @@ return [
     'stripe_setup_start' => 'Connect Stripe account',
     'stripe_setup_continue' => 'Continue Stripe setup',
     'published_sessions_not_stripe_ready' => 'You have published sessions that are not bookable because your Stripe account setup is not complete.',
+    'anomaly_warning_missing_payment_intent' => 'Some confirmed paid bookings are missing a Stripe payment intent. These records may indicate incomplete payment capture.',
+    'anomaly_warning_view_details' => 'View affected bookings →',
+    'stat_current_month_revenue' => 'This Month Revenue',
+    'stat_current_month_refunds' => 'This Month Refunds',
 
     /*
     |--------------------------------------------------------------------------

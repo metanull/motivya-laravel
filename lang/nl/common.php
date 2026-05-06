@@ -78,6 +78,8 @@ return [
     'previous' => 'Vorige',
     'view_all' => 'Alles bekijken',
     'uploading' => 'Uploaden…',
+    'yes' => 'Ja',
+    'no' => 'Nee',
     'welcome' => 'Welkom bij :app',
     'welcome_subtitle' => 'De Brusselse sportsmarktplaats — vind een coach, boek een sessie, beweeg.',
     'welcome_for_coaches' => 'Bent u coach? Maak sessies aan, beheer boekingen en ontvang betalingen moeiteloos.',

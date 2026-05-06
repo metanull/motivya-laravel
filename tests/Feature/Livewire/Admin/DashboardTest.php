@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Livewire\Admin\Dashboard;
 use App\Models\AuditEvent;
+use App\Models\PaymentAnomaly;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -75,6 +76,15 @@ describe('Admin — Dashboard', function () {
         $component = Livewire::actingAs($admin)->test(Dashboard::class);
 
         expect($component->instance()->recentAuditEventCount)->toBe(3);
+    });
+
+    it('shows the open anomaly count on admin dashboard', function () {
+        $admin = User::factory()->admin()->withTwoFactor()->create();
+        PaymentAnomaly::factory()->open()->count(5)->create();
+
+        Livewire::actingAs($admin)
+            ->test(Dashboard::class)
+            ->assertSet('anomalyCount', 5);
     });
 
 });

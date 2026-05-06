@@ -170,4 +170,77 @@ describe('coach dashboard stats', function () {
         // Only 1 session for this coach
         expect(SportSession::where('coach_id', $coach->id)->count())->toBe(1);
     });
+
+    it('shows current month revenue separately from all-time total', function () {
+        $coach = User::factory()->coach()->create();
+        $session = SportSession::factory()->confirmed()->create([
+            'coach_id' => $coach->id,
+            'date' => now()->addDays(3),
+        ]);
+
+        // This month booking
+        Booking::factory()->confirmed()->for($session, 'sportSession')->create([
+            'amount_paid' => 3000,
+            'created_at' => now(),
+        ]);
+        // Last month booking — must NOT appear in current-month revenue
+        Booking::factory()->confirmed()->for($session, 'sportSession')->create([
+            'amount_paid' => 5000,
+            'created_at' => now()->subMonths(1),
+        ]);
+
+        Livewire::actingAs($coach)
+            ->test(Dashboard::class)
+            ->assertSee(__('coach.stat_current_month_revenue'))
+            ->assertSee(__('coach.stat_current_month_refunds'));
+    });
+
+    it('shows anomaly warning when confirmed paid booking has no payment intent', function () {
+        $coach = User::factory()->coach()->create();
+        $session = SportSession::factory()->published()->create([
+            'coach_id' => $coach->id,
+            'date' => now()->addDays(3),
+        ]);
+        Booking::factory()->confirmed()->for($session, 'sportSession')->create([
+            'amount_paid' => 2000,
+            'stripe_payment_intent_id' => null,
+        ]);
+
+        Livewire::actingAs($coach)
+            ->test(Dashboard::class)
+            ->assertSee(__('coach.anomaly_warning_missing_payment_intent'));
+    });
+
+    it('does not show anomaly warning when all confirmed paid bookings have payment intent', function () {
+        $coach = User::factory()->coach()->create();
+        $session = SportSession::factory()->published()->create([
+            'coach_id' => $coach->id,
+            'date' => now()->addDays(3),
+        ]);
+        Booking::factory()->confirmed()->for($session, 'sportSession')->create([
+            'amount_paid' => 2000,
+            'stripe_payment_intent_id' => 'pi_test_ok',
+        ]);
+
+        Livewire::actingAs($coach)
+            ->test(Dashboard::class)
+            ->assertDontSee(__('coach.anomaly_warning_missing_payment_intent'));
+    });
+
+    it('excludes pending payment bookings from revenue', function () {
+        $coach = User::factory()->coach()->create();
+        $session = SportSession::factory()->published()->create([
+            'coach_id' => $coach->id,
+            'date' => now()->addDays(3),
+        ]);
+        Booking::factory()->pendingPayment()->for($session, 'sportSession')->create([
+            'amount_paid' => 5000,
+        ]);
+
+        // No confirmed bookings => revenue labels still shown, value is zero
+        Livewire::actingAs($coach)
+            ->test(Dashboard::class)
+            ->assertSee(__('coach.stat_total_revenue'))
+            ->assertSee(__('coach.stat_current_month_revenue'));
+    });
 });

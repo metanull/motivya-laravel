@@ -31,6 +31,7 @@ final class LedgerExportController extends Controller
                 $request->coachId(),
                 $request->sessionStatus(),
                 $request->bookingStatus(),
+                $request->anomalyFlag(),
             );
         }
 
@@ -40,6 +41,7 @@ final class LedgerExportController extends Controller
             $request->coachId(),
             $request->sessionStatus(),
             $request->bookingStatus(),
+            $request->anomalyFlag(),
         );
     }
 }

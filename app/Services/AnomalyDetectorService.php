@@ -184,6 +184,20 @@ final class AnomalyDetectorService
         ];
     }
 
+    /**
+     * Check whether the given coach has any confirmed paid bookings with no payment intent.
+     * Used by the coach dashboard to show a targeted anomaly warning.
+     */
+    public function coachHasMissingPaymentIntents(User $coach): bool
+    {
+        return Booking::join('sport_sessions', 'bookings.sport_session_id', '=', 'sport_sessions.id')
+            ->where('sport_sessions.coach_id', $coach->id)
+            ->where('bookings.status', BookingStatus::Confirmed)
+            ->where('bookings.amount_paid', '>', 0)
+            ->whereNull('bookings.stripe_payment_intent_id')
+            ->exists();
+    }
+
     public function resolve(PaymentAnomaly $anomaly, User $actor, string $reason): void
     {
         DB::transaction(function () use ($anomaly, $actor, $reason): void {

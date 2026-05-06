@@ -95,6 +95,10 @@ return [
     'stripe_setup_start' => 'Stripe-account verbinden',
     'stripe_setup_continue' => 'Stripe-instelling voortzetten',
     'published_sessions_not_stripe_ready' => 'U heeft gepubliceerde sessies die niet boekbaar zijn omdat uw Stripe-account nog niet is geconfigureerd.',
+    'anomaly_warning_missing_payment_intent' => 'Sommige bevestigde betaalde boekingen missen een Stripe-betaalintentie. Deze records kunnen wijzen op een onvolledige betalingsverwerking.',
+    'anomaly_warning_view_details' => 'Bekijk getroffen boekingen →',
+    'stat_current_month_revenue' => 'Omzet deze maand',
+    'stat_current_month_refunds' => 'Terugbetalingen deze maand',
 
     /*
     |--------------------------------------------------------------------------
