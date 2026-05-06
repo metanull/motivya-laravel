@@ -13,6 +13,7 @@ use App\Models\Invoice;
 use App\Models\User;
 use App\Services\AnomalyDetectorService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
@@ -184,9 +185,9 @@ final class Index extends Component
 
         $existingKeys = collect();
         if ($tuples->isNotEmpty()) {
-            $existingKeys = CoachPayoutStatement::where(function ($q) use ($tuples): void {
+            $existingKeys = CoachPayoutStatement::where(function (Builder $q) use ($tuples): void {
                 foreach ($tuples as $tuple) {
-                    $q->orWhere(function ($s) use ($tuple): void {
+                    $q->orWhere(function (Builder $s) use ($tuple): void {
                         $s->where('coach_id', $tuple['coach_id'])
                             ->where('period_month', $tuple['month'])
                             ->where('period_year', $tuple['year']);

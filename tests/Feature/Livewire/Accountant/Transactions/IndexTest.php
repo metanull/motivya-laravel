@@ -319,10 +319,24 @@ describe('accountant transactions ledger', function () {
 
     it('sets a default date range on mount', function () {
         $accountant = User::factory()->accountant()->withTwoFactor()->create();
+        $session = SportSession::factory()->create();
+
+        // Recent booking — within the 30-day window
+        $recent = Booking::factory()->confirmed()->create([
+            'sport_session_id' => $session->id,
+            'created_at' => now()->subDays(5),
+        ]);
+        // Old booking — before the 30-day window
+        Booking::factory()->confirmed()->create([
+            'sport_session_id' => $session->id,
+            'created_at' => now()->subDays(60),
+        ]);
 
         Livewire::actingAs($accountant)
             ->test(Index::class)
-            ->assertSet('dateFrom', now()->subDays(30)->toDateString());
+            ->assertSet('dateFrom', now()->subDays(30)->toDateString())
+            ->assertSeeHtml($recent->created_at->format('Y-m-d'))
+            ->assertDontSeeHtml(now()->subDays(60)->format('Y-m-d'));
     });
 
     it('filters paid_without_invoice to only confirmed bookings with payment but no invoice', function () {

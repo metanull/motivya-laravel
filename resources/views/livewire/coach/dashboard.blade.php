@@ -121,12 +121,6 @@
                     <p class="text-sm font-medium text-amber-800 dark:text-amber-300">
                         {{ __('coach.anomaly_warning_missing_payment_intent') }}
                     </p>
-                    @if (Route::has('accountant.transactions.index'))
-                        <a href="{{ route('accountant.transactions.index', ['anomalyFlag' => 'paid_without_payment_intent']) }}"
-                           class="mt-1 text-xs font-medium text-amber-700 underline hover:text-amber-600 dark:text-amber-400">
-                            {{ __('coach.anomaly_warning_view_details') }}
-                        </a>
-                    @endif
                 </div>
             </div>
         </div>

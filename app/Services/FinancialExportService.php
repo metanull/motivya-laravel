@@ -402,9 +402,9 @@ final class FinancialExportService
             return [];
         }
 
-        return CoachPayoutStatement::where(function ($q) use ($tuples): void {
+        return CoachPayoutStatement::where(function (Builder $q) use ($tuples): void {
             foreach ($tuples as $tuple) {
-                $q->orWhere(function ($s) use ($tuple): void {
+                $q->orWhere(function (Builder $s) use ($tuple): void {
                     $s->where('coach_id', $tuple['coach_id'])
                         ->where('period_month', $tuple['month'])
                         ->where('period_year', $tuple['year']);
