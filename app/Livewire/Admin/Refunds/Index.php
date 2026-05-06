@@ -182,12 +182,21 @@ final class Index extends Component
             ->whereIn('booking_id', $bookingIds)
             ->orderByDesc('created_at')
             ->get()
+            ->unique('booking_id')
             ->keyBy('booking_id');
+
+        // Story 4.3: Pre-compute per-booking eligibility badges.
+        $eligibilityBadges = $bookings->getCollection()->mapWithKeys(
+            fn (Booking $booking): array => [
+                $booking->id => $this->eligibilityBadge($booking, $bookingFlags[$booking->id] ?? []),
+            ],
+        );
 
         return view('livewire.admin.refunds.index', [
             'bookings' => $bookings,
             'bookingFlags' => $bookingFlags,
             'lastAudits' => $lastAudits,
+            'eligibilityBadges' => $eligibilityBadges,
             'statuses' => BookingStatus::cases(),
         ])->title(__('admin.refunds_title'));
     }

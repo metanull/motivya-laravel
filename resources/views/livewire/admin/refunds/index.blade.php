@@ -83,7 +83,7 @@
                 <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
                     @foreach ($bookings as $booking)
                         @php
-                            $eligibility = $this->eligibilityBadge($booking, $bookingFlags[$booking->id] ?? []);
+                            $eligibility = $eligibilityBadges[$booking->id] ?? 'cancelled';
                             $lastAudit = $lastAudits[$booking->id] ?? null;
                         @endphp
                         <tr wire:key="booking-row-{{ $booking->id }}">
@@ -119,7 +119,8 @@
                                 @if ($eligibility === 'missing_payment_intent' && Route::has('admin.anomalies.index'))
                                     <a href="{{ route('admin.anomalies.index') }}"
                                        class="ml-1 text-xs text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
-                                       wire:navigate>↗</a>
+                                       aria-label="{{ __('admin.readiness_action_anomalies') }}"
+                                       wire:navigate>↗<span class="sr-only">{{ __('admin.readiness_action_anomalies') }}</span></a>
                                 @endif
                             </td>
                             <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-700 dark:text-gray-300">
@@ -217,7 +218,7 @@
         <div class="space-y-4 lg:hidden">
             @foreach ($bookings as $booking)
                 @php
-                    $eligibility = $this->eligibilityBadge($booking, $bookingFlags[$booking->id] ?? []);
+                    $eligibility = $eligibilityBadges[$booking->id] ?? 'cancelled';
                     $lastAudit = $lastAudits[$booking->id] ?? null;
                 @endphp
                 <div
