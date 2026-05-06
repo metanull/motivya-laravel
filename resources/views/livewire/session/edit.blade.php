@@ -97,31 +97,31 @@
             @enderror
         </div>
 
-        {{-- Location + Postal code --}}
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-                <label for="location" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {{ __('sessions.location_label') }}
-                </label>
-                <input type="text" wire:model="form.location" id="location"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
-                    placeholder="{{ __('sessions.location_placeholder') }}">
-                @error('form.location')
-                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                @enderror
+        {{-- Address ─────────────────────────────────────────────────────── --}}
+        <div>
+            <label for="addressQuery" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                {{ __('sessions.address_label') }}
+            </label>
+            <div class="mt-1 flex gap-2">
+                <input type="text" wire:model="form.addressQuery" id="addressQuery"
+                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
+                    placeholder="{{ __('sessions.address_placeholder') }}">
+                <button type="button" wire:click="validateAddress"
+                    class="inline-flex shrink-0 items-center rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600">
+                    {{ __('sessions.validate_address') }}
+                </button>
             </div>
-
-            <div>
-                <label for="postalCode" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {{ __('sessions.postal_code_label') }}
-                </label>
-                <input type="text" wire:model="form.postalCode" id="postalCode"
-                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
-                    placeholder="1000">
-                @error('form.postalCode')
-                    <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                @enderror
-            </div>
+            @error('form.addressQuery')
+                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+            @enderror
+            @error('address')
+                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+            @enderror
+            @if ($form->addressValidated && $form->formattedAddress)
+                <p class="mt-1 text-sm text-green-600 dark:text-green-400">
+                    {{ __('sessions.address_validated', ['address' => $form->formattedAddress]) }}
+                </p>
+            @endif
         </div>
 
         {{-- Date + Times (locked when session has bookings) --}}

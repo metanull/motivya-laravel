@@ -58,4 +58,23 @@ class CoachProfileFactory extends Factory
     {
         return $this->state(['is_vat_subject' => false]);
     }
+
+    /**
+     * State representing a coach profile whose address has been successfully
+     * geocoded and validated by a provider.  Uses fixed Brussels coordinates
+     * (Grand-Place) so tests remain deterministic.
+     */
+    public function withValidatedAddress(): static
+    {
+        return $this->state([
+            'formatted_address' => 'Grand-Place, 1000 Bruxelles, Belgium',
+            'street_address' => 'Grand-Place',
+            'locality' => 'Bruxelles',
+            'latitude' => 50.8467,
+            'longitude' => 4.3525,
+            'geocoding_provider' => 'google',
+            'geocoding_place_id' => 'ChIJ_coach_test_place_id',
+            'geocoded_at' => now(),
+        ]);
+    }
 }

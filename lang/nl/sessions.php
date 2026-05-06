@@ -162,4 +162,18 @@ return [
 
     'publish_requires_stripe_onboarding' => 'U moet de Stripe-onboarding voltooien voordat u een sessie kunt publiceren.',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Adresvalidatie
+    |--------------------------------------------------------------------------
+    */
+
+    'address_label' => 'Adres',
+    'address_placeholder' => 'Bijv.: Jubelpark, 1000 Brussel',
+    'validate_address' => 'Adres valideren',
+    'address_validated' => 'Gevalideerd adres: :address',
+    'address_not_validated' => 'Valideer het adres voordat u opslaat.',
+    'address_not_found' => 'Adres niet gevonden. Wees specifieker.',
+    'publish_requires_formatted_address' => 'Een gevalideerd adres met coördinaten is vereist om de sessie te publiceren.',
+
 ];
