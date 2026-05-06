@@ -233,13 +233,7 @@
                             </td>
 
                             {{-- Payout statement exists --}}
-                            @php
-                                $hasPayoutStmt = $booking->sportSession?->coach_id !== null
-                                    && \App\Models\CoachPayoutStatement::where('coach_id', $booking->sportSession->coach_id)
-                                        ->where('period_month', $booking->created_at->month)
-                                        ->where('period_year', $booking->created_at->year)
-                                        ->exists();
-                            @endphp
+                            @php $hasPayoutStmt = $bookingPayoutStatements[$booking->id] ?? false; @endphp
                             <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-700 dark:text-gray-300">
                                 @if ($hasPayoutStmt)
                                     <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200">{{ __('common.yes') }}</span>

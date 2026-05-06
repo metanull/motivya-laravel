@@ -8,6 +8,7 @@ use App\Enums\BookingStatus;
 use App\Enums\SessionStatus;
 use App\Enums\UserRole;
 use App\Models\Booking;
+use App\Models\CoachPayoutStatement;
 use App\Models\Invoice;
 use App\Models\User;
 use App\Services\AnomalyDetectorService;
@@ -169,9 +170,48 @@ final class Index extends Component
             fn (Booking $booking): array => [$booking->id => $anomalyDetector->classifyBooking($booking)],
         );
 
+        // Build payout-statement existence map (booking_id → bool) without N+1 queries.
+        $pageBookings = $bookings->getCollection();
+
+        // Collect unique (coach_id, month, year) tuples from the current page.
+        $tuples = $pageBookings->map(fn (Booking $b): array => [
+            'coach_id' => $b->sportSession?->coach_id,
+            'month' => $b->created_at?->month,
+            'year' => $b->created_at?->year,
+        ])->filter(fn (array $t): bool => $t['coach_id'] !== null && $t['month'] !== null)
+            ->unique()
+            ->values();
+
+        $existingKeys = collect();
+        if ($tuples->isNotEmpty()) {
+            $existingKeys = CoachPayoutStatement::where(function ($q) use ($tuples): void {
+                foreach ($tuples as $tuple) {
+                    $q->orWhere(function ($s) use ($tuple): void {
+                        $s->where('coach_id', $tuple['coach_id'])
+                            ->where('period_month', $tuple['month'])
+                            ->where('period_year', $tuple['year']);
+                    });
+                }
+            })->get(['coach_id', 'period_month', 'period_year'])
+                ->mapWithKeys(fn (CoachPayoutStatement $stmt): array => [
+                    $stmt->coach_id.'-'.$stmt->period_month.'-'.$stmt->period_year => true,
+                ]);
+        }
+
+        $bookingPayoutStatements = $pageBookings->mapWithKeys(function (Booking $booking) use ($existingKeys): array {
+            $coachId = $booking->sportSession?->coach_id;
+            if ($coachId === null || $booking->created_at === null) {
+                return [$booking->id => false];
+            }
+            $key = $coachId.'-'.$booking->created_at->month.'-'.$booking->created_at->year;
+
+            return [$booking->id => isset($existingKeys[$key])];
+        });
+
         return view('livewire.accountant.transactions.index', [
             'bookings' => $bookings,
             'bookingFlags' => $bookingFlags,
+            'bookingPayoutStatements' => $bookingPayoutStatements,
         ])->title(__('accountant.transactions_title'));
     }
 }

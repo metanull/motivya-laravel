@@ -11,6 +11,7 @@ use App\Models\Booking;
 use App\Models\CoachPayoutStatement;
 use App\Models\Invoice;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use OpenSpout\Common\Entity\Row;
 use OpenSpout\Writer\CSV\Writer as CsvWriter;
 use OpenSpout\Writer\XLSX\Writer as XlsxWriter;
@@ -185,13 +186,15 @@ final class FinancialExportService
     ): StreamedResponse {
         $bookings = $this->buildLedgerQuery($dateFrom, $dateTo, $coachId, $sessionStatus, $bookingStatus, $anomalyFlag)->get();
 
-        return response()->streamDownload(function () use ($bookings): void {
+        $payoutStmtMap = $this->buildPayoutStatementMap($bookings);
+
+        return response()->streamDownload(function () use ($bookings, $payoutStmtMap): void {
             $writer = new CsvWriter;
             $writer->openToFile('php://output');
             $writer->addRow(Row::fromValues($this->ledgerHeaders()));
 
             foreach ($bookings as $booking) {
-                $writer->addRow(Row::fromValues($this->ledgerRow($booking)));
+                $writer->addRow(Row::fromValues($this->ledgerRow($booking, $payoutStmtMap)));
             }
 
             $writer->close();
@@ -211,13 +214,15 @@ final class FinancialExportService
     ): StreamedResponse {
         $bookings = $this->buildLedgerQuery($dateFrom, $dateTo, $coachId, $sessionStatus, $bookingStatus, $anomalyFlag)->get();
 
-        return response()->streamDownload(function () use ($bookings): void {
+        $payoutStmtMap = $this->buildPayoutStatementMap($bookings);
+
+        return response()->streamDownload(function () use ($bookings, $payoutStmtMap): void {
             $writer = new XlsxWriter;
             $writer->openToFile('php://output');
             $writer->addRow(Row::fromValues($this->ledgerHeaders()));
 
             foreach ($bookings as $booking) {
-                $writer->addRow(Row::fromValues($this->ledgerRow($booking)));
+                $writer->addRow(Row::fromValues($this->ledgerRow($booking, $payoutStmtMap)));
             }
 
             $writer->close();
@@ -333,15 +338,15 @@ final class FinancialExportService
      *
      * @return list<string|float|null>
      */
-    private function ledgerRow(Booking $booking): array
+    private function ledgerRow(Booking $booking, array $payoutStmtMap = []): array
     {
         $invoice = $booking->sportSession?->invoices?->first();
 
-        $payoutStatementExists = $booking->sportSession?->coach_id !== null
-            && CoachPayoutStatement::where('coach_id', $booking->sportSession->coach_id)
-                ->where('period_month', $booking->created_at->month)
-                ->where('period_year', $booking->created_at->year)
-                ->exists();
+        $coachId = $booking->sportSession?->coach_id;
+        $stmtKey = $coachId !== null && $booking->created_at !== null
+            ? $coachId.'-'.$booking->created_at->month.'-'.$booking->created_at->year
+            : null;
+        $payoutStatementExists = $stmtKey !== null && isset($payoutStmtMap[$stmtKey]);
 
         $anomalyFlag = match (true) {
             $booking->status === BookingStatus::Confirmed
@@ -374,6 +379,41 @@ final class FinancialExportService
             $payoutStatementExists ? 'yes' : 'no',
             $anomalyFlag,
         ];
+    }
+
+    /**
+     * Build a "coach_id-month-year => true" lookup map from a collection of bookings.
+     * Used to avoid N+1 queries when checking payout statement existence per booking.
+     *
+     * @param  Collection<int, Booking>  $bookings
+     * @return array<string, bool>
+     */
+    private function buildPayoutStatementMap(Collection $bookings): array
+    {
+        $tuples = $bookings->map(fn (Booking $b): array => [
+            'coach_id' => $b->sportSession?->coach_id,
+            'month' => $b->created_at?->month,
+            'year' => $b->created_at?->year,
+        ])->filter(fn (array $t): bool => $t['coach_id'] !== null && $t['month'] !== null)
+            ->unique()
+            ->values();
+
+        if ($tuples->isEmpty()) {
+            return [];
+        }
+
+        return CoachPayoutStatement::where(function ($q) use ($tuples): void {
+            foreach ($tuples as $tuple) {
+                $q->orWhere(function ($s) use ($tuple): void {
+                    $s->where('coach_id', $tuple['coach_id'])
+                        ->where('period_month', $tuple['month'])
+                        ->where('period_year', $tuple['year']);
+                });
+            }
+        })->get(['coach_id', 'period_month', 'period_year'])
+            ->mapWithKeys(fn (CoachPayoutStatement $stmt): array => [
+                $stmt->coach_id.'-'.$stmt->period_month.'-'.$stmt->period_year => true,
+            ])->all();
     }
 
     /**

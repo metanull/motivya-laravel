@@ -11,6 +11,7 @@ use App\Models\CoachPayoutStatement;
 use App\Models\CoachProfile;
 use App\Models\SportSession;
 use App\Models\User;
+use App\Services\AnomalyDetectorService;
 use App\Services\SessionService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
@@ -177,7 +178,7 @@ final class Dashboard extends Component
         $this->dispatch('notify', type: 'success', message: __('sessions.deleted'));
     }
 
-    public function render(): View
+    public function render(AnomalyDetectorService $anomalyDetector): View
     {
         /** @var User $coach */
         $coach = auth()->user();
@@ -273,13 +274,7 @@ final class Dashboard extends Component
         }
 
         // Story 5.2: Warn when any confirmed paid booking is missing stripe_payment_intent_id
-        $hasMissingPaymentIntentBookings = DB::table('bookings')
-            ->join('sport_sessions', 'bookings.sport_session_id', '=', 'sport_sessions.id')
-            ->where('sport_sessions.coach_id', $coach->id)
-            ->where('bookings.status', BookingStatus::Confirmed->value)
-            ->where('bookings.amount_paid', '>', 0)
-            ->whereNull('bookings.stripe_payment_intent_id')
-            ->exists();
+        $hasMissingPaymentIntentBookings = $anomalyDetector->coachHasMissingPaymentIntents($coach);
 
         // Story 5.2: Current-month revenue breakdown
         $currentMonthRevenueCents = (int) DB::table('bookings')
