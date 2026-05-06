@@ -5,7 +5,9 @@ declare(strict_types=1);
 use App\Enums\BookingStatus;
 use App\Enums\CoachPayoutStatementStatus;
 use App\Enums\CoachProfileStatus;
+use App\Enums\PaymentAnomalyType;
 use App\Enums\UserRole;
+use App\Models\ActivityImage;
 use App\Models\Booking;
 use App\Models\CoachPayoutStatement;
 use App\Models\CoachProfile;
@@ -15,10 +17,40 @@ use App\Models\SportSession;
 use App\Models\User;
 use Database\Seeders\MvpJourneySeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
+function ensureMvpSeederStorageSymlink(): bool
+{
+    $linkPath = public_path('storage');
+
+    if (is_link($linkPath)) {
+        return false;
+    }
+
+    $target = storage_path('app/public');
+
+    if (! is_dir($target)) {
+        mkdir($target, 0755, true);
+    }
+
+    symlink($target, $linkPath);
+
+    return true;
+}
+
 describe('MvpJourneySeeder', function () {
+
+    beforeEach(function (): void {
+        $GLOBALS['mvpSeederStorageSymlinkCreated'] = ensureMvpSeederStorageSymlink();
+    });
+
+    afterEach(function (): void {
+        if (($GLOBALS['mvpSeederStorageSymlinkCreated'] ?? false) && is_link(public_path('storage'))) {
+            unlink(public_path('storage'));
+        }
+    });
 
     it('creates all expected demo users', function () {
         $this->seed(MvpJourneySeeder::class);
@@ -81,6 +113,94 @@ describe('MvpJourneySeeder', function () {
         expect($postalCodes)->toContain('1000');
         expect($postalCodes)->toContain('1020');
         expect($postalCodes)->toContain('1050');
+    });
+
+    it('creates sessions with coordinates and public activity images', function () {
+        $this->seed(MvpJourneySeeder::class);
+
+        expect(SportSession::whereNull('latitude')->orWhereNull('longitude')->count())->toBe(0);
+        expect(SportSession::whereNull('cover_image_id')->count())->toBe(0);
+        expect(ActivityImage::count())->toBeGreaterThanOrEqual(3);
+
+        ActivityImage::all()->each(function (ActivityImage $image): void {
+            expect(Storage::disk('public')->exists($image->path))->toBeTrue();
+            expect(file_exists(public_path('storage/'.ltrim($image->path, '/'))))->toBeTrue();
+        });
+    });
+
+    it('creates coherent payment fields for non-anomalous paid bookings', function () {
+        $this->seed(MvpJourneySeeder::class);
+
+        $anomalousBookingIds = PaymentAnomaly::where(
+            'anomaly_type',
+            PaymentAnomalyType::ConfirmedBookingMissingPayment->value,
+        )->pluck('related_booking_id');
+
+        $bookings = Booking::whereIn('status', [
+            BookingStatus::Confirmed->value,
+            BookingStatus::Refunded->value,
+        ])->whereNotIn('id', $anomalousBookingIds)->get();
+
+        expect($bookings)->not->toBeEmpty();
+
+        $bookings->each(function (Booking $booking): void {
+            expect($booking->amount_paid)->toBeGreaterThan(0);
+            expect($booking->stripe_checkout_session_id)->not->toBeNull();
+            expect($booking->stripe_payment_intent_id)->not->toBeNull();
+
+            if ($booking->status === BookingStatus::Refunded) {
+                expect($booking->refunded_at)->not->toBeNull();
+            }
+        });
+    });
+
+    it('creates a labelled anomalous booking for accountant and admin smoke checks', function () {
+        $this->seed(MvpJourneySeeder::class);
+
+        $anomaly = PaymentAnomaly::where(
+            'anomaly_type',
+            PaymentAnomalyType::ConfirmedBookingMissingPayment->value,
+        )->first();
+
+        expect($anomaly)->not->toBeNull();
+        expect($anomaly->booking)->not->toBeNull();
+        expect($anomaly->booking->status)->toBe(BookingStatus::Confirmed);
+        expect($anomaly->booking->amount_paid)->toBe(0);
+        expect($anomaly->description)->toContain('Demo anomaly');
+    });
+
+    it('fails clearly when public storage is not linked', function () {
+        if (is_link(public_path('storage'))) {
+            unlink(public_path('storage'));
+        }
+
+        $GLOBALS['mvpSeederStorageSymlinkCreated'] = false;
+
+        expect(fn () => $this->seed(MvpJourneySeeder::class))
+            ->toThrow(RuntimeException::class, 'MvpJourneySeeder requires public/storage to be linked');
+    });
+
+    it('renders discovery map and image-backed session cards', function () {
+        $this->seed(MvpJourneySeeder::class);
+
+        $this->get(route('sessions.index'))
+            ->assertOk()
+            ->assertSee('id="session-map"', false)
+            ->assertSee('sessionMap(', false)
+            ->assertSee('activity-images/mvp-cardio.svg', false);
+    });
+
+    it('renders detail map and a coordinate-based directions link', function () {
+        $this->seed(MvpJourneySeeder::class);
+
+        $session = SportSession::where('title', 'Running Cinquantenaire — Cardio Débutant')->firstOrFail();
+
+        $this->get(route('sessions.show', $session))
+            ->assertOk()
+            ->assertSee('id="detail-map"', false)
+            ->assertSee('sessionMap(', false)
+            ->assertSee('destination=50.8390000,4.3860000', false)
+            ->assertSee('activity-images/mvp-cardio.svg', false);
     });
 
     it('creates a suspended user', function () {
