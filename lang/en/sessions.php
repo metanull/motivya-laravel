@@ -163,4 +163,18 @@ return [
 
     'publish_requires_stripe_onboarding' => 'You must complete Stripe onboarding before publishing a session.',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Address validation
+    |--------------------------------------------------------------------------
+    */
+
+    'address_label' => 'Address',
+    'address_placeholder' => 'E.g.: Parc du Cinquantenaire, 1000 Brussels',
+    'validate_address' => 'Validate address',
+    'address_validated' => 'Validated address: :address',
+    'address_not_validated' => 'Please validate the address before saving.',
+    'address_not_found' => 'Address not found. Please be more specific.',
+    'publish_requires_formatted_address' => 'A validated address with coordinates is required to publish the session.',
+
 ];

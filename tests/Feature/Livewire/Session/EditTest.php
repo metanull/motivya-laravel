@@ -25,7 +25,7 @@ describe('session editing', function () {
 
     it('pre-fills the form with existing session data', function () {
         $coach = User::factory()->coach()->create();
-        $session = SportSession::factory()->draft()->create([
+        $session = SportSession::factory()->draft()->withValidatedAddress()->create([
             'coach_id' => $coach->id,
             'activity_type' => ActivityType::Yoga->value,
             'level' => SessionLevel::Beginner->value,
@@ -38,7 +38,25 @@ describe('session editing', function () {
             ->assertSet('form.activityType', ActivityType::Yoga->value)
             ->assertSet('form.level', SessionLevel::Beginner->value)
             ->assertSet('form.title', 'My Session')
-            ->assertSet('form.priceEuros', '15.00');
+            ->assertSet('form.priceEuros', '15.00')
+            ->assertSet('form.addressValidated', true)
+            ->assertSet('form.formattedAddress', 'Parc du Cinquantenaire, 1000 Bruxelles, Belgium');
+    });
+
+    it('pre-fills address as unvalidated for legacy sessions', function () {
+        $coach = User::factory()->coach()->create();
+        // A legacy session: has location + postal_code but no formatted_address.
+        $session = SportSession::factory()->draft()->create([
+            'coach_id' => $coach->id,
+            'location' => 'Parc du Cinquantenaire',
+            'postal_code' => '1000',
+            'formatted_address' => null,
+        ]);
+
+        Livewire::actingAs($coach)
+            ->test(Edit::class, ['sportSession' => $session])
+            ->assertSet('form.addressValidated', false)
+            ->assertSet('form.addressQuery', 'Parc du Cinquantenaire, 1000');
     });
 
     it('denies access to a different coach', function () {
@@ -80,7 +98,7 @@ describe('session editing', function () {
 
     it('updates a draft session', function () {
         $coach = User::factory()->coach()->create();
-        $session = SportSession::factory()->draft()->create([
+        $session = SportSession::factory()->draft()->withValidatedAddress()->create([
             'coach_id' => $coach->id,
             'title' => 'Old Title',
             'date' => now()->addDays(7)->format('Y-m-d'),
@@ -93,8 +111,6 @@ describe('session editing', function () {
             ->set('form.activityType', ActivityType::Running->value)
             ->set('form.level', SessionLevel::Advanced->value)
             ->set('form.title', 'Updated Title')
-            ->set('form.location', 'New Location')
-            ->set('form.postalCode', '1050')
             ->set('form.date', $futureDate)
             ->set('form.startTime', '08:00')
             ->set('form.endTime', '09:30')
@@ -115,7 +131,7 @@ describe('session editing', function () {
     it('updates a published session', function () {
         $coach = User::factory()->coach()->create();
         $futureDate = now()->addDays(14)->format('Y-m-d');
-        $session = SportSession::factory()->published()->create([
+        $session = SportSession::factory()->published()->withValidatedAddress()->create([
             'coach_id' => $coach->id,
             'title' => 'Published Session',
             'date' => $futureDate,
@@ -135,7 +151,7 @@ describe('session editing', function () {
 
     it('allows admin to edit any session', function () {
         $admin = User::factory()->admin()->create();
-        $session = SportSession::factory()->draft()->create([
+        $session = SportSession::factory()->draft()->withValidatedAddress()->create([
             'date' => now()->addDays(7)->format('Y-m-d'),
         ]);
 
@@ -156,10 +172,22 @@ describe('session editing', function () {
         Livewire::actingAs($coach)
             ->test(Edit::class, ['sportSession' => $session])
             ->set('form.title', '')
-            ->set('form.location', '')
-            ->set('form.postalCode', '')
+            ->set('form.addressQuery', '')
             ->call('save')
-            ->assertHasErrors(['form.title', 'form.location', 'form.postalCode']);
+            ->assertHasErrors(['form.title', 'form.addressQuery']);
+    });
+
+    it('marks address as unvalidated when the query is changed', function () {
+        $coach = User::factory()->coach()->create();
+        $session = SportSession::factory()->draft()->withValidatedAddress()->create([
+            'coach_id' => $coach->id,
+        ]);
+
+        Livewire::actingAs($coach)
+            ->test(Edit::class, ['sportSession' => $session])
+            ->assertSet('form.addressValidated', true)
+            ->set('form.addressQuery', 'Some completely different address, 9000 Gent')
+            ->assertSet('form.addressValidated', false);
     });
 });
 
@@ -196,13 +224,13 @@ describe('recurring session group editing', function () {
         $groupId = 'test-group-id';
         $baseDate = now()->addDays(7);
 
-        $session1 = SportSession::factory()->draft()->create([
+        $session1 = SportSession::factory()->draft()->withValidatedAddress()->create([
             'coach_id' => $coach->id,
             'recurrence_group_id' => $groupId,
             'title' => 'Original',
             'date' => $baseDate,
         ]);
-        $session2 = SportSession::factory()->draft()->create([
+        $session2 = SportSession::factory()->draft()->withValidatedAddress()->create([
             'coach_id' => $coach->id,
             'recurrence_group_id' => $groupId,
             'title' => 'Original',
@@ -226,19 +254,19 @@ describe('recurring session group editing', function () {
         $groupId = 'test-group-id';
         $baseDate = now()->addDays(7);
 
-        $session1 = SportSession::factory()->draft()->create([
+        $session1 = SportSession::factory()->draft()->withValidatedAddress()->create([
             'coach_id' => $coach->id,
             'recurrence_group_id' => $groupId,
             'title' => 'Original',
             'date' => $baseDate,
         ]);
-        $session2 = SportSession::factory()->draft()->create([
+        $session2 = SportSession::factory()->draft()->withValidatedAddress()->create([
             'coach_id' => $coach->id,
             'recurrence_group_id' => $groupId,
             'title' => 'Original',
             'date' => $baseDate->copy()->addWeek(),
         ]);
-        $session3 = SportSession::factory()->published()->create([
+        $session3 = SportSession::factory()->published()->withValidatedAddress()->create([
             'coach_id' => $coach->id,
             'recurrence_group_id' => $groupId,
             'title' => 'Original',
@@ -262,19 +290,19 @@ describe('recurring session group editing', function () {
         $coach = User::factory()->coach()->create();
         $groupId = 'test-group-id';
 
-        $futureSession = SportSession::factory()->draft()->create([
+        $futureSession = SportSession::factory()->draft()->withValidatedAddress()->create([
             'coach_id' => $coach->id,
             'recurrence_group_id' => $groupId,
             'title' => 'Original',
             'date' => now()->addDays(7),
         ]);
-        $pastSession = SportSession::factory()->completed()->create([
+        $pastSession = SportSession::factory()->completed()->withValidatedAddress()->create([
             'coach_id' => $coach->id,
             'recurrence_group_id' => $groupId,
             'title' => 'Original',
             'date' => now()->subDays(7),
         ]);
-        $cancelledSession = SportSession::factory()->cancelled()->create([
+        $cancelledSession = SportSession::factory()->cancelled()->withValidatedAddress()->create([
             'coach_id' => $coach->id,
             'recurrence_group_id' => $groupId,
             'title' => 'Original',
