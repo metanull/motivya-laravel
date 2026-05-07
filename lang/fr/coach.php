@@ -52,6 +52,13 @@ return [
     'country_label' => 'Pays',
     'country_be' => 'Belgique',
 
+    'address_label' => 'Adresse',
+    'address_placeholder' => 'Ex : Grand-Place, 1000 Bruxelles',
+    'validate_address' => 'Valider l\'adresse',
+    'address_validated' => 'Adresse validée : :address',
+    'address_not_validated' => 'Veuillez valider l\'adresse avant de soumettre.',
+    'address_not_found' => 'Adresse introuvable. Veuillez préciser.',
+
     'enterprise_number_label' => 'Numéro d\'entreprise (BCE/KBO)',
     'enterprise_number_hint' => 'Format : 0123.456.789',
 

@@ -6,6 +6,7 @@ namespace App\Livewire\Session;
 
 use App\Enums\ActivityType;
 use App\Enums\SessionLevel;
+use App\Services\AddressValidationService;
 use App\Services\PostalCodeCoordinateService;
 use App\Services\SessionQueryService;
 use Illuminate\Contracts\View\View;
@@ -39,7 +40,7 @@ final class Index extends Component
     #[Url]
     public string $timeTo = '';
 
-    /** Free-text location query: postal code or municipality name. */
+    /** Free-text location query: postal code, municipality name, or full address. */
     #[Url]
     public string $locationQuery = '';
 
@@ -162,6 +163,7 @@ final class Index extends Component
     {
         $queryService = app(SessionQueryService::class);
         $postalService = app(PostalCodeCoordinateService::class);
+        $addressService = app(AddressValidationService::class);
 
         $filters = $this->buildFilters();
         $radius = $this->coerceRadius();
@@ -175,15 +177,27 @@ final class Index extends Component
         $locationInvalid = false;
 
         if ($this->useGeolocation && $this->latitude !== null && $this->longitude !== null) {
+            // Highest-priority source: browser geolocation (precise, real-time).
             $activeLat = $this->latitude;
             $activeLng = $this->longitude;
         } elseif ($effectiveQuery !== '') {
+            // First-pass: fast local postal code / municipality lookup (no API call).
             $coords = $postalService->resolveByLocationQuery($effectiveQuery);
 
             if ($coords !== null) {
                 [$activeLat, $activeLng] = $coords;
             } else {
-                $locationInvalid = true;
+                // Second-pass: geocode via AddressValidationService so that
+                // free-text queries like "Rue de la Loi, Bruxelles" resolve to
+                // precise coordinates. Results are cached by the service.
+                $validated = $addressService->validate($effectiveQuery, app()->getLocale());
+
+                if ($validated !== null) {
+                    $activeLat = $validated->latitude;
+                    $activeLng = $validated->longitude;
+                } else {
+                    $locationInvalid = true;
+                }
             }
         }
 

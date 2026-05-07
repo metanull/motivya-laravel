@@ -279,6 +279,16 @@
                                         {{ trans_choice('sessions.spots_remaining', $remaining, ['count' => $remaining]) }}
                                     </dd>
                                 </div>
+                                <div class="col-span-2">
+                                    <dt class="sr-only">{{ __('sessions.location') }}</dt>
+                                    <dd class="truncate">
+                                        📍 @if ($session->formatted_address)
+                                            {{ $session->formatted_address }}
+                                        @else
+                                            {{ $session->location }}{{ $session->postal_code ? ', ' . $session->postal_code : '' }}
+                                        @endif
+                                    </dd>
+                                </div>
                             </dl>
                         </div>
                     </a>

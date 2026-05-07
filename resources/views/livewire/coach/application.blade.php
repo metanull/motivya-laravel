@@ -104,37 +104,38 @@
                     {{ __('coach.step_2_heading') }}
                 </h2>
 
+                {{-- Address query + validate button --}}
                 <div>
-                    <label for="postal_code" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {{ __('coach.postal_code_label') }}
+                    <label for="address_query" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        {{ __('coach.address_label') }}
                     </label>
-                    <input
-                        wire:model="form.postal_code"
-                        type="text"
-                        id="postal_code"
-                        maxlength="4"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
-                        placeholder="1000"
-                    />
-                    @error('form.postal_code')
+                    <div class="mt-1 flex gap-2">
+                        <input
+                            wire:model="form.addressQuery"
+                            type="text"
+                            id="address_query"
+                            class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
+                            placeholder="{{ __('coach.address_placeholder') }}"
+                        />
+                        <button
+                            type="button"
+                            wire:click="validateAddress"
+                            class="shrink-0 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        >
+                            {{ __('coach.validate_address') }}
+                        </button>
+                    </div>
+                    @error('form.addressQuery')
                         <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
                     @enderror
-                </div>
-
-                <div>
-                    <label for="country" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {{ __('coach.country_label') }}
-                    </label>
-                    <select
-                        wire:model="form.country"
-                        id="country"
-                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm"
-                    >
-                        <option value="BE">{{ __('coach.country_be') }}</option>
-                    </select>
-                    @error('form.country')
-                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                    @enderror
+                    @if ($form->addressValidated && $form->formattedAddress !== '')
+                        <p class="mt-1 flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z" clip-rule="evenodd" />
+                            </svg>
+                            {{ __('coach.address_validated', ['address' => $form->formattedAddress]) }}
+                        </p>
+                    @endif
                 </div>
 
                 <div>
@@ -183,8 +184,10 @@
                             </div>
                         @endif
                         <div class="flex justify-between">
-                            <dt>{{ __('coach.postal_code_label') }}</dt>
-                            <dd>{{ $form->postal_code }}</dd>
+                            <dt>{{ __('coach.address_label') }}</dt>
+                            <dd class="max-w-xs truncate">
+                                {{ $form->formattedAddress !== '' ? $form->formattedAddress : $form->addressQuery }}
+                            </dd>
                         </div>
                         <div class="flex justify-between">
                             <dt>{{ __('coach.enterprise_number_label') }}</dt>

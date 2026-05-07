@@ -63,9 +63,13 @@
             <div>
                 <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ __('sessions.location') }}</dt>
                 <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                    {{ $sportSession->location }}
-                    @if ($sportSession->postal_code)
-                        <span class="text-gray-500 dark:text-gray-400">({{ $sportSession->postal_code }})</span>
+                    @if ($sportSession->formatted_address)
+                        {{ $sportSession->formatted_address }}
+                    @else
+                        {{ $sportSession->location }}
+                        @if ($sportSession->postal_code)
+                            <span class="text-gray-500 dark:text-gray-400">({{ $sportSession->postal_code }})</span>
+                        @endif
                     @endif
                 </dd>
             </div>
@@ -120,10 +124,19 @@
         {{-- Directions --}}
         @php
             $directionsBase = config('maps.google_directions_base_url');
-            if ($sportSession->latitude && $sportSession->longitude) {
-                $directionsUrl = $directionsBase.'?api=1&destination='.$sportSession->latitude.','.$sportSession->longitude;
+            if ($sportSession->hasValidatedAddress()) {
+                // Precise street-level coordinates validated by the geocoding provider.
+                $directionsUrl = $directionsBase . '?api=1&destination=' . $sportSession->latitude . ',' . $sportSession->longitude;
+            } elseif ($sportSession->latitude && $sportSession->longitude) {
+                // Postal-code-centre coordinates (less precise but still usable).
+                $directionsUrl = $directionsBase . '?api=1&destination=' . $sportSession->latitude . ',' . $sportSession->longitude;
             } else {
-                $directionsUrl = $directionsBase.'?api=1&destination='.urlencode(($sportSession->location ?? '').' '.($sportSession->postal_code ?? '').' Belgium');
+                // No coordinates — fall back to a text destination.
+                // Prefer the geocoder-formatted address if available; otherwise
+                // compose from the legacy location + postal_code fields.
+                $legacyText = trim(($sportSession->location ?? '') . ' ' . ($sportSession->postal_code ?? '')) . ' Belgium';
+                $textDestination = $sportSession->formatted_address ?? $legacyText;
+                $directionsUrl = $directionsBase . '?api=1&destination=' . urlencode($textDestination);
             }
         @endphp
         <a href="{{ $directionsUrl }}"
