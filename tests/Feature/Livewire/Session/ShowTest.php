@@ -146,4 +146,29 @@ describe('session detail page', function () {
         $this->get(route('sessions.show', $session))
             ->assertForbidden();
     });
+
+    it('shows formatted_address in the location section when present', function () {
+        $athlete = User::factory()->athlete()->create();
+        $session = SportSession::factory()->published()->withValidatedAddress()->create();
+
+        Livewire::actingAs($athlete)
+            ->test(Show::class, ['sportSession' => $session])
+            ->assertSee($session->formatted_address)
+            // The legacy location field should not appear when formatted_address is set.
+            ->assertDontSee('('.$session->postal_code.')');
+    });
+
+    it('falls back to location and postal_code in location section when no formatted_address', function () {
+        $athlete = User::factory()->athlete()->create();
+        $session = SportSession::factory()->published()->create([
+            'formatted_address' => null,
+            'location' => 'Parc du Cinquantenaire',
+            'postal_code' => '1000',
+        ]);
+
+        Livewire::actingAs($athlete)
+            ->test(Show::class, ['sportSession' => $session])
+            ->assertSee('Parc du Cinquantenaire')
+            ->assertSee('(1000)');
+    });
 });

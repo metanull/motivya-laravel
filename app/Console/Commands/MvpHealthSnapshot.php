@@ -136,6 +136,38 @@ final class MvpHealthSnapshot extends Command
             $rows[] = ['Stripe Connect', 'green', 'All active coaches onboarded'];
         }
 
+        // ── 9. Address precision ──────────────────────────────────────────
+        $totalSessions = SportSession::count();
+        $totalProfiles = CoachProfile::count();
+        $totalAddressRows = $totalSessions + $totalProfiles;
+
+        if ($totalAddressRows === 0) {
+            $rows[] = ['Address precision', 'yellow', 'No sessions or coach profiles yet'];
+        } else {
+            $validatedSessions = SportSession::whereNotNull('formatted_address')
+                ->whereNotNull('latitude')
+                ->whereNotNull('longitude')
+                ->whereNotNull('geocoding_provider')
+                ->count();
+            $validatedProfiles = CoachProfile::whereNotNull('formatted_address')
+                ->whereNotNull('latitude')
+                ->whereNotNull('longitude')
+                ->whereNotNull('geocoding_provider')
+                ->count();
+
+            $sessionLabel = "Sessions validated (exact): {$validatedSessions}/{$totalSessions}";
+            $profileLabel = "Coach profiles validated: {$validatedProfiles}/{$totalProfiles}";
+
+            if ($validatedSessions === 0 && $totalSessions > 0 && $validatedProfiles === 0 && $totalProfiles > 0) {
+                $rows[] = ['Address precision', 'red', "All rows legacy — {$sessionLabel}, {$profileLabel} — run: php artisan addresses:backfill --apply"];
+                $hasBlocker = true;
+            } elseif ($validatedSessions < $totalSessions || $validatedProfiles < $totalProfiles) {
+                $rows[] = ['Address precision', 'yellow', "Some legacy rows — {$sessionLabel}, {$profileLabel} — run: php artisan addresses:audit-precision"];
+            } else {
+                $rows[] = ['Address precision', 'green', "{$sessionLabel}, {$profileLabel}"];
+            }
+        }
+
         // ── Output ─────────────────────────────────────────────────────────
         if ($this->option('json')) {
             $output = array_map(

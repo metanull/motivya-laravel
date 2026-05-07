@@ -64,6 +64,29 @@ npm run dev
 - [ ] Sessions have lat/lng (`php artisan tinker --execute="echo \App\Models\SportSession::whereNull('latitude')->orWhereNull('longitude')->count().' missing';"`)
 - [ ] Demo activity image files exist under `public/storage/activity-images/`
 
+### Address precision smoke step
+
+After seeding, verify address precision metrics with the audit command:
+
+```bash
+php artisan addresses:audit-precision
+```
+
+Expected output: at least some sessions show **Validated (exact)** count > 0. If all sessions are **Legacy (postal-code only)** and a geocoding provider is configured, run the backfill:
+
+```bash
+# Dry-run first (default — no writes)
+php artisan addresses:backfill --model=sessions
+php artisan addresses:backfill --model=coach_profiles
+
+# Apply if results look correct
+php artisan addresses:backfill --model=sessions --apply
+php artisan addresses:backfill --model=coach_profiles --apply
+```
+
+- [ ] `php artisan addresses:audit-precision` runs without errors
+- [ ] At least some sessions show **Validated (exact)** > 0 (or provider is not configured — yellow is acceptable locally without `GOOGLE_MAPS_API_KEY`)
+
 ### UAT / production bootstrap note
 
 The OVH host currently acts as UAT, but it runs with `APP_ENV=production`. Keep that guard in place: do not run `MvpJourneySeeder` there. Bootstrap operational data explicitly so the future production cutover remains visible and repeatable:

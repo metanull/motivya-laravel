@@ -52,6 +52,13 @@ return [
     'country_label' => 'Land',
     'country_be' => 'België',
 
+    'address_label' => 'Adres',
+    'address_placeholder' => 'Bijv.: Grote Markt, 1000 Brussel',
+    'validate_address' => 'Adres valideren',
+    'address_validated' => 'Gevalideerd adres: :address',
+    'address_not_validated' => 'Valideer het adres voordat u indient.',
+    'address_not_found' => 'Adres niet gevonden. Wees specifieker.',
+
     'enterprise_number_label' => 'Ondernemingsnummer (BCE/KBO)',
     'enterprise_number_hint' => 'Formaat: 0123.456.789',
 

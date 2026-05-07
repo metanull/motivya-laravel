@@ -201,12 +201,69 @@ Navigate to `/admin/readiness` as an admin. Every check should be green before a
 | `accountant` | Accountant user exists | `/admin/users` |
 | `activity_images` | At least one image uploaded | `/admin/activity-images` |
 | `billing_config` | Billing config route registered | App deploy |
+| `address_precision` | Validated exact addresses vs. postal-code-only | Section 9 of this runbook |
 
 The readiness page also shows the **Operational Repair Tools** panel with the exact commands to copy and run on the server for each issue.
 
 ---
 
-## 9. Pre-Demo Quick Smoke
+## 9. Address Precision Audit and Backfill
+
+### Audit (read-only)
+
+Run the audit command to see a breakdown of address precision across sessions and coach profiles:
+
+```bash
+cd /opt/motivya/current
+php artisan addresses:audit-precision
+```
+
+This reports per model: total rows, validated exact addresses (formatted_address + lat/lng + geocoding_provider), legacy postal-code-only rows, missing coordinates, and provider distribution. The command is **read-only** — it never writes to the database.
+
+For machine-readable output (e.g. CI scripts):
+
+```bash
+php artisan addresses:audit-precision --json
+```
+
+### Backfill
+
+Default behavior is **dry-run** (nothing is written). Review first:
+
+```bash
+php artisan addresses:backfill --model=sessions
+php artisan addresses:backfill --model=coach_profiles
+```
+
+Apply to write validated addresses + coordinates:
+
+```bash
+php artisan addresses:backfill --model=sessions --apply
+php artisan addresses:backfill --model=coach_profiles --apply
+```
+
+To also overwrite rows that already have a formatted_address (force re-geocode):
+
+```bash
+php artisan addresses:backfill --model=sessions --apply --force
+php artisan addresses:backfill --model=coach_profiles --apply --force
+```
+
+Limit the number of rows processed per run (default: 100) to avoid long-running operations:
+
+```bash
+php artisan addresses:backfill --model=sessions --apply --limit=50
+```
+
+Exit codes: `0` = success, `1` = no provider configured or invalid options.
+
+**Requires a geocoding provider**: `MAPS_GEOCODING_PROVIDER` must be set (default: `google`) and `GOOGLE_MAPS_API_KEY` must be present when using the Google provider.
+
+The readiness page `address_precision` check turns **green** when all sessions and coach profiles have a validated formatted address with coordinates and provider. It turns **yellow** when some rows are still legacy postal-code-only, and **red** when NO rows at all are validated (and rows exist).
+
+---
+
+## 10. Pre-Demo Quick Smoke
 
 Run the health snapshot command to verify the most critical production state:
 
@@ -237,6 +294,9 @@ Production data loads that are safe:
 |---|---|
 | `php artisan geo:load-postal-codes` | ✅ Idempotent, no demo data |
 | `php artisan sessions:backfill-coordinates` | ✅ Idempotent, updates GPS only |
+| `php artisan addresses:audit-precision` | ✅ Read-only |
+| `php artisan addresses:backfill --model=sessions` | ✅ Dry-run by default (no writes) |
+| `php artisan addresses:backfill --model=sessions --apply` | ✅ Writes validated addresses only |
 | `php artisan payments:reconcile-bookings --dry-run` | ✅ Read-only |
 | `php artisan payments:reconcile-bookings --repair` | ✅ With review (writes only safe matches) |
 | `php artisan migrate --force` | ✅ Run by deploy.sh |

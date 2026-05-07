@@ -33,7 +33,16 @@ final class CoachApplicationService
                 'bio' => $data['bio'] !== '' ? $data['bio'] : null,
                 'experience_level' => $data['experience_level'] !== '' ? $data['experience_level'] : null,
                 'postal_code' => $data['postal_code'],
+                'formatted_address' => $data['formatted_address'] ?? null,
+                'street_address' => $data['street_address'] ?? null,
+                'locality' => $data['locality'] ?? null,
                 'country' => $data['country'],
+                'latitude' => $data['latitude'] ?? null,
+                'longitude' => $data['longitude'] ?? null,
+                'geocoding_provider' => $data['geocoding_provider'] ?? null,
+                'geocoding_place_id' => $data['geocoding_place_id'] ?? null,
+                'geocoded_at' => $data['geocoded_at'] ?? null,
+                'geocoding_payload' => $data['geocoding_payload'] ?? null,
                 'enterprise_number' => $data['enterprise_number'],
             ]);
 

@@ -66,6 +66,7 @@ final class Readiness extends Component
             'billing_config' => $this->checkBillingConfig(),
             'google_maps_key' => $this->checkGoogleMapsKey(),
             'geocoding_cache' => $this->checkGeocodingCache(),
+            'address_precision' => $this->checkAddressPrecision(),
         ];
     }
 
@@ -279,6 +280,60 @@ final class Readiness extends Component
         }
 
         return ['status' => 'green', 'message' => __('admin.readiness_session_coordinates_ok', ['count' => $total])];
+    }
+
+    /**
+     * Check address precision: whether sessions and coach profiles have fully
+     * validated addresses (exact geocoded address vs. postal-code-only legacy data).
+     *
+     * Green:  all rows with formatted_address also have coordinates + provider.
+     * Yellow: some rows use legacy postal-code-only (missing formatted_address).
+     * Red:    no validated addresses at all (and there are rows to validate).
+     *
+     * @return array{status: string, message: string}
+     */
+    private function checkAddressPrecision(): array
+    {
+        $totalSessions = SportSession::count();
+        $totalProfiles = CoachProfile::count();
+        $total = $totalSessions + $totalProfiles;
+
+        if ($total === 0) {
+            return ['status' => 'yellow', 'message' => __('admin.readiness_address_precision_no_data')];
+        }
+
+        $validatedSessions = SportSession::whereNotNull('formatted_address')
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->whereNotNull('geocoding_provider')
+            ->count();
+
+        $validatedProfiles = CoachProfile::whereNotNull('formatted_address')
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->whereNotNull('geocoding_provider')
+            ->count();
+
+        $validated = $validatedSessions + $validatedProfiles;
+
+        if ($validated === 0) {
+            return ['status' => 'red', 'message' => __('admin.readiness_address_precision_all_legacy', [
+                'total' => $total,
+            ])];
+        }
+
+        if ($validated < $total) {
+            $legacy = $total - $validated;
+
+            return ['status' => 'yellow', 'message' => __('admin.readiness_address_precision_some_legacy', [
+                'legacy' => $legacy,
+                'total' => $total,
+            ])];
+        }
+
+        return ['status' => 'green', 'message' => __('admin.readiness_address_precision_ok', [
+            'total' => $total,
+        ])];
     }
 
     /**

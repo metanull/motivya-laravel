@@ -9,6 +9,7 @@ use App\Models\PostalCodeCoordinate;
 use App\Models\SportSession;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
@@ -379,6 +380,91 @@ describe('session discovery page', function () {
             ->call('setGeolocation', 50.8503, 4.3517)
             ->set('radiusKm', 2)
             ->assertSee(__('sessions.no_results_radius', ['km' => 2]));
+    });
+
+    it('resolves a street address query via AddressValidationService first', function () {
+        $athlete = User::factory()->athlete()->create();
+
+        // Use the OpenFreeMap provider (no API key required) and fake the HTTP
+        // response so no real network call is made.
+        config(['maps.geocoding_provider' => 'openfreemap']);
+
+        Http::fake([
+            'nominatim.openstreetmap.org/*' => Http::response([[
+                'lat' => '50.8503',
+                'lon' => '4.3517',
+                'display_name' => 'Rue de la Loi 16, 1000 Bruxelles, Belgique',
+                'place_id' => '123456',
+                'address' => [
+                    'country_code' => 'be',
+                    'city' => 'Bruxelles',
+                    'postcode' => '1000',
+                    'road' => 'Rue de la Loi',
+                    'house_number' => '16',
+                ],
+            ]]),
+        ]);
+
+        // Session placed exactly at the geocoded coordinates — distance = 0.
+        SportSession::factory()->published()->create([
+            'title' => 'Street Address Session',
+            'latitude' => 50.8503,
+            'longitude' => 4.3517,
+        ]);
+
+        // AddressValidationService is called first; the street query resolves
+        // to precise coordinates via the geocoding provider.
+        Livewire::actingAs($athlete)
+            ->test(Index::class)
+            ->set('locationQuery', 'Rue de la Loi, Bruxelles')
+            ->assertSee('Street Address Session')
+            ->assertViewHas('locationInvalid', false);
+    });
+
+    it('sets locationInvalid when both geocoding and postal lookups return null', function () {
+        $athlete = User::factory()->athlete()->create();
+
+        // Use the OpenFreeMap provider and return an empty result to simulate
+        // a completely unresolvable query.
+        config(['maps.geocoding_provider' => 'openfreemap']);
+        Http::fake(['nominatim.openstreetmap.org/*' => Http::response([])]);
+
+        SportSession::factory()->published()->count(2)->create();
+
+        Livewire::actingAs($athlete)
+            ->test(Index::class)
+            ->set('locationQuery', 'Nonexistent99999Place')
+            ->assertViewHas('locationInvalid', true)
+            ->assertSee(__('sessions.invalid_location'));
+    });
+
+    it('falls back to postal-code lookup when geocoding returns null for a plain postal code query', function () {
+        $athlete = User::factory()->athlete()->create();
+
+        // AddressValidationService returns null (e.g. provider not configured or
+        // returns no result for a bare postal code). The local reference table
+        // should then provide a postal-center coordinate.
+        config(['maps.geocoding_provider' => 'openfreemap']);
+        Http::fake(['nominatim.openstreetmap.org/*' => Http::response([])]);
+
+        PostalCodeCoordinate::create([
+            'postal_code' => '1000',
+            'municipality' => 'Bruxelles/Brussel',
+            'latitude' => 50.8503,
+            'longitude' => 4.3517,
+        ]);
+
+        SportSession::factory()->published()->create([
+            'title' => 'Postal Fallback Session',
+            'latitude' => 50.8503,
+            'longitude' => 4.3517,
+        ]);
+
+        Livewire::actingAs($athlete)
+            ->test(Index::class)
+            ->set('locationQuery', '1000')
+            ->assertSee('Postal Fallback Session')
+            ->assertViewHas('locationInvalid', false);
     });
 
 });
