@@ -388,7 +388,6 @@ return [
     'readiness_address_precision_some_legacy' => ':legacy van :total adres(sen) gebruiken nog steeds alleen postcode (geen gevalideerd opgemaakt adres). Voer uit: php artisan addresses:audit-precision en daarna addresses:backfill --apply.',
     'readiness_address_precision_all_legacy' => 'Alle :total adressen zijn alleen postcode — geen exacte gevalideerde adressen. Voer uit: php artisan addresses:backfill --apply.',
     'readiness_address_precision_no_data' => 'Nog geen sessies of coachprofielen. Adresprecisie wordt gecontroleerd zodra er gegevens zijn.',
-    'readiness_session_coordinates_postal_center' => ':count van :total sessie(s) hebben coördinaten gebaseerd op het centrum van de postcode (geen gevalideerd opgemaakt adres). Voer uit: php artisan addresses:backfill --apply voor meer precisie.',
     'readiness_public_storage_ok' => 'Publieke opslag symlink bestaat.',
     'readiness_public_storage_missing' => 'Publieke opslag symlink ontbreekt. Voer php artisan storage:link uit of controleer het deploy-script.',
     'readiness_public_storage_not_symlink' => 'public/storage bestaat maar is geen symlink. Activiteitsafbeeldingen worden mogelijk niet correct aangeboden.',

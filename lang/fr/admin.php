@@ -388,7 +388,6 @@ return [
     'readiness_address_precision_some_legacy' => ':legacy adresse(s) sur :total utilisent encore uniquement le code postal (sans adresse formatée). Lancez : php artisan addresses:audit-precision puis addresses:backfill --apply.',
     'readiness_address_precision_all_legacy' => 'Toutes les :total adresses sont des adresses postales uniquement — aucune adresse exacte validée. Lancez : php artisan addresses:backfill --apply.',
     'readiness_address_precision_no_data' => 'Aucune session ni profil de coach créés. La précision des adresses sera vérifiée lorsque des données existeront.',
-    'readiness_session_coordinates_postal_center' => ':count session(s) sur :total ont des coordonnées basées sur le centre du code postal (sans adresse formatée validée). Lancez : php artisan addresses:backfill --apply pour améliorer la précision.',
     'readiness_public_storage_ok' => 'Le lien symbolique du stockage public existe.',
     'readiness_public_storage_missing' => 'Le lien symbolique du stockage public est manquant. Exécutez php artisan storage:link ou vérifiez le script de déploiement.',
     'readiness_public_storage_not_symlink' => 'public/storage existe mais n\'est pas un lien symbolique. Les images d\'activité peuvent ne pas être servies correctement.',

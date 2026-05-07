@@ -388,7 +388,6 @@ return [
     'readiness_address_precision_some_legacy' => ':legacy of :total address(es) still use postal-code-only (no validated formatted address). Run: php artisan addresses:audit-precision then addresses:backfill --apply.',
     'readiness_address_precision_all_legacy' => 'All :total addresses are postal-code-only — no exact validated addresses. Run: php artisan addresses:backfill --apply.',
     'readiness_address_precision_no_data' => 'No sessions or coach profiles yet. Address precision will be checked once data exists.',
-    'readiness_session_coordinates_postal_center' => ':count of :total session(s) have postal-code-centre based coordinates (no validated formatted address). Run: php artisan addresses:backfill --apply to improve precision.',
     'readiness_public_storage_ok' => 'Public storage symlink exists.',
     'readiness_public_storage_missing' => 'Public storage symlink is missing. Run php artisan storage:link or check deploy script.',
     'readiness_public_storage_not_symlink' => 'public/storage exists but is not a symlink. Activity images may not be served correctly.',

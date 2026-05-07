@@ -279,17 +279,6 @@ final class Readiness extends Component
             return ['status' => 'yellow', 'message' => __('admin.readiness_session_coordinates_some_missing', ['missing' => $missing, 'total' => $total])];
         }
 
-        // All sessions have coordinates — check whether they are postal-code-center based
-        // (has lat/lng but no validated formatted_address from a geocoding provider).
-        $postalCenterOnly = SportSession::whereNotNull('latitude')
-            ->whereNotNull('longitude')
-            ->whereNull('formatted_address')
-            ->count();
-
-        if ($postalCenterOnly > 0) {
-            return ['status' => 'yellow', 'message' => __('admin.readiness_session_coordinates_postal_center', ['count' => $postalCenterOnly, 'total' => $total])];
-        }
-
         return ['status' => 'green', 'message' => __('admin.readiness_session_coordinates_ok', ['count' => $total])];
     }
 
