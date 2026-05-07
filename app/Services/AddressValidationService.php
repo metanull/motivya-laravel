@@ -230,7 +230,7 @@ final class AddressValidationService
 
             $request = Http::timeout((int) config('maps.geocoding_timeout', 5))
                 ->acceptJson()
-                ->withHeaders(['User-Agent' => (string) config('maps.nominatim_user_agent', 'Motivya/1.0 (+https://motivya.be)')]);
+                ->withHeaders(['User-Agent' => (string) config('maps.nominatim_user_agent')]);
 
             // Only add the header when a key is actually configured.
             if (is_string($apiKey) && $apiKey !== '') {
