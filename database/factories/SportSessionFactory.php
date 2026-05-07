@@ -75,4 +75,24 @@ class SportSessionFactory extends Factory
             'longitude' => $this->faker->longitude(4.2, 4.5),
         ]);
     }
+
+    /**
+     * State representing a session whose address has been successfully
+     * geocoded and validated by a provider.  Uses fixed Brussels coordinates
+     * (Parc du Cinquantenaire) so tests remain deterministic.
+     */
+    public function withValidatedAddress(): static
+    {
+        return $this->state([
+            'formatted_address' => 'Parc du Cinquantenaire, 1000 Bruxelles, Belgium',
+            'street_address' => 'Avenue de la Joyeuse Entrée',
+            'locality' => 'Bruxelles',
+            'country' => 'BE',
+            'latitude' => 50.8503,
+            'longitude' => 4.3517,
+            'geocoding_provider' => 'google',
+            'geocoding_place_id' => 'ChIJ_test_place_id',
+            'geocoded_at' => now(),
+        ]);
+    }
 }

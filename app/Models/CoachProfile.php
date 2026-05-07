@@ -23,6 +23,15 @@ class CoachProfile extends Model
         'experience_level',
         'postal_code',
         'country',
+        'formatted_address',
+        'street_address',
+        'locality',
+        'latitude',
+        'longitude',
+        'geocoding_provider',
+        'geocoding_place_id',
+        'geocoded_at',
+        'geocoding_payload',
         'enterprise_number',
         'is_vat_subject',
         'stripe_account_id',
@@ -41,6 +50,10 @@ class CoachProfile extends Model
             'is_vat_subject' => 'boolean',
             'stripe_onboarding_complete' => 'boolean',
             'verified_at' => 'datetime',
+            'latitude' => 'decimal:7',
+            'longitude' => 'decimal:7',
+            'geocoded_at' => 'datetime',
+            'geocoding_payload' => 'array',
         ];
     }
 

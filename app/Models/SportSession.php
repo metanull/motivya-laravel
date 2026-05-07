@@ -29,6 +29,14 @@ class SportSession extends Model
         'postal_code',
         'latitude',
         'longitude',
+        'formatted_address',
+        'street_address',
+        'locality',
+        'country',
+        'geocoding_provider',
+        'geocoding_place_id',
+        'geocoded_at',
+        'geocoding_payload',
         'date',
         'start_time',
         'end_time',
@@ -60,6 +68,8 @@ class SportSession extends Model
             'longitude' => 'decimal:7',
             'cover_image_id' => 'integer',
             'reminder_sent_at' => 'datetime',
+            'geocoded_at' => 'datetime',
+            'geocoding_payload' => 'array',
         ];
     }
 
@@ -107,5 +117,20 @@ class SportSession extends Model
         return Carbon::parse(
             $this->date->format('Y-m-d').' '.$this->end_time,
         )->lte(now());
+    }
+
+    /**
+     * Returns true when the session has a fully geocoded address.
+     *
+     * All three fields — formatted_address, lat/lng, and geocoding_provider —
+     * must be populated.  This guards downstream code from treating a
+     * partially-filled address as valid.
+     */
+    public function hasValidatedAddress(): bool
+    {
+        return $this->formatted_address !== null
+            && $this->latitude !== null
+            && $this->longitude !== null
+            && $this->geocoding_provider !== null;
     }
 }

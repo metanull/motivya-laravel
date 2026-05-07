@@ -23,7 +23,7 @@ use InvalidArgumentException;
 final class SessionService
 {
     public function __construct(
-        private readonly PostalCodeCoordinateService $geoService,
+        private readonly AddressValidationService $addressValidationService,
         private readonly AuditService $auditService,
     ) {}
 
@@ -43,10 +43,19 @@ final class SessionService
                 'level' => $data['level'],
                 'title' => $data['title'],
                 'description' => $data['description'] ?? null,
-                'location' => $data['location'],
-                'postal_code' => $data['postal_code'],
+                // Keep the legacy `location` column populated for backwards compat.
+                'location' => $data['formatted_address'] ?? $data['location'] ?? '',
+                'postal_code' => $data['postal_code'] ?? '',
+                'formatted_address' => $data['formatted_address'] ?? null,
+                'street_address' => $data['street_address'] ?? null,
+                'locality' => $data['locality'] ?? null,
+                'country' => $data['country'] ?? 'BE',
                 'latitude' => $coords['latitude'] ?? null,
                 'longitude' => $coords['longitude'] ?? null,
+                'geocoding_provider' => $data['geocoding_provider'] ?? null,
+                'geocoding_place_id' => $data['geocoding_place_id'] ?? null,
+                'geocoded_at' => $data['geocoded_at'] ?? null,
+                'geocoding_payload' => $data['geocoding_payload'] ?? null,
                 'date' => $data['date'],
                 'start_time' => $data['start_time'],
                 'end_time' => $data['end_time'],
@@ -104,10 +113,18 @@ final class SessionService
                     'level' => $data['level'],
                     'title' => $data['title'],
                     'description' => $data['description'] ?? null,
-                    'location' => $data['location'],
-                    'postal_code' => $data['postal_code'],
+                    'location' => $data['formatted_address'] ?? $data['location'] ?? '',
+                    'postal_code' => $data['postal_code'] ?? '',
+                    'formatted_address' => $data['formatted_address'] ?? null,
+                    'street_address' => $data['street_address'] ?? null,
+                    'locality' => $data['locality'] ?? null,
+                    'country' => $data['country'] ?? 'BE',
                     'latitude' => $coords['latitude'] ?? null,
                     'longitude' => $coords['longitude'] ?? null,
+                    'geocoding_provider' => $data['geocoding_provider'] ?? null,
+                    'geocoding_place_id' => $data['geocoding_place_id'] ?? null,
+                    'geocoded_at' => $data['geocoded_at'] ?? null,
+                    'geocoding_payload' => $data['geocoding_payload'] ?? null,
                     'date' => $sessionDate->format('Y-m-d'),
                     'start_time' => $data['start_time'],
                     'end_time' => $data['end_time'],
@@ -166,10 +183,18 @@ final class SessionService
                 'level' => $data['level'],
                 'title' => $data['title'],
                 'description' => $data['description'] ?? null,
-                'location' => $data['location'],
-                'postal_code' => $data['postal_code'],
+                'location' => $data['formatted_address'] ?? $data['location'] ?? '',
+                'postal_code' => $data['postal_code'] ?? '',
+                'formatted_address' => $data['formatted_address'] ?? null,
+                'street_address' => $data['street_address'] ?? null,
+                'locality' => $data['locality'] ?? null,
+                'country' => $data['country'] ?? 'BE',
                 'latitude' => $coords['latitude'] ?? null,
                 'longitude' => $coords['longitude'] ?? null,
+                'geocoding_provider' => $data['geocoding_provider'] ?? null,
+                'geocoding_place_id' => $data['geocoding_place_id'] ?? null,
+                'geocoded_at' => $data['geocoded_at'] ?? null,
+                'geocoding_payload' => $data['geocoding_payload'] ?? null,
                 'date' => $data['date'],
                 'start_time' => $data['start_time'],
                 'end_time' => $data['end_time'],
@@ -221,10 +246,18 @@ final class SessionService
             'level' => $data['level'],
             'title' => $data['title'],
             'description' => $data['description'] ?? null,
-            'location' => $data['location'],
-            'postal_code' => $data['postal_code'],
+            'location' => $data['formatted_address'] ?? $data['location'] ?? '',
+            'postal_code' => $data['postal_code'] ?? '',
+            'formatted_address' => $data['formatted_address'] ?? null,
+            'street_address' => $data['street_address'] ?? null,
+            'locality' => $data['locality'] ?? null,
+            'country' => $data['country'] ?? 'BE',
             'latitude' => $coords['latitude'] ?? null,
             'longitude' => $coords['longitude'] ?? null,
+            'geocoding_provider' => $data['geocoding_provider'] ?? null,
+            'geocoding_place_id' => $data['geocoding_place_id'] ?? null,
+            'geocoded_at' => $data['geocoded_at'] ?? null,
+            'geocoding_payload' => $data['geocoding_payload'] ?? null,
             'price_per_person' => $data['price_per_person'],
             'min_participants' => $data['min_participants'],
             'max_participants' => $data['max_participants'],
@@ -336,6 +369,11 @@ final class SessionService
     /**
      * Publish a draft session (make it visible to athletes).
      *
+     * From Story 3 onwards, publishing requires a fully validated address
+     * (`formatted_address` + `latitude` + `longitude`).  Legacy sessions that
+     * were created with only `location`/`postal_code` must be re-saved through
+     * the updated form before they can be published.
+     *
      * @throws ValidationException if required fields are missing
      * @throws InvalidArgumentException if session is not in draft status
      */
@@ -360,12 +398,24 @@ final class SessionService
         if (empty($session->title)) {
             $missing['title'] = [__('validation.required', ['attribute' => __('sessions.title_label')])];
         }
-        if (empty($session->location)) {
-            $missing['location'] = [__('validation.required', ['attribute' => __('sessions.location_label')])];
+
+        // Address: new sessions must have a validated formatted_address.
+        // Legacy sessions (created before Story 3) that only have a location
+        // string are allowed to publish without a formatted_address so that
+        // existing data is not broken.  In both cases coordinates are only
+        // required when formatted_address is set (the new flow guarantees them).
+        $hasValidatedAddress = ! empty($session->formatted_address);
+        $hasLegacyAddress = ! empty($session->location);
+
+        if (! $hasValidatedAddress && ! $hasLegacyAddress) {
+            $missing['formatted_address'] = [__('sessions.publish_requires_formatted_address')];
         }
-        if (empty($session->postal_code)) {
-            $missing['postal_code'] = [__('validation.required', ['attribute' => __('sessions.postal_code_label')])];
+
+        // Coordinates are required only when a validated address is present.
+        if ($hasValidatedAddress && ($session->latitude === null || $session->longitude === null)) {
+            $missing['coordinates'] = [__('sessions.publish_requires_formatted_address')];
         }
+
         if ($session->date === null) {
             $missing['date'] = [__('validation.required', ['attribute' => __('sessions.date_label')])];
         }
@@ -404,10 +454,13 @@ final class SessionService
     }
 
     /**
-     * Resolve coordinates for a data array.
+     * Resolve coordinates from a data array.
      *
-     * If explicit latitude AND longitude are present in $data, use them directly.
-     * Otherwise attempt a lookup via the geo service.
+     * From Story 3 onwards, addresses are pre-validated by the Livewire form
+     * before the service is called.  Coordinates must therefore be present
+     * explicitly in $data.  The old fallback to PostalCodeCoordinateService is
+     * intentionally removed — sessions without validated addresses cannot be
+     * created or updated through the new form flow.
      *
      * @param  array<string, mixed>  $data
      * @return array{latitude: float, longitude: float}|null
@@ -422,12 +475,6 @@ final class SessionService
             return ['latitude' => (float) $data['latitude'], 'longitude' => (float) $data['longitude']];
         }
 
-        $coords = $this->geoService->resolveCoordinates((string) $data['postal_code']);
-
-        if ($coords === null) {
-            return null;
-        }
-
-        return ['latitude' => $coords[0], 'longitude' => $coords[1]];
+        return null;
     }
 }

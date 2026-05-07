@@ -14,6 +14,27 @@ use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
+/**
+ * Helper: return an array of address fields that represent a pre-validated address.
+ * Used in tests that need save() to succeed without calling the geocoding API.
+ *
+ * @return array<string, mixed>
+ */
+function validatedAddressFields(): array
+{
+    return [
+        'form.addressQuery' => 'Parc du Cinquantenaire, 1000 Bruxelles',
+        'form.addressValidated' => true,
+        'form.formattedAddress' => 'Parc du Cinquantenaire, 1000 Bruxelles, Belgium',
+        'form.latitude' => 50.8503,
+        'form.longitude' => 4.3517,
+        'form.postalCode' => '1000',
+        'form.locality' => 'Bruxelles',
+        'form.country' => 'BE',
+        'form.geocodingProvider' => 'google',
+    ];
+}
+
 describe('session creation', function () {
     it('renders the form for coaches', function () {
         $coach = User::factory()->coach()->create();
@@ -40,14 +61,17 @@ describe('session creation', function () {
         $coach = User::factory()->coach()->create();
         $futureDate = now()->addDays(7)->format('Y-m-d');
 
-        Livewire::actingAs($coach)
-            ->test(Create::class)
+        $livewire = Livewire::actingAs($coach)->test(Create::class);
+
+        foreach (validatedAddressFields() as $key => $value) {
+            $livewire->set($key, $value);
+        }
+
+        $livewire
             ->set('form.activityType', ActivityType::Yoga->value)
             ->set('form.level', SessionLevel::Beginner->value)
             ->set('form.title', 'Morning Yoga Flow')
             ->set('form.description', 'A relaxing morning session')
-            ->set('form.location', 'Parc du Cinquantenaire')
-            ->set('form.postalCode', '1000')
             ->set('form.date', $futureDate)
             ->set('form.startTime', '09:00')
             ->set('form.endTime', '10:00')
@@ -67,6 +91,9 @@ describe('session creation', function () {
         expect($session->price_per_person)->toBe(1500);
         expect($session->status)->toBe(SessionStatus::Draft);
         expect($session->current_participants)->toBe(0);
+        expect($session->formatted_address)->toBe('Parc du Cinquantenaire, 1000 Bruxelles, Belgium');
+        expect((float) $session->latitude)->toBe(50.8503);
+        expect((float) $session->longitude)->toBe(4.3517);
     });
 
     it('creates a session with a cover image', function () {
@@ -74,13 +101,16 @@ describe('session creation', function () {
         $image = ActivityImage::factory()->forActivity(ActivityType::Yoga)->create();
         $futureDate = now()->addDays(7)->format('Y-m-d');
 
-        Livewire::actingAs($coach)
-            ->test(Create::class)
+        $livewire = Livewire::actingAs($coach)->test(Create::class);
+
+        foreach (validatedAddressFields() as $key => $value) {
+            $livewire->set($key, $value);
+        }
+
+        $livewire
             ->set('form.activityType', ActivityType::Yoga->value)
             ->set('form.level', SessionLevel::Intermediate->value)
             ->set('form.title', 'Yoga with Cover')
-            ->set('form.location', 'Studio')
-            ->set('form.postalCode', '1050')
             ->set('form.date', $futureDate)
             ->set('form.startTime', '10:00')
             ->set('form.endTime', '11:00')
@@ -105,8 +135,7 @@ describe('session creation', function () {
                 'form.activityType',
                 'form.level',
                 'form.title',
-                'form.location',
-                'form.postalCode',
+                'form.addressQuery',
                 'form.date',
                 'form.startTime',
                 'form.endTime',
@@ -114,7 +143,7 @@ describe('session creation', function () {
             ]);
     });
 
-    it('validates end time is after start time', function () {
+    it('blocks save when address query is provided but not validated', function () {
         $coach = User::factory()->coach()->create();
         $futureDate = now()->addDays(7)->format('Y-m-d');
 
@@ -122,9 +151,35 @@ describe('session creation', function () {
             ->test(Create::class)
             ->set('form.activityType', ActivityType::Yoga->value)
             ->set('form.level', SessionLevel::Beginner->value)
+            ->set('form.title', 'Test Session')
+            ->set('form.addressQuery', 'Parc du Cinquantenaire, 1000 Bruxelles')
+            ->set('form.addressValidated', false)  // explicitly unvalidated
+            ->set('form.date', $futureDate)
+            ->set('form.startTime', '09:00')
+            ->set('form.endTime', '10:00')
+            ->set('form.priceEuros', '10.00')
+            ->set('form.minParticipants', 1)
+            ->set('form.maxParticipants', 5)
+            ->call('save')
+            ->assertHasErrors(['address']);
+
+        expect(SportSession::count())->toBe(0);
+    });
+
+    it('validates end time is after start time', function () {
+        $coach = User::factory()->coach()->create();
+        $futureDate = now()->addDays(7)->format('Y-m-d');
+
+        $livewire = Livewire::actingAs($coach)->test(Create::class);
+
+        foreach (validatedAddressFields() as $key => $value) {
+            $livewire->set($key, $value);
+        }
+
+        $livewire
+            ->set('form.activityType', ActivityType::Yoga->value)
+            ->set('form.level', SessionLevel::Beginner->value)
             ->set('form.title', 'Test')
-            ->set('form.location', 'Place')
-            ->set('form.postalCode', '1000')
             ->set('form.date', $futureDate)
             ->set('form.startTime', '10:00')
             ->set('form.endTime', '09:00')
@@ -139,13 +194,16 @@ describe('session creation', function () {
         $coach = User::factory()->coach()->create();
         $futureDate = now()->addDays(7)->format('Y-m-d');
 
-        Livewire::actingAs($coach)
-            ->test(Create::class)
+        $livewire = Livewire::actingAs($coach)->test(Create::class);
+
+        foreach (validatedAddressFields() as $key => $value) {
+            $livewire->set($key, $value);
+        }
+
+        $livewire
             ->set('form.activityType', ActivityType::Yoga->value)
             ->set('form.level', SessionLevel::Beginner->value)
             ->set('form.title', 'Test')
-            ->set('form.location', 'Place')
-            ->set('form.postalCode', '1000')
             ->set('form.date', $futureDate)
             ->set('form.startTime', '09:00')
             ->set('form.endTime', '10:00')
@@ -159,13 +217,16 @@ describe('session creation', function () {
     it('validates date is in the future', function () {
         $coach = User::factory()->coach()->create();
 
-        Livewire::actingAs($coach)
-            ->test(Create::class)
+        $livewire = Livewire::actingAs($coach)->test(Create::class);
+
+        foreach (validatedAddressFields() as $key => $value) {
+            $livewire->set($key, $value);
+        }
+
+        $livewire
             ->set('form.activityType', ActivityType::Yoga->value)
             ->set('form.level', SessionLevel::Beginner->value)
             ->set('form.title', 'Test')
-            ->set('form.location', 'Place')
-            ->set('form.postalCode', '1000')
             ->set('form.date', now()->subDay()->format('Y-m-d'))
             ->set('form.startTime', '09:00')
             ->set('form.endTime', '10:00')
@@ -176,33 +237,30 @@ describe('session creation', function () {
             ->assertHasErrors(['form.date']);
     });
 
-    it('validates postal code format', function () {
+    it('validates addressQuery minimum length', function () {
         $coach = User::factory()->coach()->create();
 
         Livewire::actingAs($coach)
             ->test(Create::class)
-            ->set('form.postalCode', '999')
+            ->set('form.addressQuery', 'abc')   // less than 5 chars
             ->call('save')
-            ->assertHasErrors(['form.postalCode']);
-
-        Livewire::actingAs($coach)
-            ->test(Create::class)
-            ->set('form.postalCode', '0100')
-            ->call('save')
-            ->assertHasErrors(['form.postalCode']);
+            ->assertHasErrors(['form.addressQuery']);
     });
 
     it('converts price from euros to cents', function () {
         $coach = User::factory()->coach()->create();
         $futureDate = now()->addDays(7)->format('Y-m-d');
 
-        Livewire::actingAs($coach)
-            ->test(Create::class)
+        $livewire = Livewire::actingAs($coach)->test(Create::class);
+
+        foreach (validatedAddressFields() as $key => $value) {
+            $livewire->set($key, $value);
+        }
+
+        $livewire
             ->set('form.activityType', ActivityType::Running->value)
             ->set('form.level', SessionLevel::Advanced->value)
             ->set('form.title', 'Trail Run')
-            ->set('form.location', 'Forêt de Soignes')
-            ->set('form.postalCode', '1170')
             ->set('form.date', $futureDate)
             ->set('form.startTime', '07:00')
             ->set('form.endTime', '09:00')

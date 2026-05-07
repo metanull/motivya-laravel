@@ -162,4 +162,18 @@ return [
 
     'publish_requires_stripe_onboarding' => 'Vous devez compléter l\'intégration Stripe avant de publier une séance.',
 
+    /*
+    |--------------------------------------------------------------------------
+    | Validation d'adresse
+    |--------------------------------------------------------------------------
+    */
+
+    'address_label' => 'Adresse',
+    'address_placeholder' => 'Ex : Parc du Cinquantenaire, 1000 Bruxelles',
+    'validate_address' => 'Valider l\'adresse',
+    'address_validated' => 'Adresse validée : :address',
+    'address_not_validated' => 'Veuillez valider l\'adresse avant de sauvegarder.',
+    'address_not_found' => 'Adresse introuvable. Veuillez préciser.',
+    'publish_requires_formatted_address' => 'Une adresse validée avec coordonnées est requise pour publier la séance.',
+
 ];
