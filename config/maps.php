@@ -37,4 +37,5 @@ return [
         'https://nominatim.openstreetmap.org/search',
     ),
     'openfreemap_geocoding_api_key' => env('OPENFREEMAP_GEOCODING_API_KEY'),
+    'nominatim_user_agent' => env('NOMINATIM_USER_AGENT', 'Motivya/1.0 (+https://motivya.be)'),
 ];
