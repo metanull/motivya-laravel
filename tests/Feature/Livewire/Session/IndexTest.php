@@ -382,7 +382,7 @@ describe('session discovery page', function () {
             ->assertSee(__('sessions.no_results_radius', ['km' => 2]));
     });
 
-    it('falls back to AddressValidationService geocoding when postal lookup returns null for a street address query', function () {
+    it('resolves a street address query via AddressValidationService first', function () {
         $athlete = User::factory()->athlete()->create();
 
         // Use the OpenFreeMap provider (no API key required) and fake the HTTP
@@ -412,8 +412,8 @@ describe('session discovery page', function () {
             'longitude' => 4.3517,
         ]);
 
-        // 'Rue de la Loi, Bruxelles' is not a postal code / municipality and will
-        // therefore fail the local lookup, triggering the geocoding fallback.
+        // AddressValidationService is called first; the street query resolves
+        // to precise coordinates via the geocoding provider.
         Livewire::actingAs($athlete)
             ->test(Index::class)
             ->set('locationQuery', 'Rue de la Loi, Bruxelles')
@@ -421,7 +421,7 @@ describe('session discovery page', function () {
             ->assertViewHas('locationInvalid', false);
     });
 
-    it('sets locationInvalid when both postal and geocoding lookups return null', function () {
+    it('sets locationInvalid when both geocoding and postal lookups return null', function () {
         $athlete = User::factory()->athlete()->create();
 
         // Use the OpenFreeMap provider and return an empty result to simulate
@@ -438,13 +438,14 @@ describe('session discovery page', function () {
             ->assertSee(__('sessions.invalid_location'));
     });
 
-    it('geocoding API is not called when the postal code lookup already resolves the query', function () {
+    it('falls back to postal-code lookup when geocoding returns null for a plain postal code query', function () {
         $athlete = User::factory()->athlete()->create();
 
-        // Switch to OpenFreeMap so any stray HTTP call would be visible, then
-        // fake all HTTP so we can assert nothing was sent.
+        // AddressValidationService returns null (e.g. provider not configured or
+        // returns no result for a bare postal code). The local reference table
+        // should then provide a postal-center coordinate.
         config(['maps.geocoding_provider' => 'openfreemap']);
-        Http::fake();
+        Http::fake(['nominatim.openstreetmap.org/*' => Http::response([])]);
 
         PostalCodeCoordinate::create([
             'postal_code' => '1000',
@@ -454,7 +455,7 @@ describe('session discovery page', function () {
         ]);
 
         SportSession::factory()->published()->create([
-            'title' => 'Postal Lookup Session',
+            'title' => 'Postal Fallback Session',
             'latitude' => 50.8503,
             'longitude' => 4.3517,
         ]);
@@ -462,11 +463,8 @@ describe('session discovery page', function () {
         Livewire::actingAs($athlete)
             ->test(Index::class)
             ->set('locationQuery', '1000')
-            ->assertSee('Postal Lookup Session')
+            ->assertSee('Postal Fallback Session')
             ->assertViewHas('locationInvalid', false);
-
-        // Confirm that AddressValidationService never made an HTTP request.
-        Http::assertNothingSent();
     });
 
 });

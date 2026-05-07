@@ -181,20 +181,22 @@ final class Index extends Component
             $activeLat = $this->latitude;
             $activeLng = $this->longitude;
         } elseif ($effectiveQuery !== '') {
-            // First-pass: fast local postal code / municipality lookup (no API call).
-            $coords = $postalService->resolveByLocationQuery($effectiveQuery);
+            // First-pass: precise geocoding via AddressValidationService.
+            // Results are cached by the service so repeated renders are cheap.
+            $validated = $addressService->validate($effectiveQuery, app()->getLocale());
 
-            if ($coords !== null) {
-                [$activeLat, $activeLng] = $coords;
+            if ($validated !== null) {
+                $activeLat = $validated->latitude;
+                $activeLng = $validated->longitude;
             } else {
-                // Second-pass: geocode via AddressValidationService so that
-                // free-text queries like "Rue de la Loi, Bruxelles" resolve to
-                // precise coordinates. Results are cached by the service.
-                $validated = $addressService->validate($effectiveQuery, app()->getLocale());
+                // Second-pass: fall back to the fast local postal-code /
+                // municipality lookup when the geocoding provider returns nothing
+                // (e.g. user typed just "1050" or a municipality name without
+                // a street, and the provider is not configured or unavailable).
+                $coords = $postalService->resolveByLocationQuery($effectiveQuery);
 
-                if ($validated !== null) {
-                    $activeLat = $validated->latitude;
-                    $activeLng = $validated->longitude;
+                if ($coords !== null) {
+                    [$activeLat, $activeLng] = $coords;
                 } else {
                     $locationInvalid = true;
                 }
