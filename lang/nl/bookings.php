@@ -23,6 +23,7 @@ return [
     'error_already_booked' => 'De sporter heeft al een boeking voor deze sessie.',
     'error_session_full' => 'De sessie heeft haar maximale capaciteit bereikt.',
     'error_session_not_bookable' => 'Alleen gepubliceerde of bevestigde sessies kunnen worden geboekt.',
+    'error_booking_not_authorized' => 'U bent niet bevoegd om deze sessie te boeken.',
     'cancel_card_title' => 'Annuleer deze boeking',
     'cancel_action' => 'Boeking annuleren',
     'cancel_confirmation_title' => 'Annulering bevestigen',

@@ -1,3 +1,4 @@
+<div>
 <section class="mt-6 rounded-lg bg-indigo-50 p-6 shadow-sm ring-1 ring-indigo-100 dark:bg-gray-800 dark:ring-gray-700">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div class="space-y-3">
@@ -130,3 +131,4 @@
         </div>
     </div>
 @endif
+</div>

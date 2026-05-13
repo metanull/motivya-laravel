@@ -23,6 +23,7 @@ return [
     'error_already_booked' => 'Athlete already has a booking for this session.',
     'error_session_full' => 'Session has reached maximum capacity.',
     'error_session_not_bookable' => 'Only published or confirmed sessions can be booked.',
+    'error_booking_not_authorized' => 'You are not authorised to book this session.',
     'cancel_card_title' => 'Cancel this booking',
     'cancel_action' => 'Cancel booking',
     'cancel_confirmation_title' => 'Confirm cancellation',

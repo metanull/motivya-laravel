@@ -334,3 +334,89 @@ describe('booking confirmation modal (story 6.2)', function () {
             ->assertDontSeeHtml('wire:click="openConfirmModal"');
     });
 });
+
+describe('two-step booking flow regression (story 6.3)', function () {
+    it('renders the confirmation modal in the HTML after openConfirmModal', function () {
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->approved()->for($coach)->create([
+            'stripe_account_id' => 'acct_two_step_modal',
+            'stripe_onboarding_complete' => true,
+        ]);
+
+        $session = SportSession::factory()->published()->for($coach, 'coach')->create();
+        $athlete = User::factory()->athlete()->create();
+
+        Livewire::actingAs($athlete)
+            ->test(Book::class, ['sportSession' => $session])
+            ->call('openConfirmModal')
+            ->assertSet('showConfirmModal', true)
+            ->assertSeeHtml('role="dialog"')
+            ->assertSeeHtml('wire:click="book"');
+    });
+
+    it('full two-step flow: openConfirmModal then book redirects to Stripe', function () {
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->approved()->for($coach)->create([
+            'stripe_account_id' => 'acct_two_step_flow',
+            'stripe_onboarding_complete' => true,
+        ]);
+
+        $session = SportSession::factory()->published()->for($coach, 'coach')->create([
+            'price_per_person' => 4000,
+        ]);
+        $athlete = User::factory()->athlete()->create();
+
+        app()->instance(PaymentService::class, new PaymentService(
+            auditService: app(AuditService::class),
+            createCheckoutSessionUsing: fn (array $payload): Session => Session::constructFrom([
+                'id' => 'cs_two_step',
+                'url' => 'https://checkout.stripe.com/pay/cs_two_step',
+            ]),
+        ));
+
+        Livewire::actingAs($athlete)
+            ->test(Book::class, ['sportSession' => $session])
+            ->call('openConfirmModal')
+            ->assertSet('showConfirmModal', true)
+            ->assertSeeHtml('role="dialog"')
+            ->call('book')
+            ->assertRedirect('https://checkout.stripe.com/pay/cs_two_step');
+
+        expect(Booking::query()->where('sport_session_id', $session->id)->first())->not->toBeNull();
+    });
+
+    it('modal is not rendered before openConfirmModal is called', function () {
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->approved()->for($coach)->create([
+            'stripe_account_id' => 'acct_no_modal_initial',
+            'stripe_onboarding_complete' => true,
+        ]);
+
+        $session = SportSession::factory()->published()->for($coach, 'coach')->create();
+        $athlete = User::factory()->athlete()->create();
+
+        Livewire::actingAs($athlete)
+            ->test(Book::class, ['sportSession' => $session])
+            ->assertSet('showConfirmModal', false)
+            ->assertDontSeeHtml('role="dialog"');
+    });
+});
+
+describe('openConfirmModal authorization diagnostics (story 6.4)', function () {
+    it('dispatches error notification and keeps modal closed when authorization fails', function () {
+        $coach = User::factory()->coach()->create();
+        CoachProfile::factory()->approved()->for($coach)->create([
+            'stripe_account_id' => 'acct_diag_coach',
+            'stripe_onboarding_complete' => true,
+        ]);
+
+        $session = SportSession::factory()->published()->for($coach, 'coach')->create();
+
+        // A coach cannot book; the gate check should fail and dispatch an error notification.
+        Livewire::actingAs($coach)
+            ->test(Book::class, ['sportSession' => $session])
+            ->call('openConfirmModal')
+            ->assertSet('showConfirmModal', false)
+            ->assertDispatched('notify');
+    });
+});
