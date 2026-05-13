@@ -64,8 +64,8 @@ final class Show extends Component
         return collect([[
             'id' => $this->sportSession->id,
             'title' => $this->sportSession->title,
-            'latitude' => $this->sportSession->latitude,
-            'longitude' => $this->sportSession->longitude,
+            'latitude' => (float) $this->sportSession->latitude,
+            'longitude' => (float) $this->sportSession->longitude,
             'coach' => $this->sportSession->coach->name,
             'date' => $this->sportSession->date->translatedFormat('d/m/Y'),
             'time' => Carbon::parse($this->sportSession->start_time)->format('H:i'),

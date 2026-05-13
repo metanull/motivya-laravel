@@ -9,6 +9,7 @@ return [
     'session_status_label' => 'Session status',
     'booking_status_label' => 'Booking status',
     'book_action' => 'Book this session',
+    'opening_confirmation' => 'Opening…',
     'processing' => 'Redirecting to payment…',
     'ready_to_book' => 'Reserve your spot and continue to payment.',
     'already_booked' => 'You already have a booking for this session.',

@@ -2,49 +2,86 @@ import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 /**
+ * Return true when a value is a finite number (not NaN, not Infinity).
+ * Accepts both number primitives and numeric strings emitted by PHP's
+ * decimal:7 model cast so that either form passes validation.
+ *
+ * @param {*} v
+ * @returns {boolean}
+ */
+function isFiniteNumber(v) {
+    return (typeof v === 'number' || typeof v === 'string') && v !== '' && isFinite(Number(v));
+}
+
+/**
  * Alpine.js data factory for the session map component.
  *
  * Uses MapLibre GL JS (open-source, no API key required) with free
  * OpenFreeMap vector tiles. Marker clustering is handled by MapLibre's
  * built-in GeoJSON cluster support.
  *
+ * IMPORTANT: The MapLibre Map and Popup objects are stored in closure-local
+ * variables (_map, _popup) rather than on the Alpine reactive state object.
+ * MapLibre uses non-configurable, non-writable internal properties (such as
+ * colour arrays) that violate the ES2015 Proxy invariant when Alpine wraps them
+ * in a reactive proxy, producing "'rgb' is a read-only and non-configurable
+ * data property" errors that corrupt the Alpine/Livewire update cycle and
+ * prevent the booking confirmation modal from opening.
+ *
  * @param {string} containerId - The DOM element ID to render the map into
- * @param {Array} markers - Array of session marker objects from SessionQueryService::mapMarkers()
- * @param {Array} fallbackCenter - [lng, lat] to use when no markers are present (default: Brussels)
+ * @param {Array}  markers      - Array of session marker objects from SessionQueryService::mapMarkers()
+ * @param {Array}  fallbackCenter - [lng, lat] to use when no markers are present (default: Brussels)
  */
 export function sessionMap(containerId, markers, fallbackCenter = [4.3517, 50.8503]) {
-    return {
-        map: null,
-        popup: null,
+    // Closure-local variables — intentionally NOT on the Alpine reactive object
+    // so that MapLibre's internal state is never wrapped in a Proxy.
+    let _map = null;
+    let _popup = null;
 
+    // Validate fallbackCenter: both elements must be finite numbers.
+    const validFallback =
+        Array.isArray(fallbackCenter) &&
+        fallbackCenter.length >= 2 &&
+        isFiniteNumber(fallbackCenter[0]) &&
+        isFiniteNumber(fallbackCenter[1])
+            ? [Number(fallbackCenter[0]), Number(fallbackCenter[1])]
+            : [4.3517, 50.8503];
+
+    return {
         initMap() {
-            this.map = new maplibregl.Map({
+            _map = new maplibregl.Map({
                 container: containerId,
                 // OpenFreeMap liberty style — free, no API key, hosted by the OSM community
                 style: 'https://tiles.openfreemap.org/styles/liberty',
-                center: fallbackCenter,
+                center: validFallback,
                 zoom: 11,
             });
 
-            this.map.addControl(new maplibregl.NavigationControl(), 'top-right');
+            _map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
-            this.popup = new maplibregl.Popup({ closeButton: true, closeOnClick: false });
+            _popup = new maplibregl.Popup({ closeButton: true, closeOnClick: false });
 
-            this.map.on('load', () => {
+            _map.on('load', () => {
                 this.addMarkers(markers);
             });
         },
 
-        addMarkers(markers) {
-            if (!this.map) return;
+        addMarkers(markerList) {
+            if (!_map) return;
+
+            // Reject markers where lat or lng is missing, null, or non-numeric.
+            // PHP's decimal:7 cast returns numeric strings; coerce to Number here.
+            const validMarkers = markerList.filter(
+                (s) => isFiniteNumber(s.latitude) && isFiniteNumber(s.longitude),
+            );
 
             const geojson = {
                 type: 'FeatureCollection',
-                features: markers.map((session) => ({
+                features: validMarkers.map((session) => ({
                     type: 'Feature',
                     geometry: {
                         type: 'Point',
-                        coordinates: [session.longitude, session.latitude],
+                        coordinates: [Number(session.longitude), Number(session.latitude)],
                     },
                     properties: {
                         id: session.id,
@@ -58,10 +95,10 @@ export function sessionMap(containerId, markers, fallbackCenter = [4.3517, 50.85
                 })),
             };
 
-            if (this.map.getSource('sessions')) {
-                this.map.getSource('sessions').setData(geojson);
+            if (_map.getSource('sessions')) {
+                _map.getSource('sessions').setData(geojson);
             } else {
-                this.map.addSource('sessions', {
+                _map.addSource('sessions', {
                     type: 'geojson',
                     data: geojson,
                     cluster: true,
@@ -70,7 +107,7 @@ export function sessionMap(containerId, markers, fallbackCenter = [4.3517, 50.85
                 });
 
                 // Cluster circles
-                this.map.addLayer({
+                _map.addLayer({
                     id: 'clusters',
                     type: 'circle',
                     source: 'sessions',
@@ -83,7 +120,7 @@ export function sessionMap(containerId, markers, fallbackCenter = [4.3517, 50.85
                 });
 
                 // Cluster count labels
-                this.map.addLayer({
+                _map.addLayer({
                     id: 'cluster-count',
                     type: 'symbol',
                     source: 'sessions',
@@ -97,7 +134,7 @@ export function sessionMap(containerId, markers, fallbackCenter = [4.3517, 50.85
                 });
 
                 // Individual session markers
-                this.map.addLayer({
+                _map.addLayer({
                     id: 'unclustered-point',
                     type: 'circle',
                     source: 'sessions',
@@ -111,22 +148,22 @@ export function sessionMap(containerId, markers, fallbackCenter = [4.3517, 50.85
                 });
 
                 // Click cluster → zoom in
-                this.map.on('click', 'clusters', (e) => {
-                    const features = this.map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
+                _map.on('click', 'clusters', (e) => {
+                    const features = _map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
                     const clusterId = features[0].properties.cluster_id;
-                    this.map.getSource('sessions').getClusterExpansionZoom(clusterId, (err, zoom) => {
+                    _map.getSource('sessions').getClusterExpansionZoom(clusterId, (err, zoom) => {
                         if (err) return;
-                        this.map.easeTo({ center: features[0].geometry.coordinates, zoom });
+                        _map.easeTo({ center: features[0].geometry.coordinates, zoom });
                     });
                 });
 
                 // Click individual marker → popup
-                this.map.on('click', 'unclustered-point', (e) => {
+                _map.on('click', 'unclustered-point', (e) => {
                     const props = e.features[0].properties;
                     const coords = e.features[0].geometry.coordinates.slice();
                     const priceFormatted = (props.price / 100).toFixed(2).replace('.', ',');
 
-                    this.popup
+                    _popup
                         .setLngLat(coords)
                         .setHTML(`
                             <div style="min-width:180px;padding:4px;">
@@ -139,27 +176,27 @@ export function sessionMap(containerId, markers, fallbackCenter = [4.3517, 50.85
                                     View session →
                                 </a>
                             </div>`)
-                        .addTo(this.map);
+                        .addTo(_map);
                 });
 
-                this.map.on('mouseenter', 'clusters', () => {
-                    this.map.getCanvas().style.cursor = 'pointer';
+                _map.on('mouseenter', 'clusters', () => {
+                    _map.getCanvas().style.cursor = 'pointer';
                 });
-                this.map.on('mouseleave', 'clusters', () => {
-                    this.map.getCanvas().style.cursor = '';
+                _map.on('mouseleave', 'clusters', () => {
+                    _map.getCanvas().style.cursor = '';
                 });
-                this.map.on('mouseenter', 'unclustered-point', () => {
-                    this.map.getCanvas().style.cursor = 'pointer';
+                _map.on('mouseenter', 'unclustered-point', () => {
+                    _map.getCanvas().style.cursor = 'pointer';
                 });
-                this.map.on('mouseleave', 'unclustered-point', () => {
-                    this.map.getCanvas().style.cursor = '';
+                _map.on('mouseleave', 'unclustered-point', () => {
+                    _map.getCanvas().style.cursor = '';
                 });
             }
 
-            if (markers.length > 0) {
-                const lngs = markers.map((s) => s.longitude);
-                const lats = markers.map((s) => s.latitude);
-                this.map.fitBounds(
+            if (validMarkers.length > 0) {
+                const lngs = validMarkers.map((s) => Number(s.longitude));
+                const lats = validMarkers.map((s) => Number(s.latitude));
+                _map.fitBounds(
                     [[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]],
                     { padding: 40, maxZoom: 14 },
                 );

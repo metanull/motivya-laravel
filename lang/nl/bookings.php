@@ -9,6 +9,7 @@ return [
     'session_status_label' => 'Sessiestatus',
     'booking_status_label' => 'Boekingsstatus',
     'book_action' => 'Boek deze sessie',
+    'opening_confirmation' => 'Openen…',
     'processing' => 'Doorsturen naar betaling…',
     'ready_to_book' => 'Reserveer je plaats en ga verder naar de betaling.',
     'already_booked' => 'Je hebt al een boeking voor deze sessie.',

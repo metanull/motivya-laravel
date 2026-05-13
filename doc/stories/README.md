@@ -10,6 +10,7 @@ This directory contains the detailed story breakdown for the Motivya project. Ea
 | [epic-2-coach.md](epic-2-coach.md) | Coach "Business-in-a-Box" | Epic 2 | Epic 1 |
 | [epic-3-athlete.md](epic-3-athlete.md) | Athlete Experience & Payments | Epic 3 | Epic 1, Epic 2 |
 | [epic-4-accountant.md](epic-4-accountant.md) | Accountant Portal + Invoicing | Epic 4 | Epic 3 |
+| [mvp-address-geolocation.md](mvp-address-geolocation.md) | MVP Address and Geolocation Precision | MVP Stabilization | Epic 2, Epic 3 |
 
 ## Conventions
 
