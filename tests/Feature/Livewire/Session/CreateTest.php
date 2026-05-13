@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Contracts\Maps\AddressValidationProviderContract;
 use App\Enums\ActivityType;
 use App\Enums\SessionLevel;
 use App\Enums\SessionStatus;
@@ -146,6 +147,12 @@ describe('session creation', function () {
     it('blocks save when address query is provided but not validated', function () {
         $coach = User::factory()->coach()->create();
         $futureDate = now()->addDays(7)->format('Y-m-d');
+
+        // Force auto-validation to fail so the 'address' error is produced
+        // regardless of whether the geocoding provider is reachable in CI.
+        $mock = Mockery::mock(AddressValidationProviderContract::class);
+        $mock->shouldReceive('validate')->once()->andReturn(null);
+        app()->instance(AddressValidationProviderContract::class, $mock);
 
         Livewire::actingAs($coach)
             ->test(Create::class)

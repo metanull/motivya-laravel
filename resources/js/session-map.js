@@ -28,11 +28,17 @@ function isFiniteNumber(v) {
  * data property" errors that corrupt the Alpine/Livewire update cycle and
  * prevent the booking confirmation modal from opening.
  *
- * @param {string} containerId - The DOM element ID to render the map into
- * @param {Array}  markers      - Array of session marker objects from SessionQueryService::mapMarkers()
+ * @param {string} containerId    - The DOM element ID to render the map into
+ * @param {Array}  markers        - Array of session marker objects from SessionQueryService::mapMarkers()
  * @param {Array}  fallbackCenter - [lng, lat] to use when no markers are present (default: Brussels)
+ * @param {string} styleUrl       - MapLibre style URL (resolved server-side by MapRenderConfigService)
  */
-export function sessionMap(containerId, markers, fallbackCenter = [4.3517, 50.8503]) {
+export function sessionMap(
+    containerId,
+    markers,
+    fallbackCenter = [4.3517, 50.8503],
+    styleUrl = 'https://tiles.openfreemap.org/styles/liberty',
+) {
     // Closure-local variables — intentionally NOT on the Alpine reactive object
     // so that MapLibre's internal state is never wrapped in a Proxy.
     let _map = null;
@@ -49,10 +55,18 @@ export function sessionMap(containerId, markers, fallbackCenter = [4.3517, 50.85
 
     return {
         initMap() {
+            // Idempotent init: destroy existing instance before recreating.
+            // Required for Livewire wire:navigate SPA-style navigation which
+            // re-mounts Alpine components without a full page reload.
+            if (_map !== null) {
+                _map.remove();
+                _map = null;
+                _popup = null;
+            }
+
             _map = new maplibregl.Map({
                 container: containerId,
-                // OpenFreeMap liberty style — free, no API key, hosted by the OSM community
-                style: 'https://tiles.openfreemap.org/styles/liberty',
+                style: styleUrl,
                 center: validFallback,
                 zoom: 11,
             });
@@ -63,6 +77,14 @@ export function sessionMap(containerId, markers, fallbackCenter = [4.3517, 50.85
 
             _map.on('load', () => {
                 this.addMarkers(markers);
+            });
+
+            // Listen for Livewire marker-sync events (fired from Index.php render
+            // when filters change while wire:ignore prevents DOM re-render).
+            window.addEventListener('map-markers-updated', (event) => {
+                if (event.detail && Array.isArray(event.detail.markers)) {
+                    this.addMarkers(event.detail.markers);
+                }
             });
         },
 

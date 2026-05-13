@@ -222,6 +222,10 @@ final class Index extends Component
             $markers = $queryService->mapMarkers($filters);
         }
 
+        $markersArray = $markers->values()->all();
+
+        $this->dispatch('map-markers-updated', markers: $markersArray);
+
         return view('livewire.session.index', [
             'sessions' => $sessions,
             'markers' => $markers,

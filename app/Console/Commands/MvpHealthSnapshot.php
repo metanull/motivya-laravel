@@ -11,6 +11,7 @@ use App\Models\PaymentAnomaly;
 use App\Models\PostalCodeCoordinate;
 use App\Models\SchedulerHeartbeat;
 use App\Models\SportSession;
+use App\Services\Maps\MapProviderHealthService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -168,6 +169,13 @@ final class MvpHealthSnapshot extends Command
             }
         }
 
+        // ── 10. Map provider ──────────────────────────────────────────────
+        [$mapStatus, $mapMessage] = $this->checkMapProvider();
+        $rows[] = ['Map provider', $mapStatus, $mapMessage];
+        if ($mapStatus === 'red') {
+            $hasBlocker = true;
+        }
+
         // ── Output ─────────────────────────────────────────────────────────
         if ($this->option('json')) {
             $output = array_map(
@@ -188,6 +196,27 @@ final class MvpHealthSnapshot extends Command
         $this->info('All critical checks passed.');
 
         return self::SUCCESS;
+    }
+
+    /**
+     * @return array{string, string}
+     */
+    private function checkMapProvider(): array
+    {
+        try {
+            $health = app(MapProviderHealthService::class);
+            $summary = $health->summary();
+
+            $status = match ($summary['status']) {
+                'ok' => 'green',
+                'warn' => 'yellow',
+                default => 'red',
+            };
+
+            return [$status, $summary['message']];
+        } catch (\Throwable $e) {
+            return ['red', 'Map provider check failed: '.$e->getMessage()];
+        }
     }
 
     /**

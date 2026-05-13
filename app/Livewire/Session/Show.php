@@ -6,6 +6,7 @@ namespace App\Livewire\Session;
 
 use App\Models\SportSession;
 use App\Models\User;
+use App\Services\Maps\DirectionsUrlService;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
@@ -85,9 +86,12 @@ final class Show extends Component
                 ->exists()
             : false;
 
+        $directionsUrl = app(DirectionsUrlService::class)->getUrl($this->sportSession);
+
         return view('livewire.session.show', [
             'spotsRemaining' => $spotsRemaining,
             'isFavourited' => $isFavourited,
+            'directionsUrl' => $directionsUrl,
         ])->title($this->sportSession->title);
     }
 }

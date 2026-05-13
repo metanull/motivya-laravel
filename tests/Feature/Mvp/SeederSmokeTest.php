@@ -195,12 +195,17 @@ describe('MvpJourneySeeder', function () {
 
         $session = SportSession::where('title', 'Running Cinquantenaire — Cardio Débutant')->firstOrFail();
 
-        $this->get(route('sessions.show', $session))
+        $response = $this->get(route('sessions.show', $session))
             ->assertOk()
             ->assertSee('id="detail-map"', false)
             ->assertSee('sessionMap(', false)
-            ->assertSee('destination=50.8390000,4.3860000', false)
             ->assertSee('activity-images/mvp-cardio.svg', false);
+
+        // The directions URL contains the session coordinates; the exact format
+        // depends on the active provider (Google: destination=lat,lng; Free: route=lat,lng).
+        $content = $response->getContent();
+        expect($content)->toContain('50.839')
+            ->and($content)->toContain('4.386');
     });
 
     it('creates a suspended user', function () {

@@ -6,11 +6,18 @@ use App\Livewire\Session\Show;
 use App\Models\SportSession;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
 use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
 describe('session directions button', function () {
+
+    beforeEach(function (): void {
+        // Force Google provider so URL assertions match google.com/maps/dir patterns.
+        Config::set('maps.google.api_key', 'AIzaFakeKeyForTest12345678');
+    });
+
     it('shows coordinate-based directions URL when session has coordinates but no validated address', function (): void {
         $athlete = User::factory()->athlete()->create();
         // withCoordinates() sets lat/lng without formatted_address/geocoding_provider,

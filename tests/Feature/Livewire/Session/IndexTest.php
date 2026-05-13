@@ -9,6 +9,7 @@ use App\Models\PostalCodeCoordinate;
 use App\Models\SportSession;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 
@@ -385,9 +386,9 @@ describe('session discovery page', function () {
     it('resolves a street address query via AddressValidationService first', function () {
         $athlete = User::factory()->athlete()->create();
 
-        // Use the OpenFreeMap provider (no API key required) and fake the HTTP
+        // Use the Free provider (no API key configured → resolver picks Nominatim) and fake the HTTP
         // response so no real network call is made.
-        config(['maps.geocoding_provider' => 'openfreemap']);
+        Config::set('maps.google.api_key', null);
 
         Http::fake([
             'nominatim.openstreetmap.org/*' => Http::response([[
@@ -424,9 +425,9 @@ describe('session discovery page', function () {
     it('sets locationInvalid when both geocoding and postal lookups return null', function () {
         $athlete = User::factory()->athlete()->create();
 
-        // Use the OpenFreeMap provider and return an empty result to simulate
-        // a completely unresolvable query.
-        config(['maps.geocoding_provider' => 'openfreemap']);
+        // Use the Free provider (no API key → resolver picks Nominatim) and return
+        // an empty result to simulate a completely unresolvable query.
+        Config::set('maps.google.api_key', null);
         Http::fake(['nominatim.openstreetmap.org/*' => Http::response([])]);
 
         SportSession::factory()->published()->count(2)->create();
@@ -441,10 +442,9 @@ describe('session discovery page', function () {
     it('falls back to postal-code lookup when geocoding returns null for a plain postal code query', function () {
         $athlete = User::factory()->athlete()->create();
 
-        // AddressValidationService returns null (e.g. provider not configured or
-        // returns no result for a bare postal code). The local reference table
-        // should then provide a postal-center coordinate.
-        config(['maps.geocoding_provider' => 'openfreemap']);
+        // AddressValidationService returns null (Free provider returns no result for
+        // a bare postal code). The local reference table should provide a postal-center coordinate.
+        Config::set('maps.google.api_key', null);
         Http::fake(['nominatim.openstreetmap.org/*' => Http::response([])]);
 
         PostalCodeCoordinate::create([

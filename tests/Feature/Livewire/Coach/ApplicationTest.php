@@ -8,6 +8,7 @@ use App\Livewire\Coach\Application;
 use App\Models\CoachProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
@@ -141,8 +142,8 @@ describe('Coach Application Form', function () {
             '*' => Http::response(['status' => 'ZERO_RESULTS', 'results' => []], 200),
         ]);
 
-        // Config must have a key so the service doesn't fail-fast.
-        config(['maps.geocoding_provider' => 'google', 'maps.google_api_key' => 'test-key']);
+        // Config must have a key so the resolver picks Google provider.
+        Config::set('maps.google.api_key', 'test-key');
 
         Livewire::actingAs($athlete)
             ->test(Application::class)

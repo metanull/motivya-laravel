@@ -15,6 +15,7 @@ use App\Models\PostalCodeCoordinate;
 use App\Models\SchedulerHeartbeat;
 use App\Models\SportSession;
 use App\Models\User;
+use App\Services\Maps\MapProviderHealthService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -64,8 +65,7 @@ final class Readiness extends Component
             'accountant' => $this->checkAccountant(),
             'activity_images' => $this->checkActivityImages(),
             'billing_config' => $this->checkBillingConfig(),
-            'google_maps_key' => $this->checkGoogleMapsKey(),
-            'geocoding_cache' => $this->checkGeocodingCache(),
+            'map_provider' => $this->checkMapProvider(),
             'address_precision' => $this->checkAddressPrecision(),
         ];
     }
@@ -451,33 +451,21 @@ final class Readiness extends Component
     /**
      * @return array{status: string, message: string}
      */
-    private function checkGoogleMapsKey(): array
+    private function checkMapProvider(): array
     {
-        $key = config('maps.google_api_key');
+        $health = app(MapProviderHealthService::class);
+        $summary = $health->summary();
+        $provider = $health->activeProviderName();
 
-        if (empty($key)) {
-            return ['status' => 'yellow', 'message' => __('admin.readiness_google_maps_key_missing')];
-        }
+        $statusMap = [
+            'ok' => 'green',
+            'warn' => 'yellow',
+            'fail' => 'red',
+        ];
 
-        if (! str_starts_with((string) $key, 'AIza')) {
-            return ['status' => 'yellow', 'message' => __('admin.readiness_google_maps_key_format')];
-        }
+        $status = $statusMap[$summary['status']] ?? 'red';
 
-        return ['status' => 'green', 'message' => __('admin.readiness_google_maps_key_ok')];
-    }
-
-    /**
-     * @return array{status: string, message: string}
-     */
-    private function checkGeocodingCache(): array
-    {
-        try {
-            DB::table('geocoding_cache')->count();
-
-            return ['status' => 'green', 'message' => __('admin.readiness_geocoding_cache_ok')];
-        } catch (\Throwable) {
-            return ['status' => 'red', 'message' => __('admin.readiness_geocoding_cache_missing')];
-        }
+        return ['status' => $status, 'message' => $summary['message']];
     }
 
     public function render(): View
