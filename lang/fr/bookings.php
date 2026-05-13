@@ -23,6 +23,7 @@ return [
     'error_already_booked' => 'L’athlète a déjà une réservation pour cette séance.',
     'error_session_full' => 'La séance a atteint sa capacité maximale.',
     'error_session_not_bookable' => 'Seules les séances publiées ou confirmées peuvent être réservées.',
+    'error_booking_not_authorized' => 'Vous n’êtes pas autorisé à réserver cette séance.',
     'cancel_card_title' => 'Annuler cette réservation',
     'cancel_action' => 'Annuler la réservation',
     'cancel_confirmation_title' => 'Confirmer l’annulation',

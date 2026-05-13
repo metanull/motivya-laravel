@@ -53,7 +53,19 @@ final class Book extends Component
             return null;
         }
 
-        Gate::authorize('create', [Booking::class, $this->sportSession]);
+        try {
+            Gate::authorize('create', [Booking::class, $this->sportSession]);
+        } catch (\Throwable $exception) {
+            Log::warning('openConfirmModal authorization denied', [
+                'athlete_id' => $athlete->getKey(),
+                'sport_session_id' => $this->sportSession->getKey(),
+                'exception_class' => $exception::class,
+                'message' => $exception->getMessage(),
+            ]);
+            $this->dispatch('notify', type: 'error', message: __('bookings.error_booking_not_authorized'));
+
+            return null;
+        }
 
         $this->showConfirmModal = true;
 
