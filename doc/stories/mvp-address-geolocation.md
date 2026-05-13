@@ -4,7 +4,7 @@
 
 Title: Deliver Precise Validated Addresses for MVP Search, Sessions, and Directions
 
-Context: Motivya already has MapLibre/OpenFreeMap map rendering, Google directions links, `postal_code_coordinates`, `geocoding_cache`, `GeocodingService`, and distance-based session search. Local review shows session creation and editing still use split `location` and `postalCode` fields, `SessionService` still resolves coordinates through `PostalCodeCoordinateService`, and typed discovery searches only resolve postal codes or municipalities. Coach application/profile address data is also postal-code-only. OVH production has the required migrations (`sport_sessions`, `postal_code_coordinates`, `geocoding_cache`) and a configured Google Maps key, but `sport_sessions` stores only `location`, `postal_code`, `latitude`, and `longitude`; production currently has 9 sessions, 3 distinct session postal codes, 8 sessions with coordinates, 1 session missing coordinates, 35 postal-code reference rows, and 0 geocoding-cache rows. Existing coordinates therefore represent postal-code centers, not validated street addresses.
+Context: Motivya already has map rendering, directions links, `postal_code_coordinates`, `geocoding_cache`, `GeocodingService`, and distance-based session search. Local review shows session creation and editing still use split `location` and `postalCode` fields, `SessionService` still resolves coordinates through `PostalCodeCoordinateService`, and typed discovery searches only resolve postal codes or municipalities. Coach application/profile address data is also postal-code-only. OVH production has the required migrations (`sport_sessions`, `postal_code_coordinates`, `geocoding_cache`) and a configured Google Maps key, but `sport_sessions` stores only `location`, `postal_code`, `latitude`, and `longitude`; production currently has 9 sessions, 3 distinct session postal codes, 8 sessions with coordinates, 1 session missing coordinates, 35 postal-code reference rows, and 0 geocoding-cache rows. Existing coordinates therefore represent postal-code centers, not validated street addresses.
 
 Problem: The MVP cannot support user expectations for precise address entry, exact session pins, exact directions, or address-based search. The current implementation validates postal-code syntax instead of validating an address against the active maps/geocoding provider, and it does not persist a normalized address result or provider metadata.
 
@@ -13,7 +13,7 @@ Solution: Add provider-backed address validation, store normalized address data 
 Implementation Instructions:
 
 1. Implement the child stories below in order.
-2. Keep MapLibre/OpenFreeMap for map display. Do not replace the map component with Google Maps JavaScript.
+2. Follow ADR-016: when `GOOGLE_MAPS_API_KEY` is configured, the Google Maps Platform stack must own map display, address validation/geocoding, discovery coordinate resolution, directions, and health checks. When the key is absent, the configured free-service stack must own all of those capabilities. Do not mix providers in the same runtime.
 3. Use Laravel services for provider calls and normalization; keep Livewire components thin and use Form Objects.
 4. Use localized strings in `lang/fr`, `lang/en`, and `lang/nl` for all user-visible labels, placeholders, validation errors, and readiness messages.
 5. Do not call an external geocoder on every keystroke. Resolve only when the user selects a suggestion, submits a search, or triggers an explicit validation action with debounce and cache.
@@ -31,29 +31,29 @@ Definition of Done:
 
 Title: Add Provider-Backed Address Validation Service
 
-Context: `app/Services/GeocodingService.php` currently resolves postal codes/municipalities locally and falls back to Google coordinates. It returns only latitude and longitude, and the cache table stores only query/provider/coordinates/found. The MVP requires a single address field that is validated against whichever geocoding provider is active. Both Google and the OpenFreeMap-compatible provider must work.
+Context: `app/Services/GeocodingService.php` currently resolves postal codes/municipalities locally and falls back to Google coordinates. It returns only latitude and longitude, and the cache table stores only query/provider/coordinates/found. The MVP requires a single address field that is validated through the active mapping provider selected by ADR-016. Google and the free-service alternative must both work as complete provider stacks, but only one may be active at runtime.
 
 Problem: There is no service contract that can validate a full street address, normalize the selected result, enforce Belgian address constraints, expose postal code/city/country components, or preserve provider metadata for storage and auditing.
 
-Solution: Introduce a reusable address validation layer that returns a normalized `ValidatedAddress` result for both Google and OpenFreeMap-compatible providers, with cached provider responses and deterministic validation failures.
+Solution: Introduce a reusable address validation layer that returns a normalized `ValidatedAddress` result through the active mapping provider, with cached provider responses and deterministic validation failures.
 
 Implementation Instructions:
 
 1. Create `app/DataTransferObjects/ValidatedAddress.php` with fields: `formattedAddress`, `streetAddress`, `locality`, `postalCode`, `country`, `latitude`, `longitude`, `provider`, `providerPlaceId`, and `rawPayload`.
-2. Add `MAPS_GEOCODING_PROVIDER=google`, `OPENFREEMAP_GEOCODING_BASE_URL=`, and `OPENFREEMAP_GEOCODING_API_KEY=` to `.env.example`, and expose them through `config/maps.php`.
-3. Create `app/Services/AddressValidationService.php` that accepts a free-text address query and locale, chooses `config('maps.geocoding_provider')`, calls exactly one active provider, and returns `ValidatedAddress` only when the provider returns one Belgian street-level or venue-level result with coordinates.
+2. Expose mapping provider settings through `config/maps.php`. `GOOGLE_MAPS_API_KEY` controls provider selection; free-provider endpoint/key settings are used only when the Google key is absent.
+3. Create `app/Services/AddressValidationService.php` that accepts a free-text address query and locale, delegates to the selected mapping provider, calls exactly one active provider, and returns `ValidatedAddress` only when the provider returns one Belgian street-level or venue-level result with coordinates.
 4. Implement a Google provider using the existing Google geocoding base URL and API key; it must reject non-BE results and results without coordinates or usable formatted address.
-5. Implement an OpenFreeMap-compatible provider using the configured base URL and optional API key; it must parse Nominatim-style JSON responses, reject non-BE results, and return the same `ValidatedAddress` shape.
+5. Implement a free-provider address validation adapter using the configured free-service geocoding endpoint and optional API key; it must parse the configured response format, reject non-BE results, and return the same `ValidatedAddress` shape. This provider is used only when Google is absent.
 6. Extend or replace `geocoding_cache` storage so successful and failed address validations are cached by normalized query, locale, country, provider, and purpose `address_validation`; do not break existing city/postal-code search cache reads.
 7. Keep `PostalCodeCoordinateService` for postal-code reference lookups until later stories replace session write paths.
 8. Add structured logging for provider failures without logging API keys or full raw payloads.
 
 Definition of Done:
 
-- Address validation works with `MAPS_GEOCODING_PROVIDER=google` and `MAPS_GEOCODING_PROVIDER=openfreemap` using mocked HTTP responses.
+- Address validation works with Google-selected and free-provider-selected configurations using mocked HTTP responses.
 - Non-Belgian, ambiguous, coordinate-less, and not-found provider responses return validation failures instead of silently storing postal-code centers.
 - Cached successful and failed validations avoid duplicate HTTP calls.
-- Unit tests cover Google success/failure, OpenFreeMap-compatible success/failure, cache hits, provider selection, and secret-safe logging.
+- Unit tests cover Google success/failure, free-provider success/failure, cache hits, provider selection, no cross-provider fallback, and secret-safe logging.
 - The requested behavior is implemented and follows the applicable project conventions.
 - Relevant automated tests are added or updated for the business logic and user-visible behavior.
 - Lint checks pass without warnings or errors.

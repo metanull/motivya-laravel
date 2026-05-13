@@ -255,9 +255,9 @@ Limit the number of rows processed per run (default: 100) to avoid long-running 
 php artisan addresses:backfill --model=sessions --apply --limit=50
 ```
 
-Exit codes: `0` = success, `1` = no provider configured or invalid options.
+Exit codes: `0` = success, `1` = selected provider misconfigured, unavailable, or invalid options.
 
-**Requires a geocoding provider**: `MAPS_GEOCODING_PROVIDER` must be set (default: `google`) and `GOOGLE_MAPS_API_KEY` must be present when using the Google provider.
+**Requires the active mapping provider**: provider selection follows ADR-016. If `GOOGLE_MAPS_API_KEY` is configured, Google Maps Platform must be healthy for geocoding/address validation, map display, and directions. If it is absent, the configured free-service provider must be healthy for the same capabilities. Do not treat one provider failing as permission to switch to another provider at runtime.
 
 The readiness page `address_precision` check turns **green** when all sessions and coach profiles have a validated formatted address with coordinates and provider. It turns **yellow** when some rows are still legacy postal-code-only, and **red** when NO rows at all are validated (and rows exist).
 
