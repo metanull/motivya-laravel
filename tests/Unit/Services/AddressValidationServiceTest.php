@@ -332,6 +332,30 @@ describe('AddressValidationService — OpenFreeMap provider', function (): void 
         Http::assertSent(fn ($request): bool => ! $request->hasHeader('X-Api-Key'));
     });
 
+    it('sends the default User-Agent header to Nominatim', function (): void {
+        Http::fake([
+            'https://nominatim.openstreetmap.org/*' => Http::response(nominatimBelgianSuccessResponse(), 200),
+        ]);
+
+        $service = app(AddressValidationService::class);
+        $service->validate('Grand-Place 1, Bruxelles');
+
+        Http::assertSent(fn ($request): bool => $request->hasHeader('User-Agent', 'Motivya/1.0 (+https://motivya.be)'));
+    });
+
+    it('sends the configured User-Agent header when NOMINATIM_USER_AGENT is overridden', function (): void {
+        Config::set('maps.free.nominatim_user_agent', 'MyApp/2.0 (+https://myapp.example.com)');
+
+        Http::fake([
+            'https://nominatim.openstreetmap.org/*' => Http::response(nominatimBelgianSuccessResponse(), 200),
+        ]);
+
+        $service = app(AddressValidationService::class);
+        $service->validate('Grand-Place 1, Bruxelles');
+
+        Http::assertSent(fn ($request): bool => $request->hasHeader('User-Agent', 'MyApp/2.0 (+https://myapp.example.com)'));
+    });
+
 });
 
 // ---------------------------------------------------------------------------

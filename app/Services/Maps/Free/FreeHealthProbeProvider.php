@@ -56,7 +56,9 @@ final class FreeHealthProbeProvider implements HealthProbeProviderContract
         // 3. Geocoding endpoint reachable
         try {
             $apiKey = config('maps.free.geocoding_api_key');
-            $request = Http::timeout((int) config('maps.geocoding_timeout', 5))->acceptJson();
+            $request = Http::timeout((int) config('maps.geocoding_timeout', 5))
+                ->acceptJson()
+                ->withHeaders(['User-Agent' => (string) config('maps.free.nominatim_user_agent', 'Motivya/1.0 (+https://motivya.be)')]);
 
             if (is_string($apiKey) && $apiKey !== '') {
                 $request = $request->withHeaders(['X-Api-Key' => $apiKey]);
