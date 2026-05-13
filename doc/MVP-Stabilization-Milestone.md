@@ -25,7 +25,7 @@ Observed production state:
 Core diagnosis:
 
 - Booking and payment are too fragile around Stripe failures, missing payment intent IDs, and webhook reconciliation.
-- Maps are implemented with MapLibre/OpenFreeMap, but no production session has coordinates, so no markers are produced and the map never renders.
+- Maps currently have mixed provider behavior and missing production coordinates, so markers can be absent and provider health is not fully observable.
 - Uploaded activity images are stored but not publicly served because the Laravel public storage link is missing in production.
 - The scheduler is not configured in production, so readiness correctly reports missing scheduled-command heartbeats, although the French wording is confusing.
 - Admin and accountant pages for audits and operations exist, but several are hidden from navigation or dashboard cards.
@@ -34,7 +34,7 @@ Core diagnosis:
 Implementation decisions for this milestone:
 
 - Booking holds remain in `PendingPayment` when Stripe Checkout creation fails, and athletes recover through retry/cancel actions until the hold expires.
-- Map display stays on MapLibre GL JS with OpenFreeMap tiles. Google is used for geocoding and directions through an environment-managed API key.
+- Map provider selection follows ADR-016: Google Maps Platform owns every mapping capability when `GOOGLE_MAPS_API_KEY` is configured; otherwise the configured free-service stack owns every mapping capability. No runtime provider mixing, silent fallback, or degraded map functionality is allowed.
 - Postal-code coordinates are loaded from a curated built-in Belgian/Brussels MVP dataset through a production-safe command.
 - OVH scheduler setup uses a systemd service and timer, not cron.
 - Production storage uses an explicit release-time symlink from `public/storage` to shared public storage.
@@ -211,7 +211,7 @@ The MVP is partner-demo ready when:
 
 **Implementation details:**
 
-- Keep MapLibre GL JS and OpenFreeMap as the default MVP map stack. It is already implemented in `resources/js/session-map.js` and does not require a Google Maps key for map display.
+- Replace the mixed map behavior with the ADR-016 provider model. Google-selected environments render maps through Google Maps Platform; environments without a Google key render through the configured free-service map stack.
 - Update the discovery view so a map container can render with Brussels as a fallback center even when there are no markers, alongside a localized message explaining that no mapped sessions match the current filters.
 - Avoid hiding all location context when filters return no markers.
 - Replace `<x-session-map>` with a reusable map component that accepts a unique DOM ID, marker collection, fallback center, height, and single-marker detail mode.
@@ -287,31 +287,31 @@ The MVP is partner-demo ready when:
 - Feature test: detail page without coordinates contains an address-based directions URL.
 - Render assertions for all three languages.
 
-## Story 2.4: Configure Google Geocoding With MapLibre/OpenFreeMap Maps
+## Story 2.4: Configure Coherent Google-or-Free Mapping
 
 **Role:** Operator, Developer
 
-**Context:** Map display is currently free and API-keyless through MapLibre/OpenFreeMap. That remains the required MVP map-rendering stack. Address/city geocoding and directions must use Google APIs through an environment-managed key so Brussels searches and directions are reliable during partner demos.
+**Context:** Map display, address/city geocoding, and directions are currently split across free map tiles and Google APIs. ADR-016 replaces that mixed approach with a hard provider choice: Google everywhere when `GOOGLE_MAPS_API_KEY` is configured, otherwise the configured free-service stack everywhere.
 
 **Implementation details:**
 
-- Keep MapLibre GL JS and OpenFreeMap for map rendering. Do not replace the map UI with Google Maps JavaScript in this milestone.
-- Add a `config/maps.php` file with these settings: MapLibre tile style URL, Google directions base URL, Google geocoding base URL, timeout, cache TTL, and `GOOGLE_MAPS_API_KEY`.
-- Implement `GeocodingService` with two ordered resolvers: first the local curated postal-code table, then Google Geocoding API.
+- Add a `config/maps.php` file with provider-neutral settings plus Google-provider and free-provider subsections.
+- Implement a single provider resolver: Google is selected when `GOOGLE_MAPS_API_KEY` is configured; the free-service provider is selected only when it is absent.
+- Implement geocoding/address validation, map display config, and directions generation through provider-specific services behind shared contracts.
 - Cache Google geocoding responses in a dedicated `geocoding_cache` table keyed by normalized query, locale, country, and provider.
-- Never call a free public geocoding service on every keystroke; resolve on search submission or debounced final input only.
-- Add readiness checks for the Google API key shape, geocoding cache table availability, and last successful geocoding probe.
+- Never call an external geocoding service on every keystroke; resolve on search submission, selected suggestion, or debounced final input only.
+- Add readiness checks for the selected provider's map display, geocoding/address validation, directions config, cache/table availability, and last successful provider probe.
 
 **Acceptance criteria:**
 
-- The app resolves Belgian city/postal-code searches through the local curated table first and Google Geocoding second.
-- Map display remains functional without a Google key.
-- Missing/invalid Google API key produces an actionable readiness warning and disables Google fallback geocoding while preserving local postal-code search.
+- The app resolves Belgian city/postal-code/address searches through the selected provider strategy.
+- Map display, directions, and geocoding use Google when a Google key is configured, and use the free-service stack only when the Google key is absent.
+- Missing or invalid selected-provider configuration produces an actionable readiness error.
 - Geocoding responses are cached and rate-limited.
 
 **Test expectations:**
 
-- Unit tests for provider selection and fallback behavior.
+- Unit tests for provider selection and no-fallback failure behavior.
 - Unit tests for cached geocoding results.
 - Feature test for city/postal-code search with mocked external provider.
 

@@ -24,7 +24,8 @@ No exceptions — migrations, seeders, config files, tests, service providers, a
 - Use `config()` helper for configuration — never `env()` outside `config/` files
 - Use `Storage::disk()` — never raw filesystem functions
 - Use Laravel built-in features over vendor-specific or low-level PHP equivalents
-- Never implement fallback logic or workarounds without explicit approval
+- Never implement fallback logic or workarounds without explicit approval. Approved alternatives must be explicit, deterministic configuration choices, not silent runtime fallback after an error.
+- Never implement degraded functionality for required external integrations. If the selected provider is configured and fails, log/report the failure and surface an actionable error or readiness status instead of silently switching providers, omitting validation, or returning partial results.
 - Never ignore warnings or errors, even pre-existing ones
 - **Never write code that "degrades gracefully" for missing migrations** — all required migrations are assumed to have been run. There is no valid scenario where application code executes against a schema missing its own columns. If a column is needed, the migration must exist; if the migration doesn't exist yet, the code that depends on it belongs in the same story or a later one. Do not use `getAttribute()` with null-coalescing, `Schema::hasColumn()`, or try/catch around column access as a substitute for running migrations.
 

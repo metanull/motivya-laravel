@@ -140,3 +140,12 @@ This file tracks all key technical and business decisions for the Motivya projec
 - **Registration**: Role files are loaded in `bootstrap/app.php` via the `then:` callback with group-level middleware, prefix, and name prefix. Individual routes inside role files must **not** re-declare group middleware.
 - **What stays in `web.php`**: Public pages (home, privacy, health), guest-only auth (login, register, OAuth, password reset), shared authenticated routes used by all roles (profile, email verify, locale switch, logout), and cross-role routes gated by ability (e.g., coach application form accessible to athletes).
 - **Alternatives rejected**: (A) Flat hyphenated files (`web-admin.php`) — unconventional PHP naming, directory gets crowded. (B) Everything in one `web.php` with inline middleware groups — error-prone, caused the missing `2fa` bug (#133). (C) Original E1-S24 proposal (`admin.php`, `coach.php`) — ambiguous channel, inconsistent athlete handling.
+
+## ADR-016: Mapping Provider Selection — Google-or-Free, Never Mixed
+
+- **Status**: DECIDED
+- **Date**: 2026-05
+- **Decision**: Use one mapping provider stack per runtime configuration. If `GOOGLE_MAPS_API_KEY` is configured, all mapping capabilities use Google Maps Platform. If it is absent, all mapping capabilities use the configured free-service alternative. Mapping capabilities include map display, address validation, geocoding, discovery search coordinate resolution, directions, and provider health checks.
+- **Rationale**: Mixing Google geocoding/directions with OpenFreeMap/MapLibre display creates inconsistent behavior, unclear cost expectations, incomplete health checks, and hidden failure modes. A hard config-derived provider choice makes production behavior predictable and testable.
+- **Constraints**: Do not silently fall back from the selected provider to another provider after an API error. Do not provide degraded map behavior when a required selected-provider capability fails. Fail the operation, log/report the provider error, and expose actionable admin readiness status.
+- **Implementation note**: Provider URLs, API-key checks, map render configuration, geocoding/address validation, directions generation, and health probes must be centralized in services/configuration. Blade, Livewire components, and JavaScript entry points should consume provider-neutral view data instead of embedding provider-specific URLs or fallback logic.

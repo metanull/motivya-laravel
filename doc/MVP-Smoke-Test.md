@@ -72,7 +72,7 @@ After seeding, verify address precision metrics with the audit command:
 php artisan addresses:audit-precision
 ```
 
-Expected output: at least some sessions show **Validated (exact)** count > 0. If all sessions are **Legacy (postal-code only)** and a geocoding provider is configured, run the backfill:
+Expected output: at least some sessions show **Validated (exact)** count > 0. If all sessions are **Legacy (postal-code only)** and the selected mapping provider is healthy, run the backfill:
 
 ```bash
 # Dry-run first (default — no writes)
@@ -85,7 +85,7 @@ php artisan addresses:backfill --model=coach_profiles --apply
 ```
 
 - [ ] `php artisan addresses:audit-precision` runs without errors
-- [ ] At least some sessions show **Validated (exact)** > 0 (or provider is not configured — yellow is acceptable locally without `GOOGLE_MAPS_API_KEY`)
+- [ ] At least some sessions show **Validated (exact)** > 0, or the selected provider readiness status clearly explains why local address validation is unavailable
 
 ### UAT / production bootstrap note
 
@@ -111,7 +111,7 @@ Epic 6 intentionally avoids Playwright for the current milestone. The MVP smoke 
 - It also asserts session detail renders the map container and a coordinate-based directions link.
 - `mvp:health-snapshot` remains the deployment-friendly check for missing public storage links, postal-code data, scheduler health, and payment anomalies.
 
-Full browser execution can be added later if the project needs pixel-level MapLibre validation, but it is not required for the partner-demo readiness gate.
+Full browser execution can be added later if the project needs pixel-level validation for the selected map provider, but it is not required for the partner-demo readiness gate.
 
 ---
 

@@ -19,6 +19,7 @@ See [doc/Glossary.md](../doc/Glossary.md) for the canonical domain vocabulary, [
 - **Storage**: S3-compatible (OVH/Laravel Cloud) in prod; local filesystem in dev/test
 - **Cache**: Valkey-compatible in prod; file driver in dev/test
 - **i18n**: French fr-BE (default), English en-GB, Dutch nl-BE
+- **Maps**: Google Maps Platform when `GOOGLE_MAPS_API_KEY` is configured; otherwise the configured free map stack. The map provider is a hard config-derived selection, never a per-feature mix.
 
 ## Build & Test
 
@@ -56,6 +57,9 @@ php artisan serve
 - Use Laravel's localization (`lang/` directory) for all user-facing strings — never hardcode text
 - Environment-based config: never commit `.env`; use `config()` helper, not `env()` outside config files
 - Prefer `php artisan make:*` generators for scaffolding new classes
+- Do not implement degraded functionality or silent fallback for required external services. If the configured provider is present but fails, fail the operation, log/report the provider error, and expose an actionable readiness/admin status.
+- Map, geocoding, address validation, directions, and provider health checks must be routed through shared services/configuration. Do not inline provider URLs, API-key checks, or ad hoc fallback logic in Blade, Livewire components, or JavaScript entry points.
+- Map provider selection rule: if `GOOGLE_MAPS_API_KEY` is configured, all map capabilities use Google Maps Platform; if it is absent, all map capabilities use the configured free-service alternative. Never use Google for one capability and free services for another in the same runtime configuration.
 
 ## Testing
 
