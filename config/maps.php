@@ -45,6 +45,7 @@ return [
         'tile_style_url' => env('MAPS_TILE_STYLE_URL', 'https://tiles.openfreemap.org/styles/liberty'),
         'geocoding_base_url' => env('OPENFREEMAP_GEOCODING_BASE_URL', 'https://nominatim.openstreetmap.org/search'),
         'geocoding_api_key' => env('OPENFREEMAP_GEOCODING_API_KEY'),
+        'nominatim_user_agent' => env('NOMINATIM_USER_AGENT', 'Motivya/1.0 (+https://motivya.be)'),
         'directions_base_url' => env('MAPS_FREE_DIRECTIONS_BASE_URL', 'https://www.openstreetmap.org/directions'),
         'attribution' => '© OpenStreetMap contributors',
     ],

@@ -223,6 +223,30 @@ describe('FreeAddressValidationProvider', function (): void {
         });
     });
 
+    it('sends the default User-Agent header to Nominatim', function (): void {
+        Http::fake([
+            'nominatim.openstreetmap.org/*' => Http::response([]),
+        ]);
+
+        $provider = new FreeAddressValidationProvider;
+        $provider->validate('Test', 'fr', 'BE');
+
+        Http::assertSent(fn ($request): bool => $request->hasHeader('User-Agent', 'Motivya/1.0 (+https://motivya.be)'));
+    });
+
+    it('sends the configured User-Agent header when nominatim_user_agent is overridden', function (): void {
+        Config::set('maps.free.nominatim_user_agent', 'TestApp/3.0 (+https://test.example.com)');
+
+        Http::fake([
+            'nominatim.openstreetmap.org/*' => Http::response([]),
+        ]);
+
+        $provider = new FreeAddressValidationProvider;
+        $provider->validate('Test', 'fr', 'BE');
+
+        Http::assertSent(fn ($request): bool => $request->hasHeader('User-Agent', 'TestApp/3.0 (+https://test.example.com)'));
+    });
+
     it('returns null on HTTP error and logs a warning', function (): void {
         Http::fake([
             'nominatim.openstreetmap.org/*' => Http::response([], 503),
