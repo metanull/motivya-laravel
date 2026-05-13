@@ -55,7 +55,7 @@
                 wire:loading.attr="disabled"
                 class="inline-flex items-center justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-70">
                 <span wire:loading.remove wire:target="openConfirmModal">{{ __('bookings.book_action') }}</span>
-                <span wire:loading wire:target="openConfirmModal">{{ __('bookings.processing') }}</span>
+                <span wire:loading wire:target="openConfirmModal">{{ __('bookings.opening_confirmation') }}</span>
             </button>
         @endif
     </div>

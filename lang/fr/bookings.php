@@ -9,6 +9,7 @@ return [
     'session_status_label' => 'Statut de la séance',
     'booking_status_label' => 'Statut de la réservation',
     'book_action' => 'Réserver cette séance',
+    'opening_confirmation' => 'Ouverture…',
     'processing' => 'Redirection vers le paiement…',
     'ready_to_book' => 'Réservez votre place et poursuivez vers le paiement.',
     'already_booked' => 'Vous avez déjà une réservation pour cette séance.',
