@@ -122,23 +122,6 @@
     {{-- Share buttons --}}
     <div class="mt-6 flex flex-wrap gap-3">
         {{-- Directions --}}
-        @php
-            $directionsBase = config('maps.google_directions_base_url');
-            if ($sportSession->hasValidatedAddress()) {
-                // Precise street-level coordinates validated by the geocoding provider.
-                $directionsUrl = $directionsBase . '?api=1&destination=' . $sportSession->latitude . ',' . $sportSession->longitude;
-            } elseif ($sportSession->latitude && $sportSession->longitude) {
-                // Postal-code-centre coordinates (less precise but still usable).
-                $directionsUrl = $directionsBase . '?api=1&destination=' . $sportSession->latitude . ',' . $sportSession->longitude;
-            } else {
-                // No coordinates — fall back to a text destination.
-                // Prefer the geocoder-formatted address if available; otherwise
-                // compose from the legacy location + postal_code fields.
-                $legacyText = trim(($sportSession->location ?? '') . ' ' . ($sportSession->postal_code ?? '')) . ' Belgium';
-                $textDestination = $sportSession->formatted_address ?? $legacyText;
-                $directionsUrl = $directionsBase . '?api=1&destination=' . urlencode($textDestination);
-            }
-        @endphp
         <a href="{{ $directionsUrl }}"
             target="_blank"
             rel="noopener noreferrer"

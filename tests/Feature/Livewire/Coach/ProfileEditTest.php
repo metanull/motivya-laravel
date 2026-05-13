@@ -6,6 +6,7 @@ use App\Livewire\Coach\ProfileEdit;
 use App\Models\CoachProfile;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 
@@ -144,7 +145,8 @@ describe('coach profile edit', function () {
         Http::fake([
             '*' => Http::response(['status' => 'ZERO_RESULTS', 'results' => []], 200),
         ]);
-        config(['maps.geocoding_provider' => 'google', 'maps.google_api_key' => 'test-key']);
+        // Config must have a key so the resolver picks Google provider.
+        Config::set('maps.google.api_key', 'test-key');
 
         Livewire::actingAs($coach)
             ->test(ProfileEdit::class)

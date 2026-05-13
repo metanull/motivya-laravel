@@ -57,7 +57,7 @@ final class GeocodingService
 
     public function googleApiKeyConfigured(): bool
     {
-        $key = config('maps.google_api_key');
+        $key = config('maps.google.api_key');
 
         return ! empty($key) && is_string($key) && strlen($key) > self::MIN_API_KEY_LENGTH;
     }
@@ -86,9 +86,9 @@ final class GeocodingService
         // Call Google API
         try {
             $response = Http::timeout((int) config('maps.geocoding_timeout', 5))
-                ->get((string) config('maps.google_geocoding_base_url'), [
+                ->get((string) config('maps.google.geocoding_base_url'), [
                     'address' => $query.', '.$country,
-                    'key' => config('maps.google_api_key'),
+                    'key' => config('maps.google.api_key'),
                     'language' => $locale,
                     'region' => strtolower($country),
                 ]);

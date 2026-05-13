@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Enums\MapProvider;
 use App\Models\CoachProfile;
 use App\Models\SportSession;
 use App\Services\AddressValidationService;
+use App\Services\Maps\MapProviderResolver;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -63,9 +65,10 @@ final class BackfillAddressPrecision extends Command
         }
 
         // Verify the geocoding provider is usable before fetching records.
-        $provider = (string) config('maps.geocoding_provider', 'google');
-        if ($provider === 'google') {
-            $googleKey = config('maps.google_api_key');
+        $resolver = app(MapProviderResolver::class);
+        $activeProvider = $resolver->resolve();
+        if ($activeProvider === MapProvider::Google) {
+            $googleKey = config('maps.google.api_key');
             if (empty($googleKey)) {
                 $this->error('No Google API key configured (GOOGLE_MAPS_API_KEY). Cannot backfill.');
 

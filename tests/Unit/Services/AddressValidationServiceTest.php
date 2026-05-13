@@ -2,8 +2,11 @@
 
 declare(strict_types=1);
 
+use App\Contracts\Maps\AddressValidationProviderContract;
 use App\DataTransferObjects\ValidatedAddress;
 use App\Services\AddressValidationService;
+use App\Services\Maps\Free\FreeAddressValidationProvider;
+use App\Services\Maps\Google\GoogleAddressValidationProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
@@ -122,9 +125,11 @@ function nominatimFrenchResponse(): array
 describe('AddressValidationService — Google provider', function (): void {
 
     beforeEach(function (): void {
-        Config::set('maps.geocoding_provider', 'google');
-        Config::set('maps.google_api_key', 'test-google-api-key-xxxxxxxxxx');
-        Config::set('maps.google_geocoding_base_url', 'https://maps.googleapis.com/maps/api/geocode/json');
+        // Setting a non-empty api_key causes MapProviderResolver to select Google.
+        Config::set('maps.google.api_key', 'test-google-api-key-xxxxxxxxxx');
+        Config::set('maps.google.geocoding_base_url', 'https://maps.googleapis.com/maps/api/geocode/json');
+        // Rebind the contract to the Google provider so tests target the right class.
+        app()->bind(AddressValidationProviderContract::class, GoogleAddressValidationProvider::class);
         Cache::flush();
     });
 
@@ -187,17 +192,25 @@ describe('AddressValidationService — Google provider', function (): void {
         expect($result)->toBeNull();
     });
 
-    it('returns null without making an HTTP call when the Google API key is missing', function (): void {
-        Config::set('maps.google_api_key', null);
+    it('switches to the free provider when google api_key is absent and calls Nominatim', function (): void {
+        // No Google key → resolver selects Free → Nominatim is called.
+        Config::set('maps.google.api_key', null);
+        Config::set('maps.free.geocoding_base_url', 'https://nominatim.openstreetmap.org/search');
+        // Rebind to the free provider to reflect what AppServiceProvider would do.
+        app()->bind(AddressValidationProviderContract::class, FreeAddressValidationProvider::class);
+        Cache::flush();
 
-        Http::fake(['*' => Http::response([], 500)]);
+        Http::fake([
+            'https://nominatim.openstreetmap.org/*' => Http::response(nominatimBelgianSuccessResponse(), 200),
+        ]);
 
         $service = app(AddressValidationService::class);
-        $result = $service->validate('Rue de la Loi 16, Bruxelles');
+        $result = $service->validate('Grand-Place 1, Bruxelles');
 
-        expect($result)->toBeNull();
+        expect($result)->toBeInstanceOf(ValidatedAddress::class)
+            ->and($result->provider)->toBe('openfreemap');
 
-        Http::assertNothingSent();
+        Http::assertSent(fn ($request): bool => str_contains($request->url(), 'nominatim.openstreetmap.org'));
     });
 
     it('does not log the API key in the warning message', function (): void {
@@ -228,9 +241,11 @@ describe('AddressValidationService — Google provider', function (): void {
 describe('AddressValidationService — OpenFreeMap provider', function (): void {
 
     beforeEach(function (): void {
-        Config::set('maps.geocoding_provider', 'openfreemap');
-        Config::set('maps.openfreemap_geocoding_base_url', 'https://nominatim.openstreetmap.org/search');
-        Config::set('maps.openfreemap_geocoding_api_key', null);
+        // No Google key → resolver selects Free.
+        Config::set('maps.google.api_key', null);
+        Config::set('maps.free.geocoding_base_url', 'https://nominatim.openstreetmap.org/search');
+        Config::set('maps.free.geocoding_api_key', null);
+        app()->bind(AddressValidationProviderContract::class, FreeAddressValidationProvider::class);
         Cache::flush();
     });
 
@@ -294,7 +309,7 @@ describe('AddressValidationService — OpenFreeMap provider', function (): void 
     });
 
     it('sends the X-Api-Key header when an OpenFreeMap API key is configured', function (): void {
-        Config::set('maps.openfreemap_geocoding_api_key', 'my-nominatim-key');
+        Config::set('maps.free.geocoding_api_key', 'my-nominatim-key');
 
         Http::fake([
             'https://nominatim.openstreetmap.org/*' => Http::response(nominatimBelgianSuccessResponse(), 200),
@@ -326,9 +341,9 @@ describe('AddressValidationService — OpenFreeMap provider', function (): void 
 describe('AddressValidationService — caching', function (): void {
 
     beforeEach(function (): void {
-        Config::set('maps.geocoding_provider', 'google');
-        Config::set('maps.google_api_key', 'test-google-api-key-xxxxxxxxxx');
-        Config::set('maps.google_geocoding_base_url', 'https://maps.googleapis.com/maps/api/geocode/json');
+        Config::set('maps.google.api_key', 'test-google-api-key-xxxxxxxxxx');
+        Config::set('maps.google.geocoding_base_url', 'https://maps.googleapis.com/maps/api/geocode/json');
+        app()->bind(AddressValidationProviderContract::class, GoogleAddressValidationProvider::class);
         Cache::flush();
     });
 
@@ -397,10 +412,10 @@ describe('AddressValidationService — provider selection', function (): void {
         Cache::flush();
     });
 
-    it('dispatches requests to the Google endpoint when provider is "google"', function (): void {
-        Config::set('maps.geocoding_provider', 'google');
-        Config::set('maps.google_api_key', 'test-google-api-key-xxxxxxxxxx');
-        Config::set('maps.google_geocoding_base_url', 'https://maps.googleapis.com/maps/api/geocode/json');
+    it('dispatches requests to the Google endpoint when GOOGLE_MAPS_API_KEY is set', function (): void {
+        Config::set('maps.google.api_key', 'test-google-api-key-xxxxxxxxxx');
+        Config::set('maps.google.geocoding_base_url', 'https://maps.googleapis.com/maps/api/geocode/json');
+        app()->bind(AddressValidationProviderContract::class, GoogleAddressValidationProvider::class);
 
         Http::fake(['*' => Http::response(['results' => [], 'status' => 'ZERO_RESULTS'], 200)]);
 
@@ -410,9 +425,10 @@ describe('AddressValidationService — provider selection', function (): void {
         Http::assertSent(fn ($request): bool => str_contains($request->url(), 'googleapis.com'));
     });
 
-    it('dispatches requests to the Nominatim endpoint when provider is "openfreemap"', function (): void {
-        Config::set('maps.geocoding_provider', 'openfreemap');
-        Config::set('maps.openfreemap_geocoding_base_url', 'https://nominatim.openstreetmap.org/search');
+    it('dispatches requests to the Nominatim endpoint when GOOGLE_MAPS_API_KEY is absent', function (): void {
+        Config::set('maps.google.api_key', null);
+        Config::set('maps.free.geocoding_base_url', 'https://nominatim.openstreetmap.org/search');
+        app()->bind(AddressValidationProviderContract::class, FreeAddressValidationProvider::class);
 
         Http::fake(['*' => Http::response([], 200)]);
 
@@ -422,17 +438,17 @@ describe('AddressValidationService — provider selection', function (): void {
         Http::assertSent(fn ($request): bool => str_contains($request->url(), 'nominatim.openstreetmap.org'));
     });
 
-    it('defaults to the Google provider when config value is absent', function (): void {
-        Config::set('maps.geocoding_provider', null);
-        Config::set('maps.google_api_key', 'test-google-api-key-xxxxxxxxxx');
-        Config::set('maps.google_geocoding_base_url', 'https://maps.googleapis.com/maps/api/geocode/json');
+    it('defaults to the free stack when GOOGLE_MAPS_API_KEY is an empty string', function (): void {
+        Config::set('maps.google.api_key', '');
+        Config::set('maps.free.geocoding_base_url', 'https://nominatim.openstreetmap.org/search');
+        app()->bind(AddressValidationProviderContract::class, FreeAddressValidationProvider::class);
 
-        Http::fake(['*' => Http::response(['results' => [], 'status' => 'ZERO_RESULTS'], 200)]);
+        Http::fake(['*' => Http::response([], 200)]);
 
         $service = app(AddressValidationService::class);
         $service->validate('Rue de la Loi 16, Bruxelles');
 
-        Http::assertSent(fn ($request): bool => str_contains($request->url(), 'googleapis.com'));
+        Http::assertSent(fn ($request): bool => str_contains($request->url(), 'nominatim.openstreetmap.org'));
     });
 
 });
