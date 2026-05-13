@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\CoachPayoutStatementService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
 final class GenerateMonthlyPayoutStatements extends Command
@@ -63,8 +64,15 @@ final class GenerateMonthlyPayoutStatements extends Command
             try {
                 $service->generateForCoach($coach, $year, $month);
                 $generated++;
-            } catch (InvalidArgumentException) {
+            } catch (InvalidArgumentException $e) {
                 $skipped++;
+                Log::info('payout-statements:generate-monthly skipped coach', [
+                    'coach_id' => $coach->id,
+                    'year' => $year,
+                    'month' => $month,
+                    'reason' => $e->getMessage(),
+                ]);
+                $this->line("  Skipped coach {$coach->id}: {$e->getMessage()}");
             }
         }
 

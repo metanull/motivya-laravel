@@ -429,9 +429,8 @@ final class StripeWebhookController extends Controller
 
         $paymentIntentId = $this->extractPaymentIntentId($transfer->source_transaction ?? null)
             ?? $this->stringValue($transfer->metadata?->payment_intent_id ?? null);
-        $chargeId = $this->stringValue($transfer->source_transaction ?? null) === $paymentIntentId
-            ? null
-            : $this->stringValue($transfer->source_transaction ?? null);
+        $sourceTransaction = $this->stringValue($transfer->source_transaction ?? null);
+        $chargeId = $sourceTransaction !== $paymentIntentId ? $sourceTransaction : null;
         $amount = $this->integerValue($transfer->amount ?? null) ?? 0;
         $currency = strtolower((string) ($transfer->currency ?? 'eur'));
         $destinationAccount = $this->stringValue($transfer->destination ?? null);
