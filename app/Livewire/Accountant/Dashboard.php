@@ -5,15 +5,18 @@ declare(strict_types=1);
 namespace App\Livewire\Accountant;
 
 use App\Enums\BookingStatus;
+use App\Enums\CoachPayoutStatementStatus;
 use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
 use App\Enums\SessionStatus;
 use App\Enums\UserRole;
 use App\Models\AuditEvent;
 use App\Models\Booking;
+use App\Models\CoachPayoutStatement;
 use App\Models\Invoice;
 use App\Models\PaymentAnomaly;
 use App\Models\SportSession;
+use App\Models\StripeTransfer;
 use App\Models\User;
 use App\Policies\AuditEventPolicy;
 use Carbon\Carbon;
@@ -184,6 +187,48 @@ final class Dashboard extends Component
     public function summaryOpenAnomalyCount(): int
     {
         return PaymentAnomaly::where('resolution_status', 'open')->count();
+    }
+
+    // ─── Collected payment metrics (booking-based, current calendar month) ───
+
+    /** Total amount paid on confirmed bookings this month (not invoice-based). */
+    #[Computed]
+    public function summaryCollectedPaymentsAmount(): int
+    {
+        return (int) Booking::query()
+            ->where('status', BookingStatus::Confirmed)
+            ->whereMonth('updated_at', now()->month)
+            ->whereYear('updated_at', now()->year)
+            ->sum('amount_paid');
+    }
+
+    /** Count of confirmed bookings with amount_paid > 0 in the current month. */
+    #[Computed]
+    public function summaryCollectedPaymentsCount(): int
+    {
+        return Booking::query()
+            ->where('status', BookingStatus::Confirmed)
+            ->where('amount_paid', '>', 0)
+            ->whereMonth('updated_at', now()->month)
+            ->whereYear('updated_at', now()->year)
+            ->count();
+    }
+
+    /** Count of Stripe transfers recorded in the current month. */
+    #[Computed]
+    public function summaryTransfersCount(): int
+    {
+        return StripeTransfer::query()
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->count();
+    }
+
+    /** Count of draft coach payout statements awaiting invoice submission. */
+    #[Computed]
+    public function summaryDraftPayoutStatementsCount(): int
+    {
+        return CoachPayoutStatement::where('status', CoachPayoutStatementStatus::Draft)->count();
     }
 
     #[Computed]

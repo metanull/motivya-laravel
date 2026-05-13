@@ -99,7 +99,7 @@ final class Index extends Component
     public function render(AnomalyDetectorService $anomalyDetector): View
     {
         $bookings = Booking::query()
-            ->with(['sportSession.coach', 'athlete', 'sportSession.invoices'])
+            ->with(['sportSession.coach', 'athlete', 'sportSession.invoices', 'stripeTransfers'])
             ->when(
                 $this->dateFrom !== '',
                 fn ($q) => $q->where('bookings.created_at', '>=', $this->dateFrom.' 00:00:00'),

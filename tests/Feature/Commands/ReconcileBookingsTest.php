@@ -175,4 +175,35 @@ describe('payments:reconcile-bookings', function () {
         $booking->refresh();
         expect($booking->stripe_payment_intent_id)->toBeNull();
     });
+
+    it('repairs a booking when Stripe returns an expanded PaymentIntent object', function () {
+        $coach = User::factory()->coach()->create();
+        $session = SportSession::factory()->confirmed()->for($coach, 'coach')->create();
+        $booking = Booking::factory()->confirmed()->for($session, 'sportSession')->create([
+            'amount_paid' => 1500,
+            'stripe_payment_intent_id' => null,
+            'stripe_checkout_session_id' => 'cs_expanded_test',
+        ]);
+
+        // Simulate Stripe returning an expanded PaymentIntent object (id, object, amount, status).
+        $command = makeReconcileCommand(
+            fn (string $csId): StripeCheckoutSession => StripeCheckoutSession::constructFrom([
+                'id' => $csId,
+                'payment_intent' => [
+                    'id' => 'pi_expanded_001',
+                    'object' => 'payment_intent',
+                    'amount' => 1500,
+                    'status' => 'succeeded',
+                ],
+            ]),
+        );
+
+        app()->instance(ReconcileBookings::class, $command);
+
+        $this->artisan('payments:reconcile-bookings', ['--repair' => true])
+            ->assertExitCode(0);
+
+        $booking->refresh();
+        expect($booking->stripe_payment_intent_id)->toBe('pi_expanded_001');
+    });
 });

@@ -86,6 +86,10 @@ return [
     'summary_stuck_sessions' => 'Stuck Sessions',
     'summary_open_anomalies' => 'Open Anomalies',
     'summary_view_anomalies' => 'View all anomalies',
+    'summary_collected_payments' => 'Collected Payments (this month)',
+    'summary_collected_payments_count' => '{0} 0 bookings|{1} :count booking|[2,*] :count bookings',
+    'summary_transfers' => 'Stripe Transfers (this month)',
+    'summary_draft_payout_statements' => 'Draft Payout Statements',
 
     // Transactions ledger
     'transactions_title' => 'Transaction Ledger',
@@ -102,6 +106,7 @@ return [
     'transactions_col_payout' => 'Coach Payout',
     'transactions_col_stripe_pi' => 'Stripe PI',
     'transactions_col_stripe_cs' => 'Stripe CS',
+    'transactions_col_stripe_transfer' => 'Stripe Transfer',
     'transactions_col_refund_status' => 'Refund Status',
     'transactions_col_anomaly' => 'Anomaly',
     'transactions_col_session_status' => 'Session Status',
@@ -185,6 +190,7 @@ return [
     'anomalies_type_completed_session_without_invoice' => 'Completed Session Without Invoice',
     'anomalies_type_invoice_total_mismatch' => 'Invoice Total Mismatch',
     'anomalies_type_coach_stripe_incomplete' => 'Coach Stripe Account Incomplete',
+    'anomalies_type_unresolved_stripe_transfer' => 'Unresolved Stripe Transfer',
 
     /*
     |--------------------------------------------------------------------------

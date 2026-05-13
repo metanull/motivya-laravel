@@ -11,6 +11,7 @@ enum PaymentAnomalyType: string
     case CompletedSessionWithoutInvoice = 'completed_session_without_invoice';
     case InvoiceTotalMismatch = 'invoice_total_mismatch';
     case CoachStripeIncomplete = 'coach_stripe_incomplete';
+    case UnresolvedStripeTransfer = 'unresolved_stripe_transfer';
 
     public function label(): string
     {

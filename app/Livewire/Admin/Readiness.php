@@ -16,6 +16,7 @@ use App\Models\SchedulerHeartbeat;
 use App\Models\SportSession;
 use App\Models\User;
 use App\Services\Maps\MapProviderHealthService;
+use App\Services\Stripe\StripeWebhookInspectionService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -36,6 +37,7 @@ final class Readiness extends Component
         'sessions:complete-finished' => 120,
         'subscriptions:compute-monthly' => 46080,
         'bookings:expire-unpaid' => 30,
+        'payout-statements:generate-monthly' => 46080,
     ];
 
     public function mount(): void
@@ -51,6 +53,7 @@ final class Readiness extends Component
     {
         return [
             'stripe' => $this->checkStripe(),
+            'stripe_webhook_subscriptions' => $this->checkStripeWebhookSubscriptions(),
             'mail' => $this->checkMail(),
             'database' => $this->checkDatabase(),
             'cache' => $this->checkCache(),
@@ -124,6 +127,35 @@ final class Readiness extends Component
         }
 
         return ['status' => 'green', 'message' => __('admin.readiness_stripe_ok')];
+    }
+
+    /**
+     * @return array{status: string, message: string}
+     */
+    private function checkStripeWebhookSubscriptions(): array
+    {
+        $secret = config('services.stripe.secret');
+
+        if (empty($secret) || ! str_starts_with((string) $secret, 'sk_')) {
+            return ['status' => 'yellow', 'message' => __('admin.readiness_stripe_webhook_subscriptions_no_key')];
+        }
+
+        try {
+            $service = app(StripeWebhookInspectionService::class);
+            $missing = $service->missingEvents();
+        } catch (\Throwable $e) {
+            return ['status' => 'red', 'message' => __('admin.readiness_stripe_webhook_subscriptions_api_error', [
+                'message' => $e->getMessage(),
+            ])];
+        }
+
+        if ($missing === []) {
+            return ['status' => 'green', 'message' => __('admin.readiness_stripe_webhook_subscriptions_ok')];
+        }
+
+        return ['status' => 'red', 'message' => __('admin.readiness_stripe_webhook_subscriptions_missing', [
+            'events' => implode(', ', $missing),
+        ])];
     }
 
     /**

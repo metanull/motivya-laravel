@@ -9,6 +9,7 @@ use Database\Factories\BookingFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Booking extends Model
 {
@@ -61,5 +62,13 @@ class Booking extends Model
     public function athlete(): BelongsTo
     {
         return $this->belongsTo(User::class, 'athlete_id');
+    }
+
+    /**
+     * @return HasMany<StripeTransfer, $this>
+     */
+    public function stripeTransfers(): HasMany
+    {
+        return $this->hasMany(StripeTransfer::class);
     }
 }

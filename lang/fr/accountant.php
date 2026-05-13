@@ -86,6 +86,10 @@ return [
     'summary_stuck_sessions' => 'Séances bloquées',
     'summary_open_anomalies' => 'Anomalies ouvertes',
     'summary_view_anomalies' => 'Voir toutes les anomalies',
+    'summary_collected_payments' => 'Paiements collectés (ce mois)',
+    'summary_collected_payments_count' => '{0} 0 réservation|{1} :count réservation|[2,*] :count réservations',
+    'summary_transfers' => 'Virements Stripe (ce mois)',
+    'summary_draft_payout_statements' => 'Relevés de paiement en brouillon',
 
     // Grand livre des transactions
     'transactions_title' => 'Grand livre',
@@ -102,6 +106,7 @@ return [
     'transactions_col_payout' => 'Versement coach',
     'transactions_col_stripe_pi' => 'PI Stripe',
     'transactions_col_stripe_cs' => 'CS Stripe',
+    'transactions_col_stripe_transfer' => 'Virement Stripe',
     'transactions_col_refund_status' => 'Statut remboursement',
     'transactions_col_anomaly' => 'Anomalie',
     'transactions_col_session_status' => 'Statut séance',
@@ -185,6 +190,7 @@ return [
     'anomalies_type_completed_session_without_invoice' => 'Séance terminée sans facture',
     'anomalies_type_invoice_total_mismatch' => 'Écart de total de facture',
     'anomalies_type_coach_stripe_incomplete' => 'Compte Stripe coach incomplet',
+    'anomalies_type_unresolved_stripe_transfer' => 'Virement Stripe non résolu',
 
     /*
     |--------------------------------------------------------------------------

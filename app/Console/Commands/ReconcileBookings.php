@@ -96,9 +96,7 @@ final class ReconcileBookings extends Command
                 continue;
             }
 
-            $paymentIntentId = is_string($stripeSession->payment_intent) && $stripeSession->payment_intent !== ''
-                ? $stripeSession->payment_intent
-                : null;
+            $paymentIntentId = $this->extractPaymentIntentId($stripeSession->payment_intent);
 
             if ($paymentIntentId === null) {
                 $this->warn("  Booking #{$booking->id}: checkout session has no payment intent — manual review required.");
@@ -162,5 +160,22 @@ final class ReconcileBookings extends Command
             'id' => $checkoutSessionId,
             'expand' => ['payment_intent'],
         ]);
+    }
+
+    /**
+     * Extract a PaymentIntent ID from either a string identifier or an expanded
+     * Stripe PaymentIntent object. Returns null when neither form is present.
+     */
+    private function extractPaymentIntentId(mixed $value): ?string
+    {
+        if (is_string($value) && $value !== '') {
+            return $value;
+        }
+
+        if (is_object($value) && isset($value->id) && is_string($value->id) && $value->id !== '') {
+            return $value->id;
+        }
+
+        return null;
     }
 }

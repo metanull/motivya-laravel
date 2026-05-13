@@ -160,4 +160,36 @@ describe('checkout.session.completed webhook', function () {
         expect($booking->fresh()->status)->toBe(BookingStatus::Confirmed);
         expect($booking->fresh()->stripe_payment_intent_id)->toBe('pi_fallback');
     });
+
+    it('persists stripe_payment_intent_id from an expanded PaymentIntent object', function () {
+        Event::fake([BookingCreated::class]);
+
+        $sportSession = SportSession::factory()->published()->create(['min_participants' => 1]);
+        $booking = Booking::factory()->pendingPayment()->for($sportSession, 'sportSession')->create([
+            'stripe_checkout_session_id' => 'cs_expanded_pi',
+        ]);
+
+        // Simulate Stripe sending an expanded payment_intent object instead of a bare string ID.
+        $response = ($this->postStripeWebhook)('evt_cs_expanded_pi', 'checkout.session.completed', [
+            'id' => 'cs_expanded_pi',
+            'payment_intent' => [
+                'id' => 'pi_expanded_object',
+                'object' => 'payment_intent',
+                'amount' => 2000,
+                'status' => 'succeeded',
+            ],
+            'amount_total' => 2000,
+            'metadata' => [
+                'session_id' => (string) $sportSession->id,
+                'athlete_id' => (string) $booking->athlete_id,
+            ],
+        ]);
+
+        $response->assertOk()->assertJson(['status' => 'processed']);
+
+        $booking = $booking->fresh();
+        expect($booking->status)->toBe(BookingStatus::Confirmed);
+        expect($booking->stripe_payment_intent_id)->toBe('pi_expanded_object');
+        expect($booking->amount_paid)->toBe(2000);
+    });
 });
