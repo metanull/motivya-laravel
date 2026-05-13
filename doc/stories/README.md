@@ -12,6 +12,7 @@ This directory contains the detailed story breakdown for the Motivya project. Ea
 | [epic-4-accountant.md](epic-4-accountant.md) | Accountant Portal + Invoicing | Epic 4 | Epic 3 |
 | [mvp-address-geolocation.md](mvp-address-geolocation.md) | MVP Address and Geolocation Precision | MVP Stabilization | Epic 2, Epic 3 |
 | [mvp-mapping-provider-coherence.md](mvp-mapping-provider-coherence.md) | MVP Mapping Provider Coherence | MVP Stabilization | MVP Address and Geolocation Precision |
+| [mvp-payment-ledger-recovery.md](mvp-payment-ledger-recovery.md) | MVP Payment Ledger Recovery | MVP Stabilization | Epic 3, Epic 4 |
 
 ## Conventions
 
@@ -48,3 +49,4 @@ This directory contains the detailed story breakdown for the Motivya project. Ea
 | Epic 3: Athlete Experience & Payments | — | Discovery, booking, Stripe, refunds, athlete dashboard |
 | Epic 4: Accountant Portal + Invoicing | — | PEPPOL, VAT engine, credit notes, exports |
 | MVP Mapping Provider Coherence | — | Google-or-free map provider architecture, readiness, and discovery map fixes |
+| MVP Payment Ledger Recovery | — | Stripe payment-intent persistence, reconciliation, transfers, payout statements, and accountant dashboard metrics |
