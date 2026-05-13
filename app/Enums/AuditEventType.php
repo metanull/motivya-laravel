@@ -46,4 +46,6 @@ enum AuditEventType: string
 
     case AnomalyResolved = 'anomaly.resolved';
     case AnomalyIgnored = 'anomaly.ignored';
+
+    case TransferRecorded = 'transfer.recorded';
 }

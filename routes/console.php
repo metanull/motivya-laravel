@@ -16,3 +16,4 @@ Schedule::command('sessions:complete-finished')->hourly();
 Schedule::command('subscriptions:compute-monthly')->monthlyOn(1, '02:00');
 Schedule::command('bookings:expire-unpaid')->everyFiveMinutes();
 Schedule::command('payments:detect-anomalies')->hourly();
+Schedule::command('payout-statements:generate-monthly')->monthlyOn(1, '03:00');

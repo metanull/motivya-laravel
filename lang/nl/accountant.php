@@ -86,6 +86,10 @@ return [
     'summary_stuck_sessions' => 'Vastgelopen sessies',
     'summary_open_anomalies' => 'Openstaande afwijkingen',
     'summary_view_anomalies' => 'Alle anomalieën bekijken',
+    'summary_collected_payments' => 'Geïnde betalingen (deze maand)',
+    'summary_collected_payments_count' => '{0} 0 boeking|{1} :count boeking|[2,*] :count boekingen',
+    'summary_transfers' => 'Stripe-overdrachten (deze maand)',
+    'summary_draft_payout_statements' => 'Conceptbetalingsoverzichten',
 
     // Dagboek transacties
     'transactions_title' => 'Transactiedagboek',
@@ -102,6 +106,7 @@ return [
     'transactions_col_payout' => 'Coach-uitbetaling',
     'transactions_col_stripe_pi' => 'Stripe PI',
     'transactions_col_stripe_cs' => 'Stripe CS',
+    'transactions_col_stripe_transfer' => 'Stripe-overdracht',
     'transactions_col_refund_status' => 'Terugbetalingsstatus',
     'transactions_col_anomaly' => 'Anomalie',
     'transactions_col_session_status' => 'Sessiestatus',
@@ -185,6 +190,7 @@ return [
     'anomalies_type_completed_session_without_invoice' => 'Voltooide sessie zonder factuur',
     'anomalies_type_invoice_total_mismatch' => 'Factuurtotaal klopt niet',
     'anomalies_type_coach_stripe_incomplete' => 'Onvolledige Stripe-account voor coach',
+    'anomalies_type_unresolved_stripe_transfer' => 'Onopgeloste Stripe-overdracht',
 
     /*
     |--------------------------------------------------------------------------

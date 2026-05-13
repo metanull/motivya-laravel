@@ -43,6 +43,7 @@ final class AuditEventPolicy
         AuditEventType::PayoutStatementPaid,
         AuditEventType::AnomalyResolved,
         AuditEventType::AnomalyIgnored,
+        AuditEventType::TransferRecorded,
     ];
 
     /**

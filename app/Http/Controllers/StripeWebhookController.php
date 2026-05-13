@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Enums\AuditEventType;
 use App\Enums\AuditOperation;
 use App\Enums\BookingStatus;
+use App\Enums\PaymentAnomalyType;
 use App\Enums\SessionStatus;
 use App\Events\BookingCancelled;
 use App\Events\BookingCreated;
@@ -19,13 +20,16 @@ use App\Events\Stripe\PaymentIntentFailed;
 use App\Events\Stripe\PaymentIntentSucceeded;
 use App\Models\Booking;
 use App\Models\CoachProfile;
+use App\Models\PaymentAnomaly;
 use App\Models\ProcessedWebhook;
 use App\Models\SportSession;
+use App\Models\StripeTransfer;
 use App\Services\Audit\AuditContextResolver;
 use App\Services\Audit\AuditService;
 use App\Services\Audit\AuditSubject;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Stripe\Event;
@@ -100,6 +104,7 @@ final class StripeWebhookController extends Controller
             'charge.refunded' => $this->handleChargeRefunded($event),
             'account.updated' => $this->handleAccountUpdated($event),
             'checkout.session.completed' => $this->handleCheckoutSessionCompleted($event),
+            'transfer.created' => $this->handleTransferCreated($event),
             default => null,
         };
     }
@@ -116,7 +121,7 @@ final class StripeWebhookController extends Controller
         // These event types are processed in processStripeEvent and dispatch domain events
         // inline (e.g. BookingCreated, SessionConfirmed) rather than mapping to a dedicated
         // Stripe event class.
-        $silentTypes = ['checkout.session.completed'];
+        $silentTypes = ['checkout.session.completed', 'transfer.created'];
 
         $eventClass = $eventMap[$event->type] ?? null;
 
@@ -142,7 +147,36 @@ final class StripeWebhookController extends Controller
             ->lockForUpdate()
             ->find($booking->getKey());
 
-        if ($lockedBooking === null || $lockedBooking->status !== BookingStatus::PendingPayment) {
+        if ($lockedBooking === null) {
+            return;
+        }
+
+        $paymentIntent = $event->data->object;
+        $paymentIntentId = $this->stringValue($paymentIntent->id ?? null);
+        $amountPaid = $this->integerValue($paymentIntent->amount_received ?? $paymentIntent->amount ?? null);
+
+        // Repair case: booking is already confirmed but missing PaymentIntent ID.
+        if ($lockedBooking->status === BookingStatus::Confirmed
+            && $lockedBooking->stripe_payment_intent_id === null
+            && $paymentIntentId !== null) {
+            $lockedBooking->forceFill([
+                'stripe_payment_intent_id' => $paymentIntentId,
+            ])->save();
+
+            $this->auditService->record(
+                AuditEventType::BookingPaymentReconciled,
+                AuditOperation::Payment,
+                $lockedBooking,
+                subjects: [AuditSubject::primary($lockedBooking)],
+                oldValues: ['stripe_payment_intent_id' => null],
+                newValues: ['stripe_payment_intent_id' => $paymentIntentId],
+                context: $this->contextResolver->forWebhook('stripe', $event->id),
+            );
+
+            return;
+        }
+
+        if ($lockedBooking->status !== BookingStatus::PendingPayment) {
             return;
         }
 
@@ -151,12 +185,10 @@ final class StripeWebhookController extends Controller
             return;
         }
 
-        $paymentIntent = $event->data->object;
-        $amountPaid = $this->integerValue($paymentIntent->amount_received ?? $paymentIntent->amount ?? null);
-
         $lockedBooking->forceFill([
             'status' => BookingStatus::Confirmed,
             'amount_paid' => $amountPaid ?? $lockedBooking->amount_paid,
+            'stripe_payment_intent_id' => $paymentIntentId ?? $lockedBooking->stripe_payment_intent_id,
         ])->save();
 
         $this->auditService->record(
@@ -168,6 +200,7 @@ final class StripeWebhookController extends Controller
             newValues: [
                 'status' => BookingStatus::Confirmed->value,
                 'amount_paid' => $amountPaid,
+                'stripe_payment_intent_id' => $paymentIntentId,
             ],
             context: $this->contextResolver->forWebhook('stripe', $event->id),
         );
@@ -335,7 +368,7 @@ final class StripeWebhookController extends Controller
             return;
         }
 
-        $paymentIntentId = $this->stringValue($checkoutSession->payment_intent ?? null);
+        $paymentIntentId = $this->extractPaymentIntentId($checkoutSession->payment_intent ?? null);
         $amountTotal = $this->integerValue($checkoutSession->amount_total ?? null);
 
         $lockedBooking->forceFill([
@@ -374,6 +407,102 @@ final class StripeWebhookController extends Controller
         }
 
         BookingCreated::dispatch($lockedBooking->getKey());
+    }
+
+    private function handleTransferCreated(Event $event): void
+    {
+        $transfer = $event->data->object;
+        $transferId = $this->stringValue($transfer->id ?? null);
+
+        if ($transferId === null) {
+            Log::warning('Stripe transfer.created event received without transfer ID.', [
+                'event_id' => $event->id,
+            ]);
+
+            return;
+        }
+
+        // Idempotency: skip if already recorded.
+        if (StripeTransfer::where('stripe_transfer_id', $transferId)->exists()) {
+            return;
+        }
+
+        $paymentIntentId = $this->extractPaymentIntentId($transfer->source_transaction ?? null)
+            ?? $this->stringValue($transfer->metadata?->payment_intent_id ?? null);
+        $sourceTransaction = $this->stringValue($transfer->source_transaction ?? null);
+        $chargeId = $sourceTransaction !== $paymentIntentId ? $sourceTransaction : null;
+        $amount = $this->integerValue($transfer->amount ?? null) ?? 0;
+        $currency = strtolower((string) ($transfer->currency ?? 'eur'));
+        $destinationAccount = $this->stringValue($transfer->destination ?? null);
+
+        $stripeCreatedAt = isset($transfer->created) && is_int($transfer->created)
+            ? Carbon::createFromTimestamp($transfer->created)
+            : null;
+
+        // Resolve related booking by PaymentIntent ID or metadata.
+        $booking = null;
+
+        if ($paymentIntentId !== null) {
+            $booking = Booking::query()
+                ->where('stripe_payment_intent_id', $paymentIntentId)
+                ->first();
+        }
+
+        if ($booking === null && isset($transfer->metadata)) {
+            $sessionId = $this->integerValue($transfer->metadata?->session_id ?? null);
+            $athleteId = $this->integerValue($transfer->metadata?->athlete_id ?? null);
+
+            if ($sessionId !== null && $athleteId !== null) {
+                $booking = Booking::query()
+                    ->where('sport_session_id', $sessionId)
+                    ->where('athlete_id', $athleteId)
+                    ->latest('id')
+                    ->first();
+            }
+        }
+
+        if ($booking === null) {
+            Log::warning('Stripe transfer.created: could not resolve booking. Recording anomaly.', [
+                'transfer_id' => $transferId,
+                'event_id' => $event->id,
+            ]);
+
+            PaymentAnomaly::create([
+                'anomaly_type' => PaymentAnomalyType::UnresolvedStripeTransfer->value,
+                'description' => "Stripe transfer {$transferId} received but could not be linked to a booking or session.",
+                'recommended_action' => 'Find the related booking manually using the Stripe Dashboard and update stripe_payment_intent_id.',
+                'resolution_status' => 'open',
+            ]);
+
+            return;
+        }
+
+        $stripeTransfer = StripeTransfer::create([
+            'stripe_transfer_id' => $transferId,
+            'stripe_payment_intent_id' => $paymentIntentId,
+            'stripe_charge_id' => $chargeId,
+            'booking_id' => $booking->id,
+            'sport_session_id' => $booking->sport_session_id,
+            'coach_id' => $booking->sportSession?->coach_id,
+            'destination_account_id' => $destinationAccount,
+            'amount' => $amount,
+            'currency' => $currency,
+            'status' => 'created',
+            'stripe_created_at' => $stripeCreatedAt,
+        ]);
+
+        $this->auditService->record(
+            AuditEventType::TransferRecorded,
+            AuditOperation::Payment,
+            $stripeTransfer,
+            subjects: [AuditSubject::primary($booking)],
+            newValues: [
+                'stripe_transfer_id' => $transferId,
+                'amount' => $amount,
+                'destination_account_id' => $destinationAccount,
+            ],
+            context: $this->contextResolver->forWebhook('stripe', $event->id),
+        );
     }
 
     private function findBookingForPaymentIntent(Event $event): ?Booking
@@ -444,5 +573,22 @@ final class StripeWebhookController extends Controller
     private function stringValue(mixed $value): ?string
     {
         return is_string($value) && $value !== '' ? $value : null;
+    }
+
+    /**
+     * Extract a PaymentIntent ID from either a string identifier or an expanded
+     * Stripe PaymentIntent object. Returns null when neither form is present.
+     */
+    private function extractPaymentIntentId(mixed $value): ?string
+    {
+        if (is_string($value) && $value !== '') {
+            return $value;
+        }
+
+        if (is_object($value) && isset($value->id) && is_string($value->id) && $value->id !== '') {
+            return $value->id;
+        }
+
+        return null;
     }
 }

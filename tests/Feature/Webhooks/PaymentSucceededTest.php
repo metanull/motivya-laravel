@@ -135,4 +135,60 @@ describe('payment_intent.succeeded webhook', function () {
         Event::assertNotDispatched(BookingCreated::class);
         Event::assertNotDispatched(SessionConfirmed::class);
     });
+
+    it('persists stripe_payment_intent_id when booking found by metadata', function () {
+        Event::fake([BookingCreated::class, SessionConfirmed::class]);
+
+        $session = SportSession::factory()->published()->create(['min_participants' => 1]);
+        $booking = Booking::factory()->pendingPayment()->for($session, 'sportSession')->create([
+            'stripe_payment_intent_id' => null,
+            'amount_paid' => 0,
+        ]);
+
+        $response = ($this->postStripeWebhook)('evt_pi_metadata_persist', 'payment_intent.succeeded', [
+            'id' => 'pi_metadata_found',
+            'amount_received' => 1500,
+            'metadata' => [
+                'session_id' => (string) $session->id,
+                'athlete_id' => (string) $booking->athlete_id,
+            ],
+        ]);
+
+        $response->assertOk()->assertJson(['status' => 'processed']);
+
+        $booking = $booking->fresh();
+        expect($booking->status)->toBe(BookingStatus::Confirmed);
+        expect($booking->stripe_payment_intent_id)->toBe('pi_metadata_found');
+        expect($booking->amount_paid)->toBe(1500);
+
+        Event::assertDispatched(BookingCreated::class);
+    });
+
+    it('repairs a confirmed booking missing stripe_payment_intent_id when the same PaymentIntent arrives', function () {
+        Event::fake([BookingCreated::class]);
+
+        $session = SportSession::factory()->confirmed()->create();
+        $booking = Booking::factory()->confirmed()->for($session, 'sportSession')->create([
+            'stripe_payment_intent_id' => null,
+            'amount_paid' => 2000,
+        ]);
+
+        $response = ($this->postStripeWebhook)('evt_pi_repair', 'payment_intent.succeeded', [
+            'id' => 'pi_repair_intent',
+            'amount_received' => 2000,
+            'metadata' => [
+                'session_id' => (string) $session->id,
+                'athlete_id' => (string) $booking->athlete_id,
+            ],
+        ]);
+
+        $response->assertOk()->assertJson(['status' => 'processed']);
+
+        $booking = $booking->fresh();
+        expect($booking->status)->toBe(BookingStatus::Confirmed);
+        expect($booking->stripe_payment_intent_id)->toBe('pi_repair_intent');
+
+        // Must not re-dispatch BookingCreated for an already confirmed booking.
+        Event::assertNotDispatched(BookingCreated::class);
+    });
 });

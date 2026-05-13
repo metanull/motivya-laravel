@@ -120,6 +120,39 @@
                 </p>
             </div>
         @endif
+
+        {{-- Collected Payments Amount --}}
+        <div class="rounded-lg border border-green-200 bg-green-50 p-4 shadow-sm dark:border-green-700 dark:bg-green-900/20">
+            <p class="text-xs font-medium uppercase tracking-wider text-green-600 dark:text-green-400">
+                {{ __('accountant.summary_collected_payments') }}
+            </p>
+            <p class="mt-2 text-2xl font-semibold text-green-700 dark:text-green-300">
+                <x-money :cents="$this->summaryCollectedPaymentsAmount" />
+            </p>
+            <p class="mt-1 text-xs text-green-600 dark:text-green-400">
+                {{ trans_choice('accountant.summary_collected_payments_count', $this->summaryCollectedPaymentsCount, ['count' => $this->summaryCollectedPaymentsCount]) }}
+            </p>
+        </div>
+
+        {{-- Stripe Transfers --}}
+        <div class="rounded-lg border border-blue-200 bg-blue-50 p-4 shadow-sm dark:border-blue-700 dark:bg-blue-900/20">
+            <p class="text-xs font-medium uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                {{ __('accountant.summary_transfers') }}
+            </p>
+            <p class="mt-2 text-2xl font-semibold text-blue-700 dark:text-blue-300">
+                {{ $this->summaryTransfersCount }}
+            </p>
+        </div>
+
+        {{-- Draft Payout Statements --}}
+        <div class="rounded-lg border border-purple-200 bg-purple-50 p-4 shadow-sm dark:border-purple-700 dark:bg-purple-900/20">
+            <p class="text-xs font-medium uppercase tracking-wider text-purple-600 dark:text-purple-400">
+                {{ __('accountant.summary_draft_payout_statements') }}
+            </p>
+            <p class="mt-2 text-2xl font-semibold text-purple-700 dark:text-purple-300">
+                {{ $this->summaryDraftPayoutStatementsCount }}
+            </p>
+        </div>
     </div>
 
     {{-- Audit Log Card --}}

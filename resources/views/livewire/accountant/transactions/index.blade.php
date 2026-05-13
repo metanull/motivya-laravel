@@ -164,6 +164,9 @@
                             {{ __('accountant.transactions_col_stripe_cs') }}
                         </th>
                         <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            {{ __('accountant.transactions_col_stripe_transfer') }}
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
                             {{ __('accountant.transactions_col_refund_status') }}
                         </th>
                         <th scope="col" class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
@@ -286,6 +289,12 @@
                             {{-- Stripe Checkout Session ID --}}
                             <td class="max-w-[120px] truncate px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400">
                                 {{ $booking->stripe_checkout_session_id ?? __('accountant.transactions_missing_value') }}
+                            </td>
+
+                            {{-- Stripe Transfer ID --}}
+                            <td class="max-w-[120px] truncate px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400">
+                                @php $transfer = $booking->stripeTransfers->first(); @endphp
+                                {{ $transfer?->stripe_transfer_id ?? __('accountant.transactions_missing_value') }}
                             </td>
 
                             {{-- Refund status --}}
