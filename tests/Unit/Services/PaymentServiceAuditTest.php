@@ -57,7 +57,9 @@ describe('PaymentService audit', function () {
 
         $service->createCheckoutSession($booking);
 
-        $audit = AuditEvent::where('event_type', AuditEventType::BookingPaymentStarted->value)->firstOrFail();
+        $audit = AuditEvent::where('event_type', AuditEventType::BookingPaymentStarted->value)
+            ->where('model_id', $booking->id)
+            ->firstOrFail();
 
         expect($audit->new_values['stripe_checkout_session_id'])->toBe('cs_audit_values_check');
     });

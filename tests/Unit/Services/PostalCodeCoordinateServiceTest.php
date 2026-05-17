@@ -11,7 +11,7 @@ uses(RefreshDatabase::class);
 describe('PostalCodeCoordinateService', function () {
 
     it('returns coordinates for a known postal code', function (): void {
-        PostalCodeCoordinate::create([
+        PostalCodeCoordinate::query()->updateOrCreate(['postal_code' => '1000'], [
             'postal_code' => '1000',
             'municipality' => 'Bruxelles/Brussel',
             'latitude' => 50.8503000,
@@ -34,7 +34,7 @@ describe('PostalCodeCoordinateService', function () {
     });
 
     it('resolveByLocationQuery returns coordinates for an exact postal code', function (): void {
-        PostalCodeCoordinate::create([
+        PostalCodeCoordinate::query()->updateOrCreate(['postal_code' => '1050'], [
             'postal_code' => '1050',
             'municipality' => 'Ixelles/Elsene',
             'latitude' => 50.8274000,
@@ -50,7 +50,7 @@ describe('PostalCodeCoordinateService', function () {
     });
 
     it('resolveByLocationQuery returns coordinates for a French municipality name', function (): void {
-        PostalCodeCoordinate::create([
+        PostalCodeCoordinate::query()->updateOrCreate(['postal_code' => '1000'], [
             'postal_code' => '1000',
             'municipality' => 'Bruxelles/Brussel',
             'latitude' => 50.8503000,
@@ -66,7 +66,7 @@ describe('PostalCodeCoordinateService', function () {
     });
 
     it('resolveByLocationQuery matches a partial bilingual municipality fragment', function (): void {
-        PostalCodeCoordinate::create([
+        PostalCodeCoordinate::query()->updateOrCreate(['postal_code' => '1050'], [
             'postal_code' => '1050',
             'municipality' => 'Ixelles/Elsene',
             'latitude' => 50.8274000,

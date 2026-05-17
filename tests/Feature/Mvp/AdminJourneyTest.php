@@ -6,6 +6,7 @@ use App\Enums\PaymentAnomalyType;
 use App\Livewire\Admin\Readiness;
 use App\Models\CoachProfile;
 use App\Models\PaymentAnomaly;
+use App\Models\PostalCodeCoordinate;
 use App\Models\SportSession;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -162,6 +163,7 @@ describe('MVP Admin Journey', function () {
 
     it('readiness reports red for missing postal code reference', function () {
         $admin = User::factory()->admin()->withTwoFactor()->create();
+        PostalCodeCoordinate::query()->delete();
 
         $component = Livewire::actingAs($admin)->test(Readiness::class);
 
@@ -180,6 +182,7 @@ describe('MVP Admin Journey', function () {
 
     it('readiness reports green for payment anomalies when all confirmed bookings have payment intent', function () {
         $admin = User::factory()->admin()->withTwoFactor()->create();
+        PaymentAnomaly::query()->delete();
 
         $component = Livewire::actingAs($admin)->test(Readiness::class);
 
@@ -224,6 +227,7 @@ describe('MVP Admin Journey', function () {
     it('readiness reports yellow when some sessions are missing GPS coordinates', function () {
         $admin = User::factory()->admin()->withTwoFactor()->create();
         $coach = User::factory()->coach()->create();
+        SportSession::query()->update(['latitude' => null, 'longitude' => null]);
 
         SportSession::factory()->create(['coach_id' => $coach->id, 'latitude' => null, 'longitude' => null]);
         SportSession::factory()->withCoordinates()->create(['coach_id' => $coach->id]);
@@ -236,6 +240,7 @@ describe('MVP Admin Journey', function () {
     it('readiness reports red when all sessions are missing GPS coordinates', function () {
         $admin = User::factory()->admin()->withTwoFactor()->create();
         $coach = User::factory()->coach()->create();
+        SportSession::query()->update(['latitude' => null, 'longitude' => null]);
 
         SportSession::factory()->count(2)->create(['coach_id' => $coach->id, 'latitude' => null, 'longitude' => null]);
 
@@ -247,6 +252,7 @@ describe('MVP Admin Journey', function () {
     it('readiness reports green for session coordinates when all sessions have GPS coordinates', function () {
         $admin = User::factory()->admin()->withTwoFactor()->create();
         $coach = User::factory()->coach()->create();
+        SportSession::query()->update(['latitude' => 50.8503, 'longitude' => 4.3517]);
 
         SportSession::factory()->withCoordinates()->count(2)->create(['coach_id' => $coach->id]);
 

@@ -10,7 +10,7 @@ use App\Models\AuditEvent;
 use App\Models\AuditEventSubject;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
-use RuntimeException;
+use Throwable;
 
 /**
  * Central application-level audit service.
@@ -36,7 +36,7 @@ final class AuditService
      * @param  array<string, mixed>  $newValues
      * @param  array<string, mixed>  $metadata
      *
-     * @throws RuntimeException when the DB write or log write fails
+     * @throws Throwable when the DB audit write fails
      */
     public function record(
         AuditEventType $eventType,
@@ -85,26 +85,34 @@ final class AuditService
             ]);
         }
 
-        Log::channel('audit')->info('domain_audit_event', [
-            'audit_event_id' => $auditEvent->id,
-            'event_type' => $eventType->value,
-            'operation' => $operation->value,
-            'actor_type' => $context->actorType->value,
-            'actor_id' => $context->actorId,
-            'actor_role' => $context->actorRole?->value,
-            'source' => $context->source->value,
-            'request_id' => $context->requestId,
-            'model_type' => $model->getMorphClass(),
-            'model_id' => $model->getKey(),
-            'subjects' => array_map(fn (AuditSubject $s): array => [
-                'type' => $s->subjectType,
-                'id' => $s->subjectId,
-                'relation' => $s->relation,
-            ], $subjects),
-            'old_values' => $safeOldValues,
-            'new_values' => $safeNewValues,
-            'metadata' => array_merge($safeMetadata, $context->metadata),
-        ]);
+        try {
+            Log::channel('audit')->info('domain_audit_event', [
+                'audit_event_id' => $auditEvent->id,
+                'event_type' => $eventType->value,
+                'operation' => $operation->value,
+                'actor_type' => $context->actorType->value,
+                'actor_id' => $context->actorId,
+                'actor_role' => $context->actorRole?->value,
+                'source' => $context->source->value,
+                'request_id' => $context->requestId,
+                'model_type' => $model->getMorphClass(),
+                'model_id' => $model->getKey(),
+                'subjects' => array_map(fn (AuditSubject $s): array => [
+                    'type' => $s->subjectType,
+                    'id' => $s->subjectId,
+                    'relation' => $s->relation,
+                ], $subjects),
+                'old_values' => $safeOldValues,
+                'new_values' => $safeNewValues,
+                'metadata' => array_merge($safeMetadata, $context->metadata),
+            ]);
+        } catch (Throwable $exception) {
+            error_log(sprintf(
+                'Motivya audit file log write failed for audit_event_id=%s: %s',
+                (string) $auditEvent->id,
+                $exception->getMessage(),
+            ));
+        }
 
         return $auditEvent;
     }

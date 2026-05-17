@@ -37,7 +37,7 @@ describe('detectConfirmedBookingsMissingPayment', function () {
     it('does not flag confirmed bookings that have a payment', function () {
         $session = SportSession::factory()->published()->create();
         $athlete = User::factory()->athlete()->create();
-        Booking::factory()->create([
+        $booking = Booking::factory()->create([
             'sport_session_id' => $session->id,
             'athlete_id' => $athlete->id,
             'status' => BookingStatus::Confirmed,
@@ -47,7 +47,9 @@ describe('detectConfirmedBookingsMissingPayment', function () {
 
         app(AnomalyDetectorService::class)->detectConfirmedBookingsMissingPayment();
 
-        expect(PaymentAnomaly::where('anomaly_type', PaymentAnomalyType::ConfirmedBookingMissingPayment->value)->exists())->toBeFalse();
+        expect(PaymentAnomaly::where('anomaly_type', PaymentAnomalyType::ConfirmedBookingMissingPayment->value)
+            ->where('related_booking_id', $booking->id)
+            ->exists())->toBeFalse();
     });
 });
 
@@ -109,7 +111,7 @@ describe('detectInvoiceTotalMismatches', function () {
         $coach = User::factory()->coach()->create();
         $session = SportSession::factory()->create(['coach_id' => $coach->id]);
 
-        Invoice::factory()->create([
+        $invoice = Invoice::factory()->create([
             'coach_id' => $coach->id,
             'sport_session_id' => $session->id,
             'revenue_ttc' => 12100,
@@ -119,7 +121,9 @@ describe('detectInvoiceTotalMismatches', function () {
 
         app(AnomalyDetectorService::class)->detectInvoiceTotalMismatches();
 
-        expect(PaymentAnomaly::where('anomaly_type', PaymentAnomalyType::InvoiceTotalMismatch->value)->exists())->toBeFalse();
+        expect(PaymentAnomaly::where('anomaly_type', PaymentAnomalyType::InvoiceTotalMismatch->value)
+            ->where('related_invoice_id', $invoice->id)
+            ->exists())->toBeFalse();
     });
 });
 
@@ -133,7 +137,7 @@ describe('createIfNotOpen deduplication', function () {
     it('does not create a duplicate open anomaly for the same type and model', function () {
         $session = SportSession::factory()->published()->create();
         $athlete = User::factory()->athlete()->create();
-        Booking::factory()->create([
+        $booking = Booking::factory()->create([
             'sport_session_id' => $session->id,
             'athlete_id' => $athlete->id,
             'status' => BookingStatus::Confirmed,
@@ -146,7 +150,9 @@ describe('createIfNotOpen deduplication', function () {
         $service->detectConfirmedBookingsMissingPayment(); // run twice
 
         expect(
-            PaymentAnomaly::where('anomaly_type', PaymentAnomalyType::ConfirmedBookingMissingPayment->value)->count()
+            PaymentAnomaly::where('anomaly_type', PaymentAnomalyType::ConfirmedBookingMissingPayment->value)
+                ->where('related_booking_id', $booking->id)
+                ->count()
         )->toBe(1);
     });
 });

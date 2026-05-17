@@ -284,4 +284,4 @@ describe('MvpJourneySeeder', function () {
         }
     })->group('production-guard');
 
-});
+})->group('local-seeder');

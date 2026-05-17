@@ -43,7 +43,9 @@ describe('UserAdminService audit', function () {
 
         $service->changeRole($user, UserRole::Coach);
 
-        $audit = AuditEvent::where('event_type', AuditEventType::UserRoleChanged->value)->firstOrFail();
+        $audit = AuditEvent::where('event_type', AuditEventType::UserRoleChanged->value)
+            ->where('model_id', $user->id)
+            ->firstOrFail();
 
         expect($audit->old_values['role'])->toBe(UserRole::Athlete->value)
             ->and($audit->new_values['role'])->toBe(UserRole::Coach->value);

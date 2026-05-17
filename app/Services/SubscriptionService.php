@@ -87,7 +87,8 @@ final class SubscriptionService
      */
     public function chargeSubscriptionFee(User $coach, CoachSubscription $subscription): void
     {
-        $coach->charge($subscription->subscription_fee, [
+        $coach->charge($subscription->subscription_fee, $coach->defaultPaymentMethod()?->id, [
+            'payment_method_types' => ['card'],
             'description' => sprintf(
                 'Motivya subscription — %s — %s',
                 $subscription->applied_plan->value,

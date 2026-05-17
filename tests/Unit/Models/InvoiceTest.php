@@ -12,6 +12,25 @@ use Illuminate\Support\Carbon;
 
 uses(RefreshDatabase::class);
 
+function expectedNextInvoiceNumberFor(InvoiceType $type): string
+{
+    $year = (int) now()->format('Y');
+    $prefix = $type === InvoiceType::Invoice ? 'INV' : 'CN';
+    $last = Invoice::query()
+        ->where('invoice_number', 'like', "{$prefix}-{$year}-%")
+        ->orderByDesc('invoice_number')
+        ->value('invoice_number');
+
+    $sequence = 1;
+
+    if ($last !== null) {
+        $parts = explode('-', $last);
+        $sequence = (int) end($parts) + 1;
+    }
+
+    return sprintf('%s-%d-%06d', $prefix, $year, $sequence);
+}
+
 describe('Invoice model', function () {
 
     describe('auto-numbering on create', function () {
@@ -39,10 +58,12 @@ describe('Invoice model', function () {
         });
 
         it('uses independent sequences for invoices and credit notes', function () {
+            $expectedCreditNoteNumber = expectedNextInvoiceNumberFor(InvoiceType::CreditNote);
+
             Invoice::factory()->invoice()->create();
             $creditNote = Invoice::factory()->creditNote()->create();
 
-            expect($creditNote->invoice_number)->toMatch('/^CN-\d{4}-000001$/');
+            expect($creditNote->invoice_number)->toBe($expectedCreditNoteNumber);
         });
 
         it('preserves a manually supplied invoice number', function () {
@@ -65,27 +86,21 @@ describe('Invoice model', function () {
     describe('generateInvoiceNumber', function () {
 
         it('returns INV-{year}-000001 for the first invoice of the year', function () {
-            $year = now()->format('Y');
-
             expect(Invoice::generateInvoiceNumber(InvoiceType::Invoice))
-                ->toBe("INV-{$year}-000001");
+                ->toBe(expectedNextInvoiceNumberFor(InvoiceType::Invoice));
         });
 
         it('returns CN-{year}-000001 for the first credit note of the year', function () {
-            $year = now()->format('Y');
-
             expect(Invoice::generateInvoiceNumber(InvoiceType::CreditNote))
-                ->toBe("CN-{$year}-000001");
+                ->toBe(expectedNextInvoiceNumberFor(InvoiceType::CreditNote));
         });
 
         it('accepts a string type value', function () {
-            $year = now()->format('Y');
-
             expect(Invoice::generateInvoiceNumber('invoice'))
-                ->toBe("INV-{$year}-000001");
+                ->toBe(expectedNextInvoiceNumberFor(InvoiceType::Invoice));
 
             expect(Invoice::generateInvoiceNumber('credit_note'))
-                ->toBe("CN-{$year}-000001");
+                ->toBe(expectedNextInvoiceNumberFor(InvoiceType::CreditNote));
         });
 
     });

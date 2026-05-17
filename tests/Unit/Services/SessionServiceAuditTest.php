@@ -92,7 +92,9 @@ describe('SessionService audit', function () {
 
         $service->cancel($session, 'Bad weather');
 
-        $audit = AuditEvent::where('event_type', AuditEventType::SessionCancelled->value)->firstOrFail();
+        $audit = AuditEvent::where('event_type', AuditEventType::SessionCancelled->value)
+            ->where('model_id', $session->id)
+            ->firstOrFail();
 
         expect($audit->metadata['reason'])->toBe('Bad weather');
     });
@@ -137,6 +139,7 @@ describe('SessionService audit', function () {
         $coach = User::factory()->coach()->create();
         CoachProfile::factory()->approved()->for($coach)->create(['stripe_onboarding_complete' => true]);
         $service = app(SessionService::class);
+        $existingCount = AuditEvent::where('event_type', AuditEventType::SessionCreated->value)->count();
 
         $service->createRecurring($coach, [
             'activity_type' => 'yoga',
@@ -154,6 +157,6 @@ describe('SessionService audit', function () {
 
         expect(
             AuditEvent::where('event_type', AuditEventType::SessionCreated->value)->count()
-        )->toBe(3);
+        )->toBe($existingCount + 3);
     });
 });
