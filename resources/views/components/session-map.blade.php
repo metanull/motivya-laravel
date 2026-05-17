@@ -19,8 +19,3 @@
     wire:ignore>
 </div>
 
-@once
-    @push('scripts')
-        @vite('resources/js/session-map.js')
-    @endpush
-@endonce
