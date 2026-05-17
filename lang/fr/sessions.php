@@ -86,6 +86,8 @@ return [
     'date_label' => 'Date',
     'start_time_label' => 'Heure de début',
     'end_time_label' => 'Heure de fin',
+    'schedule_hint' => 'Utilisez le sélecteur de date/heure natif de votre appareil. Les heures sont au format 24 h.',
+    'schedule_locked_hint' => 'La date et l’heure ne peuvent plus être modifiées dès qu’un sportif a réservé cette séance.',
     'price_label' => 'Prix (EUR)',
     'price_hint' => 'Prix par personne, hors commission plateforme.',
     'min_participants_label' => 'Participants min.',

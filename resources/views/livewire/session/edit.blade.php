@@ -132,6 +132,8 @@
                     {{ __('sessions.date_label') }}
                 </label>
                 <input type="date" wire:model="form.date" id="date"
+                    min="{{ now()->addDay()->toDateString() }}" autocomplete="off"
+                    aria-describedby="session-schedule-hint"
                     @if ($hasBookings) disabled @endif
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm disabled:cursor-not-allowed disabled:opacity-50">
                 @error('form.date')
@@ -144,6 +146,7 @@
                     {{ __('sessions.start_time_label') }}
                 </label>
                 <input type="time" wire:model="form.startTime" id="startTime"
+                    step="900" autocomplete="off" aria-describedby="session-schedule-hint"
                     @if ($hasBookings) disabled @endif
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm disabled:cursor-not-allowed disabled:opacity-50">
                 @error('form.startTime')
@@ -156,6 +159,8 @@
                     {{ __('sessions.end_time_label') }}
                 </label>
                 <input type="time" wire:model="form.endTime" id="endTime"
+                    step="900" min="{{ $form->startTime !== '' ? $form->startTime : '00:00' }}"
+                    autocomplete="off" aria-describedby="session-schedule-hint"
                     @if ($hasBookings) disabled @endif
                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 sm:text-sm disabled:cursor-not-allowed disabled:opacity-50">
                 @error('form.endTime')
@@ -163,6 +168,9 @@
                 @enderror
             </div>
         </div>
+        <p id="session-schedule-hint" class="text-sm text-gray-500 dark:text-gray-400">
+            {{ $hasBookings ? __('sessions.schedule_locked_hint') : __('sessions.schedule_hint') }}
+        </p>
 
         {{-- Price + Participants --}}
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">

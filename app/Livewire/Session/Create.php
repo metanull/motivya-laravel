@@ -19,6 +19,11 @@ final class Create extends Component
 {
     public SessionForm $form;
 
+    public function mount(): void
+    {
+        $this->form->setDefaultSchedule();
+    }
+
     /**
      * Validate the free-text address query against the geocoding provider.
      *
@@ -98,6 +103,11 @@ final class Create extends Component
         }
 
         $this->redirect(route('sessions.show', $session), navigate: true);
+    }
+
+    public function updatedFormStartTime(): void
+    {
+        $this->form->syncEndTimeAfterStartTime();
     }
 
     public function render(): View

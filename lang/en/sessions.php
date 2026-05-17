@@ -86,6 +86,8 @@ return [
     'date_label' => 'Date',
     'start_time_label' => 'Start Time',
     'end_time_label' => 'End Time',
+    'schedule_hint' => 'Use your device’s date/time picker. Times use the 24-hour format.',
+    'schedule_locked_hint' => 'Date and time can’t be changed once athletes have booked this session.',
     'price_label' => 'Price (EUR)',
     'price_hint' => 'Price per person, excluding platform commission.',
     'min_participants_label' => 'Min Participants',

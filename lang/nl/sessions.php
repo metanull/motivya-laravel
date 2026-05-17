@@ -86,6 +86,8 @@ return [
     'date_label' => 'Datum',
     'start_time_label' => 'Starttijd',
     'end_time_label' => 'Eindtijd',
+    'schedule_hint' => 'Gebruik de native datum-/tijdkiezer van uw apparaat. Tijden gebruiken het 24-uursformaat.',
+    'schedule_locked_hint' => 'Datum en tijd kunnen niet meer worden gewijzigd zodra een sporter deze sessie heeft geboekt.',
     'price_label' => 'Prijs (EUR)',
     'price_hint' => 'Prijs per persoon, exclusief platformcommissie.',
     'min_participants_label' => 'Min. deelnemers',
