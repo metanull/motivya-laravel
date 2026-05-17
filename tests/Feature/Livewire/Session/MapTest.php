@@ -92,4 +92,21 @@ describe('session map', function () {
             ->assertSee(__('sessions.map_no_markers'));
     });
 
+    it('does not push a page-local session-map.js Vite entry in the component', function () {
+        // The session map initializer is loaded via the global app bundle (app.js → session-map.js).
+        // The <x-session-map> component must NOT inject its own @vite('resources/js/session-map.js')
+        // so that wire:navigate SPA visits — which reuse the already-loaded app bundle — have
+        // window.sessionMap available without a full-page reload.
+        $blade = file_get_contents(resource_path('views/components/session-map.blade.php'));
+
+        expect($blade)->not->toContain("@vite('resources/js/session-map.js')");
+    });
+
+    it('registers window.sessionMap from the global app bundle entry', function () {
+        // app.js must import session-map.js so the initializer is bundled globally.
+        $appJs = file_get_contents(resource_path('js/app.js'));
+
+        expect($appJs)->toContain("import './session-map'");
+    });
+
 });
