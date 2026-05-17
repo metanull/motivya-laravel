@@ -37,6 +37,25 @@ function validatedAddressFields(): array
 }
 
 describe('session creation', function () {
+    it('pre-fills native schedule defaults', function () {
+        $coach = User::factory()->coach()->create();
+
+        Livewire::actingAs($coach)
+            ->test(Create::class)
+            ->assertSet('form.date', now()->addDay()->toDateString())
+            ->assertSet('form.startTime', '18:00')
+            ->assertSet('form.endTime', '19:00');
+    });
+
+    it('keeps end time after the chosen start time', function () {
+        $coach = User::factory()->coach()->create();
+
+        Livewire::actingAs($coach)
+            ->test(Create::class)
+            ->set('form.startTime', '19:30')
+            ->assertSet('form.endTime', '20:30');
+    });
+
     it('renders the form for coaches', function () {
         $coach = User::factory()->coach()->create();
 
@@ -137,9 +156,6 @@ describe('session creation', function () {
                 'form.level',
                 'form.title',
                 'form.addressQuery',
-                'form.date',
-                'form.startTime',
-                'form.endTime',
                 'form.priceEuros',
             ]);
     });
@@ -289,5 +305,18 @@ describe('session creation', function () {
             ->test(Create::class)
             ->set('form.activityType', ActivityType::Yoga->value)
             ->assertViewHas('coverImages', fn ($images) => $images->count() === 1 && $images->first()->id === $yogaImage->id);
+    });
+
+    it('renders native schedule input guidance', function () {
+        $coach = User::factory()->coach()->create();
+
+        $this->actingAs($coach)
+            ->get(route('coach.sessions.create'))
+            ->assertOk()
+            ->assertSee('type="date"', false)
+            ->assertSee('type="time"', false)
+            ->assertSee('step="900"', false)
+            ->assertSee('min="'.now()->addDay()->toDateString().'"', false)
+            ->assertSee(__('sessions.schedule_hint'));
     });
 });

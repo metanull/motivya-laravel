@@ -177,6 +177,18 @@ describe('session editing', function () {
             ->assertHasErrors(['form.title', 'form.addressQuery']);
     });
 
+    it('keeps end time after the chosen start time while editing', function () {
+        $coach = User::factory()->coach()->create();
+        $session = SportSession::factory()->draft()->withValidatedAddress()->create([
+            'coach_id' => $coach->id,
+        ]);
+
+        Livewire::actingAs($coach)
+            ->test(Edit::class, ['sportSession' => $session])
+            ->set('form.startTime', '19:30')
+            ->assertSet('form.endTime', '20:30');
+    });
+
     it('marks address as unvalidated when the query is changed', function () {
         $coach = User::factory()->coach()->create();
         $session = SportSession::factory()->draft()->withValidatedAddress()->create([
@@ -188,6 +200,33 @@ describe('session editing', function () {
             ->assertSet('form.addressValidated', true)
             ->set('form.addressQuery', 'Some completely different address, 9000 Gent')
             ->assertSet('form.addressValidated', false);
+    });
+
+    it('renders native schedule guidance on the edit page', function () {
+        $coach = User::factory()->coach()->create();
+        $session = SportSession::factory()->draft()->create(['coach_id' => $coach->id]);
+
+        $this->actingAs($coach)
+            ->get(route('coach.sessions.edit', $session))
+            ->assertOk()
+            ->assertSee('type="date"', false)
+            ->assertSee('type="time"', false)
+            ->assertSee('step="900"', false)
+            ->assertSee(__('sessions.schedule_hint'));
+    });
+
+    it('explains when schedule fields are locked by bookings', function () {
+        $coach = User::factory()->coach()->create();
+        $session = SportSession::factory()->draft()->create([
+            'coach_id' => $coach->id,
+            'current_participants' => 2,
+        ]);
+
+        $this->actingAs($coach)
+            ->get(route('coach.sessions.edit', $session))
+            ->assertOk()
+            ->assertSee(__('sessions.schedule_locked_hint'))
+            ->assertSee('disabled', false);
     });
 });
 

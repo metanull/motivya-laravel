@@ -7,6 +7,7 @@ namespace App\Livewire\Forms;
 use App\Enums\ActivityType;
 use App\Enums\SessionLevel;
 use App\Models\SportSession;
+use Carbon\Carbon;
 use Illuminate\Validation\Rules\Enum;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
@@ -195,5 +196,35 @@ final class SessionForm extends Form
         $this->minParticipants = $session->min_participants;
         $this->maxParticipants = $session->max_participants;
         $this->coverImageId = $session->cover_image_id;
+    }
+
+    public function setDefaultSchedule(): void
+    {
+        if ($this->date === '') {
+            $this->date = now()->addDay()->toDateString();
+        }
+
+        if ($this->startTime === '') {
+            $this->startTime = '18:00';
+        }
+
+        if ($this->endTime === '') {
+            $this->endTime = '19:00';
+        }
+    }
+
+    public function syncEndTimeAfterStartTime(): void
+    {
+        if ($this->startTime === '') {
+            return;
+        }
+
+        if ($this->endTime !== '' && $this->endTime > $this->startTime) {
+            return;
+        }
+
+        $this->endTime = Carbon::createFromFormat('H:i', $this->startTime)
+            ->addHour()
+            ->format('H:i');
     }
 }

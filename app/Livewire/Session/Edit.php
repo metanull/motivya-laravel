@@ -52,6 +52,15 @@ final class Edit extends Component
         }
     }
 
+    public function updatedFormStartTime(): void
+    {
+        if ($this->sportSession->current_participants > 0) {
+            return;
+        }
+
+        $this->form->syncEndTimeAfterStartTime();
+    }
+
     /**
      * Validate the free-text address query against the geocoding provider.
      *
