@@ -65,7 +65,7 @@ php artisan config:cache
 
 ## OVH UAT Command
 
-OVH is currently treated as the UAT environment. Run the suite directly on the host with bare PHP, using the deployed app configuration and the UAT MySQL database. Do not use Docker and do not force SQLite.
+OVH is currently treated as the UAT environment. Run the suite directly on the host with bare PHP. Stripe credentials and app URL come from the active `.env.uat`, but the suite forces an isolated SQLite in-memory test database and runs migrations before each test. It must not use or reset the configured UAT MySQL database.
 
 With `.env.uat` active, the command is intentionally short:
 
@@ -74,7 +74,7 @@ cd /opt/motivya/current
 php artisan test -c phpunit.manual-stripe.xml
 ```
 
-This writes provisional QA records to the UAT database and creates Stripe test-mode objects. That is expected for UAT.
+This creates temporary Laravel test records in SQLite and real Stripe test-mode objects in Stripe. Stripe test-mode objects that cannot be deleted remain visible in the Stripe dashboard.
 
 The suite verifies:
 
@@ -95,7 +95,17 @@ stripe listen --forward-to http://127.0.0.1:8000/stripe/webhook
 
 ## Data Isolation
 
-Each test creates a unique `qa_run_id` and uses it in user emails, session titles, and Stripe metadata where the called Stripe API supports metadata. Stripe test-mode objects that cannot be deleted remain discoverable in the Stripe Dashboard by `qa_run_id` metadata or generated object timestamps.
+The manual suite uses Laravel migrations and factories against SQLite `:memory:`. Each test starts from a fresh schema, creates the users/profiles/sessions/bookings it needs, and uses a unique `qa_run_id` in user emails, session titles, and Stripe metadata where the called Stripe API supports metadata. Stripe test-mode objects that cannot be deleted remain discoverable in the Stripe Dashboard by `qa_run_id` metadata or generated object timestamps.
+
+The existing full demo data feeder is `Database\Seeders\MvpJourneySeeder`. It is called by `DevSeeder` in local/testing and creates one user per role plus a full MVP smoke journey. It is intentionally skipped in production.
+
+Useful UAT account operations after a database restore or reset:
+
+```bash
+php artisan users:list --json
+php artisan users:create --email=admin@example.test --name="Admin User" --role=admin --password='change-me-now'
+php artisan users:change-role admin@example.test admin
+```
 
 ## Non-CI Rule
 
