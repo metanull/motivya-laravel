@@ -121,6 +121,8 @@ jobs:
     name: Build Release Artifact
     runs-on: ubuntu-24.04
     needs: test
+    environment:
+      name: motivya.metanull.eu
     env:
       MOTIVYA_DEPLOY_PROFILE: ${{ vars.MOTIVYA_DEPLOY_PROFILE || 'production' }}
 
@@ -141,6 +143,10 @@ jobs:
           path: vendor
           key: composer-${{ hashFiles('composer.lock') }}
           restore-keys: composer-
+
+      - name: Show release profile
+        run: |
+          echo "MOTIVYA_DEPLOY_PROFILE=${MOTIVYA_DEPLOY_PROFILE}"
 
       - name: Install Composer dependencies for release profile
         run: |
@@ -186,6 +192,19 @@ jobs:
           fi
 
           tar czf /tmp/release.tar.gz "${EXCLUDES[@]}" .
+
+      - name: Verify release artifact profile
+        run: |
+          mkdir -p /tmp/release-check
+          tar xzf /tmp/release.tar.gz -C /tmp/release-check
+
+          if [ "$MOTIVYA_DEPLOY_PROFILE" = "uat" ]; then
+            test -x /tmp/release-check/vendor/bin/pest || { echo "::error::UAT artifact is missing vendor/bin/pest"; exit 1; }
+            test -d /tmp/release-check/tests || { echo "::error::UAT artifact is missing tests/"; exit 1; }
+            test -f /tmp/release-check/phpunit.manual-stripe.xml || { echo "::error::UAT artifact is missing phpunit.manual-stripe.xml"; exit 1; }
+          else
+            test ! -d /tmp/release-check/tests || { echo "::error::Production artifact unexpectedly contains tests/"; exit 1; }
+          fi
 
       - name: Upload release artifact
         uses: actions/upload-artifact@v7
