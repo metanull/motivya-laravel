@@ -85,6 +85,34 @@ The suite verifies:
 - Exceptional refund through Stripe test-mode refund flow and credit note generation.
 - Coach billing calculation, subscription fee charge, invoice XML generation, and payout statement issuing.
 
+## UAT Scenario Data
+
+Generate a realistic UAT dataset on demand with:
+
+```bash
+cd /opt/motivya/current
+php artisan uat:play-scenario --payments=simulated --fresh --force
+```
+
+The scenario creates 5 coaches, 15 athletes, 5 sessions per coach, bookings across a rolling -30/+30 day window, successful payments, failed payments, below-threshold refunded sessions, at least two exceptional admin refunds, completed sessions, invoices, payout statements, payment anomalies, and captured UAT mail.
+
+To create real Stripe test-mode PaymentIntents and refunds instead of simulated payment identifiers:
+
+```bash
+php artisan uat:play-scenario --payments=stripe --fresh --force --confirm-stripe
+```
+
+Stripe mode requires test-mode Stripe configuration. Both modes force mail delivery to Laravel's `array` mailer during the run and capture generated mails in the database instead of sending them externally.
+
+Review captured UAT mail with:
+
+```bash
+php artisan uat:mail:list --limit=25
+php artisan uat:mail:list --run-id=uat_YYYYMMDD_HHMMSS
+php artisan uat:mail:show {id}
+php artisan uat:mail:clear --run-id=uat_YYYYMMDD_HHMMSS --force
+```
+
 ## Webhook Notes
 
 The suite posts signed Stripe-like webhook events directly to `/stripe/webhook` using `STRIPE_WEBHOOK_SECRET`. When manually completing hosted Checkout flows outside the suite, Stripe CLI forwarding remains useful:

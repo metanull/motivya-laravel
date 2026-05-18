@@ -14,6 +14,7 @@ use App\Events\NewCoachApplication;
 use App\Events\SessionCancelled;
 use App\Events\SessionCompleted;
 use App\Events\SessionConfirmed;
+use App\Listeners\CaptureUatMail;
 use App\Listeners\GenerateCreditNoteOnRefund;
 use App\Listeners\GenerateInvoiceOnSessionCompletion;
 use App\Listeners\NotifyAdminsOfNewApplication;
@@ -27,6 +28,7 @@ use App\Listeners\SendPayoutNotification;
 use App\Listeners\SendSessionCancelledNotification;
 use App\Listeners\SendSessionConfirmedNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Illuminate\Mail\Events\MessageSending;
 
 final class EventServiceProvider extends ServiceProvider
 {
@@ -65,6 +67,9 @@ final class EventServiceProvider extends ServiceProvider
         ],
         BookingRefunded::class => [
             GenerateCreditNoteOnRefund::class,
+        ],
+        MessageSending::class => [
+            CaptureUatMail::class,
         ],
     ];
 }

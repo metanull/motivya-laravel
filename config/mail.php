@@ -115,4 +115,8 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    'uat_capture' => [
+        'enabled' => env('UAT_MAIL_CAPTURE_ENABLED', false),
+    ],
+
 ];
