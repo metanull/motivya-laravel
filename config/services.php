@@ -47,6 +47,11 @@ return [
         'webhook' => [
             'secret' => env('STRIPE_WEBHOOK_SECRET'),
         ],
+        'manual_tests' => [
+            'enabled' => env('MOTIVYA_STRIPE_LIVE_TESTS', '0'),
+            'connected_account_id' => env('MOTIVYA_STRIPE_CONNECTED_ACCOUNT_ID'),
+            'base_url' => env('MOTIVYA_QA_BASE_URL', env('APP_URL')),
+        ],
     ],
 
 ];
