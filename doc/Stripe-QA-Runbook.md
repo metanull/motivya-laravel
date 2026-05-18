@@ -21,31 +21,56 @@ MOTIVYA_STRIPE_CONNECTED_ACCOUNT_ID=acct_...
 
 `MOTIVYA_STRIPE_CONNECTED_ACCOUNT_ID` must reference a Stripe test-mode connected account that can receive destination-charge transfer data.
 
-## Local Windows Command
+## UAT Environment Setup
 
-Run from the repository root. The local host does not need PHP 8.3 installed; the command runs through Docker.
+Generate a dedicated UAT env file without overwriting the active `.env`:
 
-```powershell
-$env:MOTIVYA_STRIPE_LIVE_TESTS = "1"
-$env:STRIPE_KEY = "pk_test_..."
-$env:STRIPE_SECRET = "sk_test_..."
-$env:STRIPE_WEBHOOK_SECRET = "whsec_..."
-$env:MOTIVYA_QA_BASE_URL = "http://127.0.0.1:8000"
-$env:MOTIVYA_STRIPE_CONNECTED_ACCOUNT_ID = "acct_..."
-.\scripts\qa-stripe.ps1
+```bash
+cd /opt/motivya/current
+php artisan env:make-uat --path=/opt/motivya/shared/.env.uat --from=/opt/motivya/shared/.env
+```
+
+The command writes UAT-safe values including:
+
+```env
+APP_ENV=uat
+APP_DEBUG=false
+MOTIVYA_DEPLOY_PROFILE=uat
+MOTIVYA_STRIPE_LIVE_TESTS=1
+MOTIVYA_STRIPE_CONNECTED_ACCOUNT_ID=acct_...
+```
+
+It discovers the connected account from approved, onboarded coach profiles. To inspect accounts yourself:
+
+```bash
+php artisan stripe:connect-accounts --json
+php artisan stripe:connect-accounts --usable-only --account-id-only
+```
+
+Activate UAT by switching the shared `.env` symlink:
+
+```bash
+php artisan env:activate uat --shared-path=/opt/motivya/shared
+php artisan optimize:clear
+php artisan config:cache
+```
+
+Switch back to production later with:
+
+```bash
+php artisan env:activate production --shared-path=/opt/motivya/shared
+php artisan optimize:clear
+php artisan config:cache
 ```
 
 ## OVH UAT Command
 
 OVH is currently treated as the UAT environment. Run the suite directly on the host with bare PHP, using the deployed app configuration and the UAT MySQL database. Do not use Docker and do not force SQLite.
 
-The connected account can be derived from any Stripe-ready coach profile already present in the UAT database:
+With `.env.uat` active, the command is intentionally short:
 
 ```bash
 cd /opt/motivya/current
-CONNECTED_ACCOUNT=$(php -r 'require "vendor/autoload.php"; $app = require "bootstrap/app.php"; $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class); $kernel->bootstrap(); echo App\Models\CoachProfile::whereNotNull("stripe_account_id")->where("stripe_account_id", "!=", "")->where("stripe_onboarding_complete", true)->value("stripe_account_id");')
-MOTIVYA_STRIPE_LIVE_TESTS=1 \
-MOTIVYA_STRIPE_CONNECTED_ACCOUNT_ID="$CONNECTED_ACCOUNT" \
 php artisan test -c phpunit.manual-stripe.xml
 ```
 
