@@ -11,7 +11,6 @@ describe('Stripe manual integration readiness', function () {
         expect($config['publishable_key'])->toStartWith('pk_test_')
             ->and($config['secret_key'])->toStartWith('sk_test_')
             ->and($config['webhook_secret'])->toStartWith('whsec_')
-            ->and($config['connected_account_id'])->toStartWith('acct_')
             ->and(filter_var($config['base_url'], FILTER_VALIDATE_URL))->not->toBeFalse();
     });
 });

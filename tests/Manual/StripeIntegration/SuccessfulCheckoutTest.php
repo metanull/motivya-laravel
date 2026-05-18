@@ -17,8 +17,9 @@ describe('Stripe manual successful payment integration', function () {
     it('initiates checkout, records a real successful card payment, and reconciles the webhook receipt', function (): void {
         $stripe = requireLiveStripeIntegration();
         $qaRunId = manualStripeQaRunId('successful_checkout');
+        $connectedAccountId = manualStripeConnectedAccountId($qaRunId);
 
-        $coach = manualStripeCoach($qaRunId, $stripe['connected_account_id']);
+        $coach = manualStripeCoach($qaRunId, $connectedAccountId);
         $athlete = manualStripeAthlete($qaRunId);
         $session = manualStripeSession($qaRunId, $coach, [
             'price_per_person' => 3100,
@@ -53,7 +54,7 @@ describe('Stripe manual successful payment integration', function () {
             'payment_method_types' => ['card'],
             'confirm' => true,
             'transfer_data' => [
-                'destination' => $stripe['connected_account_id'],
+                'destination' => $connectedAccountId,
                 'amount' => 3100,
             ],
             'metadata' => [

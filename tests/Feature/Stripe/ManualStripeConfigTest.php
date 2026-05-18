@@ -23,7 +23,16 @@ describe('manual Stripe UAT configuration', function () {
         expect($config['publishable_key'])->toBe('pk_test_config_ready')
             ->and($config['secret_key'])->toBe('sk_test_config_ready')
             ->and($config['webhook_secret'])->toBe('whsec_config_ready')
-            ->and($config['connected_account_id'])->toBe('acct_config_ready')
             ->and($config['base_url'])->toBe('https://motivya.metanull.eu');
+    });
+
+    it('uses an optional configured connected account when one is present', function (): void {
+        unset($_SERVER['MOTIVYA_STRIPE_CONNECTED_ACCOUNT_ID'], $_ENV['MOTIVYA_STRIPE_CONNECTED_ACCOUNT_ID']);
+
+        config([
+            'services.stripe.manual_tests.connected_account_id' => 'acct_config_ready',
+        ]);
+
+        expect(manualStripeConnectedAccountId('config_test'))->toBe('acct_config_ready');
     });
 });

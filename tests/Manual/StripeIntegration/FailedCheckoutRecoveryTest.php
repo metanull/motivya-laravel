@@ -13,8 +13,9 @@ describe('Stripe manual failed payment integration', function () {
     it('keeps recovery available and releases capacity exactly once after payment failure', function (): void {
         $stripe = requireLiveStripeIntegration();
         $qaRunId = manualStripeQaRunId('failed_payment');
+        $connectedAccountId = manualStripeConnectedAccountId($qaRunId);
 
-        $coach = manualStripeCoach($qaRunId, $stripe['connected_account_id']);
+        $coach = manualStripeCoach($qaRunId, $connectedAccountId);
         $athlete = manualStripeAthlete($qaRunId);
         $session = manualStripeSession($qaRunId, $coach);
         $booking = app(BookingService::class)->book($session, $athlete);

@@ -16,8 +16,9 @@ describe('Stripe manual exceptional reimbursement integration', function () {
     it('creates a real Stripe test-mode refund and records refunded booking state', function (): void {
         $stripe = requireLiveStripeIntegration();
         $qaRunId = manualStripeQaRunId('exceptional_refund');
+        $connectedAccountId = manualStripeConnectedAccountId($qaRunId);
 
-        $booking = manualConfirmedPaidBooking($qaRunId, $stripe['connected_account_id'], 2800);
+        $booking = manualConfirmedPaidBooking($qaRunId, $connectedAccountId, 2800);
         $admin = User::factory()->admin()->withTwoFactor()->create();
         $originalInvoice = manualOriginalInvoice($qaRunId, $booking);
 
