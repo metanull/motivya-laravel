@@ -122,7 +122,7 @@ jobs:
     runs-on: ubuntu-24.04
     needs: test
     env:
-      MOTIVYA_DEPLOY_PROFILE: ${{ vars.MOTIVYA_DEPLOY_PROFILE || 'uat' }}
+      MOTIVYA_DEPLOY_PROFILE: ${{ vars.MOTIVYA_DEPLOY_PROFILE || 'production' }}
 
     steps:
       - name: Checkout code
