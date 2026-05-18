@@ -121,6 +121,8 @@ jobs:
     name: Build Release Artifact
     runs-on: ubuntu-24.04
     needs: test
+    env:
+      MOTIVYA_DEPLOY_PROFILE: ${{ vars.MOTIVYA_DEPLOY_PROFILE || 'production' }}
 
     steps:
       - name: Checkout code
@@ -140,8 +142,13 @@ jobs:
           key: composer-${{ hashFiles('composer.lock') }}
           restore-keys: composer-
 
-      - name: Install Composer dependencies (production)
-        run: composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+      - name: Install Composer dependencies for release profile
+        run: |
+          if [ "$MOTIVYA_DEPLOY_PROFILE" = "production" ]; then
+            composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
+          else
+            composer install --no-interaction --prefer-dist --optimize-autoloader
+          fi
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -163,17 +170,22 @@ jobs:
 
       - name: Create release archive
         run: |
-          tar czf /tmp/release.tar.gz \
-            --exclude='.git' \
-            --exclude='node_modules' \
-            --exclude='tests' \
-            --exclude='.github' \
-            --exclude='.env' \
-            --exclude='storage/logs/*' \
-            --exclude='storage/framework/cache/data/*' \
-            --exclude='storage/framework/sessions/*' \
-            --exclude='storage/framework/views/*' \
-            .
+          EXCLUDES=(
+            --exclude='.git'
+            --exclude='node_modules'
+            --exclude='.github'
+            --exclude='.env'
+            --exclude='storage/logs/*'
+            --exclude='storage/framework/cache/data/*'
+            --exclude='storage/framework/sessions/*'
+            --exclude='storage/framework/views/*'
+          )
+
+          if [ "$MOTIVYA_DEPLOY_PROFILE" = "production" ]; then
+            EXCLUDES+=(--exclude='tests')
+          fi
+
+          tar czf /tmp/release.tar.gz "${EXCLUDES[@]}" .
 
       - name: Upload release artifact
         uses: actions/upload-artifact@v7
