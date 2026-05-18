@@ -26,7 +26,9 @@ describe('RefundService audit', function () {
         $service->refund($booking);
 
         expect(
-            AuditEvent::where('event_type', AuditEventType::RefundRequested->value)->exists()
+            AuditEvent::where('event_type', AuditEventType::RefundRequested->value)
+                ->where('model_id', $booking->id)
+                ->exists()
         )->toBeTrue();
     });
 
@@ -43,7 +45,9 @@ describe('RefundService audit', function () {
         $service->refund($booking);
 
         expect(
-            AuditEvent::where('event_type', AuditEventType::RefundCompleted->value)->exists()
+            AuditEvent::where('event_type', AuditEventType::RefundCompleted->value)
+                ->where('model_id', $booking->id)
+                ->exists()
         )->toBeTrue();
     });
 
@@ -66,7 +70,9 @@ describe('RefundService audit', function () {
         }
 
         expect(
-            AuditEvent::where('event_type', AuditEventType::RefundFailed->value)->exists()
+            AuditEvent::where('event_type', AuditEventType::RefundFailed->value)
+                ->where('model_id', $booking->id)
+                ->exists()
         )->toBeTrue();
     });
 
@@ -82,7 +88,7 @@ describe('RefundService audit', function () {
 
         $service->refund($booking);
 
-        expect(AuditEvent::count())->toBe(0);
+        expect(AuditEvent::query()->where('model_id', $booking->id)->exists())->toBeFalse();
     });
 
     it('records both requested and completed in the correct order', function () {
@@ -97,7 +103,7 @@ describe('RefundService audit', function () {
 
         $service->refund($booking);
 
-        $events = AuditEvent::orderBy('occurred_at')->pluck('event_type')->all();
+        $events = AuditEvent::where('model_id', $booking->id)->orderBy('occurred_at')->pluck('event_type')->all();
 
         expect($events[0]->value)->toBe(AuditEventType::RefundRequested->value)
             ->and($events[1]->value)->toBe(AuditEventType::RefundCompleted->value);

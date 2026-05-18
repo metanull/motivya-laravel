@@ -34,7 +34,12 @@ describe('Audit — Transaction Regression', function () {
             ->toThrow(SessionFullException::class);
 
         expect(
-            AuditEvent::where('event_type', AuditEventType::BookingCreated->value)->exists()
+            AuditEvent::where('event_type', AuditEventType::BookingCreated->value)
+                ->where('model_type', Booking::class)
+                ->whereHas('subjects', fn ($query) => $query
+                    ->where('subject_type', SportSession::class)
+                    ->where('subject_id', $session->id))
+                ->exists()
         )->toBeFalse();
     });
 

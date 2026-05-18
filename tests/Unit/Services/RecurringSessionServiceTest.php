@@ -17,6 +17,7 @@ describe('SessionService::createRecurring', function () {
         $coach = User::factory()->coach()->create();
         $service = app(SessionService::class);
         $futureDate = now()->addDays(7)->format('Y-m-d');
+        $existingCount = SportSession::query()->count();
 
         $sessions = $service->createRecurring($coach, [
             'activity_type' => ActivityType::Yoga->value,
@@ -35,7 +36,7 @@ describe('SessionService::createRecurring', function () {
         ], 4);
 
         expect($sessions)->toHaveCount(4);
-        expect(SportSession::count())->toBe(4);
+        expect(SportSession::count())->toBe($existingCount + 4);
     });
 
     it('generates correct weekly dates', function () {

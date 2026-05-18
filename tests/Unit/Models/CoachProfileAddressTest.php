@@ -98,7 +98,7 @@ describe('CoachProfile address columns', function () {
         $profile->refresh();
 
         expect($profile->geocoding_payload)->toBeArray();
-        expect($profile->geocoding_payload)->toBe($payload);
+        expect($profile->geocoding_payload)->toEqual($payload);
     });
 
     it('stores null geocoding_payload when not provided', function () {

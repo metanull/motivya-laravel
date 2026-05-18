@@ -10,11 +10,14 @@ uses(RefreshDatabase::class);
 describe('MVP Guest Journey', function () {
 
     it('can browse the session listing as a guest', function () {
+        $date = now()->addYears(10)->toDateString();
+
         SportSession::factory()->published()->create([
             'title' => 'Public Running Session',
+            'date' => $date,
         ]);
 
-        $this->get(route('sessions.index'))
+        $this->get(route('sessions.index', ['dateFrom' => $date, 'dateTo' => $date]))
             ->assertOk()
             ->assertSee('Public Running Session');
     });

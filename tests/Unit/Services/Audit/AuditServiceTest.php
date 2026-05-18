@@ -51,6 +51,8 @@ describe('AuditService::record()', function () {
     describe('database row creation', function () {
 
         it('creates one audit_events row', function () {
+            $existingCount = AuditEvent::query()->count();
+
             $this->service->record(
                 eventType: AuditEventType::SessionCreated,
                 operation: AuditOperation::Create,
@@ -58,7 +60,7 @@ describe('AuditService::record()', function () {
                 context: testAuditContext(),
             );
 
-            $this->assertDatabaseCount('audit_events', 1);
+            expect(AuditEvent::query()->count())->toBe($existingCount + 1);
         });
 
         it('persists the correct event_type, operation, and source', function () {
@@ -116,7 +118,7 @@ describe('AuditService::record()', function () {
                 context: testAuditContext(),
             );
 
-            $row = AuditEvent::first();
+            $row = AuditEvent::latest('id')->first();
             expect($row->old_values)->toBe(['status' => 'draft']);
             expect($row->new_values)->toBe(['status' => 'published']);
         });
@@ -139,6 +141,7 @@ describe('AuditService::record()', function () {
 
         it('creates audit_event_subjects rows for each given subject', function () {
             $session = SportSession::factory()->create();
+            $existingCount = DB::table('audit_event_subjects')->count();
 
             $this->service->record(
                 eventType: AuditEventType::SessionCreated,
@@ -151,7 +154,7 @@ describe('AuditService::record()', function () {
                 context: testAuditContext(),
             );
 
-            $this->assertDatabaseCount('audit_event_subjects', 2);
+            expect(DB::table('audit_event_subjects')->count())->toBe($existingCount + 2);
         });
 
         it('creates a primary subject with the correct relation', function () {
@@ -173,6 +176,8 @@ describe('AuditService::record()', function () {
         });
 
         it('creates no subject rows when subjects list is empty', function () {
+            $existingCount = DB::table('audit_event_subjects')->count();
+
             $this->service->record(
                 eventType: AuditEventType::SessionCreated,
                 operation: AuditOperation::Create,
@@ -181,7 +186,7 @@ describe('AuditService::record()', function () {
                 context: testAuditContext(),
             );
 
-            $this->assertDatabaseCount('audit_event_subjects', 0);
+            expect(DB::table('audit_event_subjects')->count())->toBe($existingCount);
         });
 
         it('links subject rows to the correct audit_event_id', function () {
@@ -256,6 +261,9 @@ describe('AuditService::record()', function () {
     describe('transaction participation', function () {
 
         it('rolls back audit rows when the outer transaction is rolled back', function () {
+            $existingAuditEvents = AuditEvent::query()->count();
+            $existingSubjects = DB::table('audit_event_subjects')->count();
+
             try {
                 DB::transaction(function () {
                     $this->service->record(
@@ -272,11 +280,13 @@ describe('AuditService::record()', function () {
                 // expected
             }
 
-            $this->assertDatabaseCount('audit_events', 0);
-            $this->assertDatabaseCount('audit_event_subjects', 0);
+            expect(AuditEvent::query()->count())->toBe($existingAuditEvents);
+            expect(DB::table('audit_event_subjects')->count())->toBe($existingSubjects);
         });
 
         it('commits audit rows when the outer transaction commits', function () {
+            $existingCount = AuditEvent::query()->count();
+
             DB::transaction(function () {
                 $this->service->record(
                     eventType: AuditEventType::SessionCreated,
@@ -286,7 +296,7 @@ describe('AuditService::record()', function () {
                 );
             });
 
-            $this->assertDatabaseCount('audit_events', 1);
+            expect(AuditEvent::query()->count())->toBe($existingCount + 1);
         });
 
     });
@@ -302,7 +312,7 @@ describe('AuditService::record()', function () {
                 context: testAuditContext(),
             );
 
-            $row = AuditEvent::first();
+            $row = AuditEvent::latest('id')->first();
             expect($row->old_values['password'])->toBe('[REDACTED]');
             expect($row->old_values['name'])->toBe('Alice');
         });
@@ -316,7 +326,7 @@ describe('AuditService::record()', function () {
                 context: testAuditContext(),
             );
 
-            $row = AuditEvent::first();
+            $row = AuditEvent::latest('id')->first();
             expect($row->new_values['remember_token'])->toBe('[REDACTED]');
             expect($row->new_values['role'])->toBe('coach');
         });
@@ -330,7 +340,7 @@ describe('AuditService::record()', function () {
                 context: testAuditContext(),
             );
 
-            $row = AuditEvent::first();
+            $row = AuditEvent::latest('id')->first();
             expect($row->new_values['two_factor_secret'])->toBe('[REDACTED]');
         });
 
@@ -343,7 +353,7 @@ describe('AuditService::record()', function () {
                 context: testAuditContext(),
             );
 
-            $row = AuditEvent::first();
+            $row = AuditEvent::latest('id')->first();
             expect($row->old_values['oauth_token'])->toBe('[REDACTED]');
         });
 

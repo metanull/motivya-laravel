@@ -67,7 +67,7 @@ describe('SportSession address columns', function () {
         $session->refresh();
 
         expect($session->geocoding_payload)->toBeArray();
-        expect($session->geocoding_payload)->toBe($payload);
+        expect($session->geocoding_payload)->toEqual($payload);
     });
 
     it('stores null geocoding_payload when not provided', function () {

@@ -17,6 +17,7 @@ uses(RefreshDatabase::class);
 
 describe('InvoiceService audit', function () {
     it('records an invoice.generated event for a completed session', function () {
+        $lastAuditId = AuditEvent::query()->max('id');
         $coach = User::factory()->coach()->create();
         CoachProfile::factory()->approved()->for($coach)->create(['is_vat_subject' => false]);
         $session = SportSession::factory()->for($coach, 'coach')->create(['status' => SessionStatus::Completed]);
@@ -29,11 +30,14 @@ describe('InvoiceService audit', function () {
         $service->generateForCompletedSession($session);
 
         expect(
-            AuditEvent::where('event_type', AuditEventType::InvoiceGenerated->value)->exists()
+            AuditEvent::where('event_type', AuditEventType::InvoiceGenerated->value)
+                ->when($lastAuditId !== null, fn ($query) => $query->where('id', '>', $lastAuditId))
+                ->exists()
         )->toBeTrue();
     });
 
     it('records an invoice.credit_note_generated event for a refunded booking', function () {
+        $lastAuditId = AuditEvent::query()->max('id');
         $coach = User::factory()->coach()->create();
         CoachProfile::factory()->approved()->for($coach)->create(['is_vat_subject' => false]);
         $session = SportSession::factory()->for($coach, 'coach')->create(['status' => SessionStatus::Completed]);
@@ -45,17 +49,17 @@ describe('InvoiceService audit', function () {
         $service = app(InvoiceService::class);
         $originalInvoice = $service->generateForCompletedSession($session);
 
-        // Reset audit count to test only the credit note audit
-        AuditEvent::truncate();
-
         $service->generateCreditNote($booking, $originalInvoice);
 
         expect(
-            AuditEvent::where('event_type', AuditEventType::InvoiceCreditNoteGenerated->value)->exists()
+            AuditEvent::where('event_type', AuditEventType::InvoiceCreditNoteGenerated->value)
+                ->when($lastAuditId !== null, fn ($query) => $query->where('id', '>', $lastAuditId))
+                ->exists()
         )->toBeTrue();
     });
 
     it('does not create duplicate audit events on idempotent calls', function () {
+        $lastAuditId = AuditEvent::query()->max('id');
         $coach = User::factory()->coach()->create();
         CoachProfile::factory()->approved()->for($coach)->create(['is_vat_subject' => false]);
         $session = SportSession::factory()->for($coach, 'coach')->create(['status' => SessionStatus::Completed]);
@@ -69,7 +73,9 @@ describe('InvoiceService audit', function () {
         $service->generateForCompletedSession($session); // idempotent — should not create a second audit
 
         expect(
-            AuditEvent::where('event_type', AuditEventType::InvoiceGenerated->value)->count()
+            AuditEvent::where('event_type', AuditEventType::InvoiceGenerated->value)
+                ->when($lastAuditId !== null, fn ($query) => $query->where('id', '>', $lastAuditId))
+                ->count()
         )->toBe(1);
     });
 });

@@ -353,6 +353,7 @@ dpkg-reconfigure -f noninteractive unattended-upgrades
 info "Creating application directories at ${APP_DIR}..."
 
 mkdir -p "${APP_DIR}/releases"
+mkdir -p "${APP_DIR}/shared/storage/app/private"
 mkdir -p "${APP_DIR}/shared/storage/app/public"
 mkdir -p "${APP_DIR}/shared/storage/framework/cache/data"
 mkdir -p "${APP_DIR}/shared/storage/framework/sessions"
