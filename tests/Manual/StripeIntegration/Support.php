@@ -9,6 +9,7 @@ use App\Models\Invoice;
 use App\Models\SportSession;
 use App\Models\User;
 use Illuminate\Testing\TestResponse;
+use Stripe\Account as StripeAccount;
 use Stripe\PaymentIntent;
 use Stripe\Stripe;
 
@@ -33,7 +34,7 @@ function stripeIntegrationValue(string $key, ?string $configKey = null): ?string
 }
 
 /**
- * @return array{publishable_key: string, secret_key: string, webhook_secret: string, base_url: string, connected_account_id: string}
+ * @return array{publishable_key: string, secret_key: string, webhook_secret: string, base_url: string}
  */
 function requireLiveStripeIntegration(): array
 {
@@ -42,7 +43,6 @@ function requireLiveStripeIntegration(): array
     $secretKey = stripeIntegrationValue('STRIPE_SECRET', 'services.stripe.secret');
     $webhookSecret = stripeIntegrationValue('STRIPE_WEBHOOK_SECRET', 'services.stripe.webhook.secret');
     $baseUrl = stripeIntegrationValue('MOTIVYA_QA_BASE_URL', 'services.stripe.manual_tests.base_url');
-    $connectedAccountId = stripeIntegrationValue('MOTIVYA_STRIPE_CONNECTED_ACCOUNT_ID', 'services.stripe.manual_tests.connected_account_id');
 
     $errors = [];
 
@@ -66,10 +66,6 @@ function requireLiveStripeIntegration(): array
         $errors[] = 'MOTIVYA_QA_BASE_URL must be a valid URL for the app under test.';
     }
 
-    if (! is_string($connectedAccountId) || ! str_starts_with($connectedAccountId, 'acct_')) {
-        $errors[] = 'MOTIVYA_STRIPE_CONNECTED_ACCOUNT_ID must be a Stripe Connect account ID beginning with acct_.';
-    }
-
     if ($errors !== []) {
         throw new RuntimeException("Stripe manual integration readiness failed:\n- ".implode("\n- ", $errors));
     }
@@ -88,8 +84,53 @@ function requireLiveStripeIntegration(): array
         'secret_key' => $secretKey,
         'webhook_secret' => $webhookSecret,
         'base_url' => $baseUrl,
-        'connected_account_id' => $connectedAccountId,
     ];
+}
+
+function manualStripeConnectedAccountId(string $qaRunId): string
+{
+    $configured = stripeIntegrationValue('MOTIVYA_STRIPE_CONNECTED_ACCOUNT_ID', 'services.stripe.manual_tests.connected_account_id');
+
+    if (is_string($configured) && str_starts_with($configured, 'acct_')) {
+        return $configured;
+    }
+
+    try {
+        $accounts = StripeAccount::all(['limit' => 100]);
+    } catch (Throwable $exception) {
+        throw new RuntimeException('Unable to list Stripe test connected accounts: '.$exception->getMessage(), previous: $exception);
+    }
+
+    foreach ($accounts->data as $account) {
+        if (is_string($account->id ?? null) && str_starts_with($account->id, 'acct_')) {
+            return $account->id;
+        }
+    }
+
+    try {
+        $account = StripeAccount::create([
+            'type' => 'express',
+            'country' => 'BE',
+            'email' => "connect.{$qaRunId}@motivya.test",
+            'capabilities' => [
+                'card_payments' => ['requested' => true],
+                'transfers' => ['requested' => true],
+            ],
+            'business_type' => 'individual',
+            'metadata' => [
+                'qa_run_id' => $qaRunId,
+                'created_by' => 'motivya_manual_stripe_suite',
+            ],
+        ]);
+    } catch (Throwable $exception) {
+        throw new RuntimeException('Unable to create a Stripe test connected account: '.$exception->getMessage(), previous: $exception);
+    }
+
+    if (! is_string($account->id ?? null) || ! str_starts_with($account->id, 'acct_')) {
+        throw new RuntimeException('Stripe did not return a valid connected account ID.');
+    }
+
+    return $account->id;
 }
 
 function manualStripeQaRunId(string $prefix): string

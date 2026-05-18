@@ -22,10 +22,11 @@ describe('Stripe manual coach billing and subscription integration', function ()
     it('computes no-charge Freemium billing and paid-plan subscription billing', function (): void {
         $stripe = requireLiveStripeIntegration();
         $qaRunId = manualStripeQaRunId('coach_billing');
+        $connectedAccountId = manualStripeConnectedAccountId($qaRunId);
         $month = Carbon::parse('2026-01-01');
 
-        $freemiumCoach = manualStripeCoach("{$qaRunId}_free", $stripe['connected_account_id'], true);
-        $premiumCoach = manualStripeCoach("{$qaRunId}_paid", $stripe['connected_account_id'], false);
+        $freemiumCoach = manualStripeCoach("{$qaRunId}_free", $connectedAccountId, true);
+        $premiumCoach = manualStripeCoach("{$qaRunId}_paid", $connectedAccountId, false);
 
         Invoice::factory()->invoice()->for($freemiumCoach, 'coach')->create([
             'billing_period_start' => '2026-01-15',
