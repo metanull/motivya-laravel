@@ -37,12 +37,12 @@ function stripeIntegrationValue(string $key, ?string $configKey = null): ?string
  */
 function requireLiveStripeIntegration(): array
 {
-    $enabled = stripeIntegrationEnv('MOTIVYA_STRIPE_LIVE_TESTS');
+    $enabled = stripeIntegrationValue('MOTIVYA_STRIPE_LIVE_TESTS', 'services.stripe.manual_tests.enabled');
     $publishableKey = stripeIntegrationValue('STRIPE_KEY', 'services.stripe.key');
     $secretKey = stripeIntegrationValue('STRIPE_SECRET', 'services.stripe.secret');
     $webhookSecret = stripeIntegrationValue('STRIPE_WEBHOOK_SECRET', 'services.stripe.webhook.secret');
-    $baseUrl = stripeIntegrationValue('MOTIVYA_QA_BASE_URL', 'app.url');
-    $connectedAccountId = stripeIntegrationEnv('MOTIVYA_STRIPE_CONNECTED_ACCOUNT_ID');
+    $baseUrl = stripeIntegrationValue('MOTIVYA_QA_BASE_URL', 'services.stripe.manual_tests.base_url');
+    $connectedAccountId = stripeIntegrationValue('MOTIVYA_STRIPE_CONNECTED_ACCOUNT_ID', 'services.stripe.manual_tests.connected_account_id');
 
     $errors = [];
 
