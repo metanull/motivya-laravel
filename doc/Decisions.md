@@ -100,9 +100,9 @@ This file tracks all key technical and business decisions for the Motivya projec
 
 - **Status**: DECIDED
 - **Date**: 2026-04
-- **Decision**: Single OVH VPS Starter (1 vCPU, 2 GB RAM, 20 GB SSD, France datacenter) running Docker Compose. Domain: `motivya.metanull.eu` (app), `metanull.eu` (static landing). SSL via Let's Encrypt.
-- **Rationale**: Cheapest viable option (~€3.50/mo). Free OVH credits cover initial period. A single VPS running the same Docker Compose stack as local dev (Nginx + PHP-FPM + MySQL + Valkey) handles MVP traffic easily. No multi-server orchestration needed at this scale.
-- **Deployment**: GitHub Actions SSH-based deploy on push to `main`. No container registry — code synced via rsync/git pull, containers rebuilt on the VPS.
+- **Decision**: Single OVH VPS Starter (1 vCPU, 2 GB RAM, 20 GB SSD, France datacenter) running native Ubuntu services for Nginx, PHP-FPM, MySQL, and Valkey. Current production baseline: Ubuntu 25.10. Domain: `motivya.metanull.eu` (app), `metanull.eu` (static landing). SSL via Let's Encrypt.
+- **Rationale**: Cheapest viable option (~€3.50/mo). Free OVH credits cover initial period. A single VPS serving the app through native Nginx + PHP-FPM with local MySQL and Valkey handles MVP traffic easily. No multi-server orchestration needed at this scale.
+- **Deployment**: GitHub Actions SSH-based deploy on push to `main`. CI builds a release tarball, uploads it to the VPS, and runs `scripts/deploy.sh` for an atomic release swap. No container registry and no container rebuild on the VPS.
 - **Cost model**: VPS is billed monthly (not per-hour). Shutting down does not save money. At ~€3.50/mo this is acceptable.
 - **Scaling path**: If traffic outgrows VPS Starter, upgrade to VPS Comfort (2 vCPU, 4 GB) in-place. Move to managed Kubernetes or Laravel Cloud only if truly needed.
 - **Alternatives rejected**: OVH Public Cloud (hourly billing but higher baseline cost, more complex). Azure (explored in client repo PR #3, too expensive for MVP). Laravel Cloud (convenient but more expensive than bare VPS for a single app).
