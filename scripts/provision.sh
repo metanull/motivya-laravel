@@ -59,7 +59,7 @@ error() { echo -e "${RED}[PROVISION]${NC} $1"; exit 1; }
 [[ $EUID -ne 0 ]] && error "This script must be run as root (or via sudo)."
 [[ ! -f /etc/os-release ]] && error "Cannot detect OS"
 source /etc/os-release
-[[ "$VERSION_ID" != "24.04" ]] && warn "Expected Ubuntu 24.04, got $VERSION_ID. Proceeding anyway..."
+[[ "$VERSION_ID" != "25.10" ]] && warn "Expected Ubuntu 25.10, got $VERSION_ID. Proceeding anyway..."
 
 # --- SSH public key (optional, for first run) ---------------------------------
 SSH_PUBLIC_KEY="${1:-}"
