@@ -136,6 +136,12 @@ configure_laravel() {
         fi
     fi
 
+    # Ensure values with spaces are properly quoted — phpdotenv v5 requires this.
+    # Handles .env files created before this quoting was added to .env.example.
+    if grep -qE '^NOMINATIM_USER_AGENT=[^"'"'"']' "${APP_DIR}/shared/.env" 2>/dev/null; then
+        sed -i 's|^NOMINATIM_USER_AGENT=\(.*\)$|NOMINATIM_USER_AGENT="\1"|' "${APP_DIR}/shared/.env"
+    fi
+
     # Symlink .env (must happen before key:generate or artisan commands)
     ln -sfn "${APP_DIR}/shared/.env" "${CURRENT}/.env"
 
