@@ -1,0 +1,99 @@
+name: motivya
+
+services:
+  app:
+    image: ghcr.io/metanull/motivya-laravel:${IMAGE_TAG:-latest}
+    env_file:
+      - /opt/motivya/.env
+    environment:
+      # Override networking for Docker: service names instead of 127.0.0.1
+      DB_HOST: mysql
+      REDIS_HOST: valkey
+      TRUSTED_PROXIES: "*"
+    volumes:
+      - storage:/var/www/app/storage
+    ports:
+      - "127.0.0.1:8001:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [motivya]
+
+  worker:
+    image: ghcr.io/metanull/motivya-laravel:${IMAGE_TAG:-latest}
+    command: php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600 --memory=128
+    env_file:
+      - /opt/motivya/.env
+    environment:
+      DB_HOST: mysql
+      REDIS_HOST: valkey
+    volumes:
+      - storage:/var/www/app/storage
+    depends_on:
+      mysql:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [motivya]
+
+  scheduler:
+    image: ghcr.io/metanull/motivya-laravel:${IMAGE_TAG:-latest}
+    command: php artisan schedule:work
+    env_file:
+      - /opt/motivya/.env
+    environment:
+      DB_HOST: mysql
+      REDIS_HOST: valkey
+    volumes:
+      - storage:/var/www/app/storage
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+    networks: [motivya]
+
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-motivya}
+      MYSQL_USER: ${DB_USERNAME:-motivya}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?ERROR: DB_PASSWORD not set in .env}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:?ERROR: DB_PASSWORD not set in .env}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks: [motivya]
+    # No ports: isolated within Docker network; host Nginx proxies to app on 8001
+
+  valkey:
+    image: valkey/valkey:8-alpine
+    volumes:
+      - valkey-data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      retries: 3
+    restart: unless-stopped
+    networks: [motivya]
+    # No ports: isolated within Docker network
+
+volumes:
+  mysql-data:
+    name: motivya_mysql-data
+  valkey-data:
+    name: motivya_valkey-data
+  storage:
+    name: motivya_storage
+
+networks:
+  motivya:
+    name: motivya_net
