@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
 #
-# provision.sh — One-time VPS setup for Motivya production
+# provision.sh — Standalone VPS provisioning for Motivya
 #
-# Run as root (or via sudo) on the VPS:
+# Fully self-contained: installs all infrastructure (PHP, Nginx, MySQL, Valkey,
+# UFW, fail2ban, Certbot) and configures the Motivya-specific resources.
+# Safe to run on a fresh server or alongside inventory-app (each app is isolated).
+#
+# Run as root (or via sudo):
 #   sudo bash provision.sh [SSH_PUBLIC_KEY]
+#
+# Required env vars (set in scripts/infra.local or export before running):
+#   MOTIVYA_DOMAIN       — the app domain (e.g. motivya.metanull.eu)
+#   MOTIVYA_ADMIN_EMAIL  — email for Certbot Let's Encrypt registration
 #
 # This script is idempotent — safe to re-run after updates.
 #
@@ -36,7 +44,7 @@ DEPLOY_USER="deploy"
 APP_DIR="/opt/motivya"
 DOMAIN="${MOTIVYA_DOMAIN:?ERROR: Set MOTIVYA_DOMAIN in scripts/infra.local or export it as an env var}"
 ADMIN_EMAIL="${MOTIVYA_ADMIN_EMAIL:?ERROR: Set MOTIVYA_ADMIN_EMAIL in scripts/infra.local or export it as an env var}"
-PHP_VERSION="8.4"
+PHP_VERSION="8.5"
 TIMEZONE="Europe/Brussels"
 LOCALE="fr_BE.UTF-8"
 
@@ -59,7 +67,8 @@ error() { echo -e "${RED}[PROVISION]${NC} $1"; exit 1; }
 [[ $EUID -ne 0 ]] && error "This script must be run as root (or via sudo)."
 [[ ! -f /etc/os-release ]] && error "Cannot detect OS"
 source /etc/os-release
-[[ "$VERSION_ID" != "25.10" ]] && warn "Expected Ubuntu 25.10, got $VERSION_ID. Proceeding anyway..."
+version_ge() { [ "$(printf '%s\n%s' "$1" "$2" | sort -V | head -1)" = "$2" ]; }
+version_ge "$VERSION_ID" "26.04" || warn "Expected Ubuntu 26.04 or later, got $VERSION_ID. Proceeding anyway..."
 
 # --- SSH public key (optional, for first run) ---------------------------------
 SSH_PUBLIC_KEY="${1:-}"
@@ -101,16 +110,17 @@ rm -f "/etc/sudoers.d/${DEPLOY_USER}"
 # Add deploy to www-data group (for shared file permissions)
 usermod -aG www-data "$DEPLOY_USER"
 
-# Set up SSH key for deploy user
+# Set up SSH key for deploy user (append-if-not-present so co-hosted apps keep their keys)
 if [[ -n "$SSH_PUBLIC_KEY" ]]; then
     DEPLOY_HOME="/home/${DEPLOY_USER}"
     mkdir -p "${DEPLOY_HOME}/.ssh"
-    # Replace (not append) to ensure clean state
-    echo "$SSH_PUBLIC_KEY" > "${DEPLOY_HOME}/.ssh/authorized_keys"
+    touch "${DEPLOY_HOME}/.ssh/authorized_keys"
+    grep -qxF "$SSH_PUBLIC_KEY" "${DEPLOY_HOME}/.ssh/authorized_keys" || \
+        echo "$SSH_PUBLIC_KEY" >> "${DEPLOY_HOME}/.ssh/authorized_keys"
     chmod 700 "${DEPLOY_HOME}/.ssh"
     chmod 600 "${DEPLOY_HOME}/.ssh/authorized_keys"
     chown -R "${DEPLOY_USER}:${DEPLOY_USER}" "${DEPLOY_HOME}/.ssh"
-    info "SSH key installed for '${DEPLOY_USER}'."
+    info "SSH key added for '${DEPLOY_USER}' (pre-existing keys preserved)."
 else
     info "No SSH key provided — skipping (use: provision.sh 'ssh-ed25519 AAAA...')"
 fi
