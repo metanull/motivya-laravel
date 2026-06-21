@@ -31,7 +31,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # --- Configuration -----------------------------------------------------------
 APP_DIR="/opt/motivya"
 CURRENT="${APP_DIR}/current"
-PHP_VERSION="8.4"
+PHP_VERSION="8.5"
 
 # --- Arguments ---------------------------------------------------------------
 ARCHIVE="${1:-}"
@@ -82,6 +82,11 @@ deploy_release() {
     # Each release is a fresh tarball extraction so the symlink is never present yet.
     ln -sfn "${APP_DIR}/shared/storage/app/public" "${RELEASE_DIR}/public/storage"
     info "Created public/storage symlink."
+
+    # If provisioning created CURRENT as a real directory, replace it.
+    if [[ -d "${CURRENT}" && ! -L "${CURRENT}" ]]; then
+        rm -rf "${CURRENT}"
+    fi
 
     # Swap the current symlink atomically
     ln -sfn "$RELEASE_DIR" "${CURRENT}"
