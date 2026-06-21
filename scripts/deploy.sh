@@ -105,7 +105,7 @@ configure_laravel() {
         # Production defaults
         sed -i 's/^APP_ENV=.*/APP_ENV=production/' "${APP_DIR}/shared/.env"
         sed -i 's/^APP_DEBUG=.*/APP_DEBUG=false/' "${APP_DIR}/shared/.env"
-        sed -i "s|^APP_URL=.*|APP_URL=https://${MOTIVYA_DOMAIN:?Set MOTIVYA_DOMAIN in scripts/infra.local or as an env var}|" "${APP_DIR}/shared/.env"
+        sed -i 's|^APP_URL=.*|APP_URL=https://motivya.metanull.eu|' "${APP_DIR}/shared/.env"
 
         # MySQL (if credentials file exists, written by provision.sh)
         DB_CRED_FILE="/root/.motivya-db-credentials"
