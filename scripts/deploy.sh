@@ -24,10 +24,6 @@
 #
 set -euo pipefail
 
-# --- Optional: source local infra config (gitignored, never committed) ------
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-[[ -f "${SCRIPT_DIR}/infra.local" ]] && source "${SCRIPT_DIR}/infra.local"
-
 # --- Configuration -----------------------------------------------------------
 APP_DIR="/opt/motivya"
 CURRENT="${APP_DIR}/current"
