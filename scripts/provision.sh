@@ -9,10 +9,6 @@
 # Run as root (or via sudo):
 #   sudo bash provision.sh [SSH_PUBLIC_KEY]
 #
-# Required env vars (set in scripts/infra.local or export before running):
-#   MOTIVYA_DOMAIN       — the app domain (e.g. motivya.metanull.eu)
-#   MOTIVYA_ADMIN_EMAIL  — email for Certbot Let's Encrypt registration
-#
 # This script is idempotent — safe to re-run after updates.
 #
 # What it does:
@@ -22,34 +18,31 @@
 #   4. Installs PHP-FPM, Nginx, and PHP extensions
 #   5. Installs MySQL 8.x and creates application database + user
 #   6. Installs Valkey (Redis-compatible) for cache/sessions/queues
-#   7. Configures Nginx vhost for Motivya
-#   8. Sets up UFW firewall (22, 80, 443)
-#   9. Installs Fail2ban and unattended-upgrades
-#   10. Creates the application directory structure (owned by deploy)
-#   11. Sets up shared storage with www-data group permissions
-#   12. Installs Certbot + auto-renewal timer
+#   7. Installs Certbot + issues SSL certificate (before Nginx config)
+#   8. Configures Nginx vhost for Motivya (HTTPS if cert available)
+#   9. Sets up UFW firewall (22, 80, 443)
+#   10. Installs Fail2ban and unattended-upgrades
+#   11. Creates the application directory structure (owned by deploy)
+#   12. Sets up shared storage with www-data group permissions
 #   13. Creates queue worker systemd service
-#   14. Sets up daily MySQL backup cron
+#   14. Sets up Laravel scheduler systemd service + timer
+#   15. Sets up daily MySQL backup cron
 #
 # The 'deploy' user has NO sudo. All privileged operations belong here.
 #
 set -euo pipefail
 
-# --- Optional: source local infra config (gitignored, never committed) ------
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-[[ -f "${SCRIPT_DIR}/infra.local" ]] && source "${SCRIPT_DIR}/infra.local"
-
 # --- Configuration -----------------------------------------------------------
 DEPLOY_USER="deploy"
 APP_DIR="/opt/motivya"
-DOMAIN="${MOTIVYA_DOMAIN:?ERROR: Set MOTIVYA_DOMAIN in scripts/infra.local or export it as an env var}"
-ADMIN_EMAIL="${MOTIVYA_ADMIN_EMAIL:?ERROR: Set MOTIVYA_ADMIN_EMAIL in scripts/infra.local or export it as an env var}"
+DOMAIN="motivya.metanull.eu"
+ADMIN_EMAIL="admin@metanull.eu"
 PHP_VERSION="8.5"
 TIMEZONE="Europe/Brussels"
 LOCALE="fr_BE.UTF-8"
 
 # Deployment mode: "bare-metal" (php-fpm FastCGI) or "docker" (Docker proxy_pass)
-# Set DEPLOY_MODE=docker in scripts/infra.local to switch to Docker-based deployment.
+# Override by exporting DEPLOY_MODE=docker before running.
 DEPLOY_MODE="${DEPLOY_MODE:-bare-metal}"
 DOCKER_APP_PORT="8001"   # loopback port where the Docker app container listens
 
@@ -257,17 +250,69 @@ systemctl restart valkey-server
 info "Valkey installed and running on localhost:6379."
 
 # =============================================================================
-# 7. Configure Nginx vhost
+# 7. Certbot + SSL certificate (runs BEFORE Nginx config so step 8 can write
+#    the correct HTTPS vhost in a single pass — no script re-entry needed)
+# =============================================================================
+info "Installing Certbot..."
+apt-get install -y -qq certbot python3-certbot-dns-ovh
+
+# Enable auto-renewal timer
+if systemctl list-timers 2>/dev/null | grep -q certbot; then
+    info "Certbot auto-renewal timer already active."
+else
+    systemctl enable --now certbot.timer 2>/dev/null || \
+        info "Certbot timer not found — renewal via cron should be in place."
+fi
+
+# Issue certificate if not yet present.
+# Prefer a wildcard cert (*.metanull.eu) via OVH DNS if credentials are available;
+# otherwise fall back to a per-domain cert via HTTP-01 standalone.
+BASE_DOMAIN=$(echo "${DOMAIN}" | awk -F. '{print $(NF-1)"."$NF}')
+OVH_CREDS="${OVH_CREDENTIALS_FILE:-/etc/certbot/ovh.ini}"
+WILDCARD_CERT_DIR="/etc/letsencrypt/live/${BASE_DOMAIN}"
+
+if [[ ! -f "${WILDCARD_CERT_DIR}/fullchain.pem" && ! -f "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" ]]; then
+    if [[ -f "${OVH_CREDS}" ]]; then
+        info "OVH credentials found — requesting wildcard certificate for *.${BASE_DOMAIN}..."
+        chmod 600 "${OVH_CREDS}"
+        certbot certonly \
+            --dns-ovh \
+            --dns-ovh-credentials "${OVH_CREDS}" \
+            -d "*.${BASE_DOMAIN}" -d "${BASE_DOMAIN}" \
+            --agree-tos -m "${ADMIN_EMAIL}" --non-interactive \
+            && info "Wildcard SSL certificate obtained." \
+            || warn "Wildcard cert via OVH DNS failed — falling back to per-domain standalone cert."
+    fi
+
+    # Fall through to standalone if wildcard was not obtained
+    if [[ ! -f "${WILDCARD_CERT_DIR}/fullchain.pem" && ! -f "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" ]]; then
+        if [[ ! -f "${OVH_CREDS}" ]]; then
+            warn "No OVH credentials at ${OVH_CREDS} — requesting per-domain certificate..."
+            warn "For a wildcard *.${BASE_DOMAIN} cert: create ${OVH_CREDS} with OVH API credentials and re-run."
+        fi
+        systemctl stop nginx
+        if certbot certonly --standalone -d "${DOMAIN}" \
+            --agree-tos -m "${ADMIN_EMAIL}" --non-interactive; then
+            info "SSL certificate obtained for ${DOMAIN}."
+        else
+            warn "Certbot failed — site will run on HTTP only."
+        fi
+        systemctl start nginx
+    fi
+else
+    info "SSL certificate already present — skipping issuance."
+fi
+
+# =============================================================================
+# 8. Configure Nginx vhost (cert state is now known — no re-entry needed)
 # =============================================================================
 info "Configuring Nginx for ${DOMAIN} (DEPLOY_MODE=${DEPLOY_MODE})..."
 NGINX_CONF="/etc/nginx/sites-available/motivya"
 
-# Prefer a wildcard cert (*.metanull.eu) over a per-domain cert.
-# The wildcard cert lives under the base domain directory in Let's Encrypt.
-BASE_DOMAIN=$(echo "${DOMAIN}" | awk -F. '{print $(NF-1)"."$NF}')
-if [[ -f "/etc/letsencrypt/live/${BASE_DOMAIN}/fullchain.pem" ]]; then
-    SSL_CERT="/etc/letsencrypt/live/${BASE_DOMAIN}/fullchain.pem"
-    SSL_KEY="/etc/letsencrypt/live/${BASE_DOMAIN}/privkey.pem"
+# Resolve which cert to use: wildcard takes priority over per-domain.
+if [[ -f "${WILDCARD_CERT_DIR}/fullchain.pem" ]]; then
+    SSL_CERT="${WILDCARD_CERT_DIR}/fullchain.pem"
+    SSL_KEY="${WILDCARD_CERT_DIR}/privkey.pem"
 else
     SSL_CERT="/etc/letsencrypt/live/${DOMAIN}/fullchain.pem"
     SSL_KEY="/etc/letsencrypt/live/${DOMAIN}/privkey.pem"
@@ -419,7 +464,7 @@ nginx -t && systemctl reload nginx
 info "Nginx configured and reloaded."
 
 # =============================================================================
-# 8. Firewall (UFW)
+# 9. Firewall (UFW)
 # =============================================================================
 info "Configuring UFW firewall..."
 apt-get install -y -qq ufw
@@ -431,7 +476,7 @@ ufw allow 443/tcp comment "HTTPS"
 ufw --force enable
 
 # =============================================================================
-# 9. Fail2ban + unattended-upgrades
+# 10. Fail2ban + unattended-upgrades
 # =============================================================================
 info "Installing Fail2ban..."
 apt-get install -y -qq fail2ban
@@ -453,7 +498,7 @@ apt-get install -y -qq unattended-upgrades
 dpkg-reconfigure -f noninteractive unattended-upgrades
 
 # =============================================================================
-# 10. Application directory structure
+# 11. Application directory structure
 # =============================================================================
 info "Creating application directories at ${APP_DIR}..."
 
@@ -474,7 +519,7 @@ fi
 touch "${APP_DIR}/shared/database.sqlite"
 
 # =============================================================================
-# 11. File ownership and permissions
+# 12. File ownership and permissions
 # =============================================================================
 info "Setting ownership and permissions..."
 
@@ -487,65 +532,6 @@ chmod 664 "${APP_DIR}/shared/database.sqlite"
 
 # Set setgid bit so new files inherit www-data group
 find "${APP_DIR}/shared/storage" -type d -exec chmod g+s {} +
-
-# =============================================================================
-# 12. Certbot + auto-renewal (wildcard *.metanull.eu preferred via OVH DNS)
-# =============================================================================
-info "Installing Certbot..."
-apt-get install -y -qq certbot python3-certbot-dns-ovh
-
-# Enable auto-renewal timer
-if systemctl list-timers 2>/dev/null | grep -q certbot; then
-    info "Certbot auto-renewal timer already active."
-else
-    systemctl enable --now certbot.timer 2>/dev/null || \
-        info "Certbot timer not found — renewal via cron should be in place."
-fi
-
-# Issue certificate if not yet present.
-# If /etc/certbot/ovh.ini exists, request a wildcard cert via OVH DNS challenge.
-# Otherwise fall back to a per-domain cert via HTTP-01 standalone.
-OVH_CREDS="${OVH_CREDENTIALS_FILE:-/etc/certbot/ovh.ini}"
-WILDCARD_CERT_DIR="/etc/letsencrypt/live/${BASE_DOMAIN}"
-
-if [[ ! -f "${WILDCARD_CERT_DIR}/fullchain.pem" && ! -f "/etc/letsencrypt/live/${DOMAIN}/fullchain.pem" ]]; then
-    if [[ -f "${OVH_CREDS}" ]]; then
-        info "OVH credentials found — requesting wildcard certificate for *.${BASE_DOMAIN}..."
-        chmod 600 "${OVH_CREDS}"
-        if certbot certonly \
-            --dns-ovh \
-            --dns-ovh-credentials "${OVH_CREDS}" \
-            -d "*.${BASE_DOMAIN}" -d "${BASE_DOMAIN}" \
-            --agree-tos -m "${ADMIN_EMAIL}" --non-interactive; then
-            info "Wildcard SSL certificate obtained. Re-running to apply HTTPS config..."
-            exec "$0" "$@"
-        else
-            warn "Wildcard cert via OVH DNS failed — falling back to per-domain standalone cert."
-            systemctl stop nginx
-            if certbot certonly --standalone -d "${DOMAIN}" \
-                --agree-tos -m "${ADMIN_EMAIL}" --non-interactive; then
-                systemctl start nginx
-                exec "$0" "$@"
-            else
-                systemctl start nginx
-                warn "Certbot failed — site will run on HTTP only."
-            fi
-        fi
-    else
-        warn "No OVH credentials at ${OVH_CREDS} — requesting per-domain certificate..."
-        warn "For a wildcard *.${BASE_DOMAIN} cert: create ${OVH_CREDS} with OVH API credentials and re-run."
-        systemctl stop nginx
-        if certbot certonly --standalone -d "${DOMAIN}" \
-            --agree-tos -m "${ADMIN_EMAIL}" --non-interactive; then
-            systemctl start nginx
-            info "SSL certificate obtained. Re-running to apply HTTPS config..."
-            exec "$0" "$@"
-        else
-            systemctl start nginx
-            warn "Certbot failed — site will run on HTTP only."
-        fi
-    fi
-fi
 
 # =============================================================================
 # 13. Queue worker systemd service
@@ -695,11 +681,11 @@ info ""
 info "  MySQL:         ${DB_NAME} (credentials in ${DB_CREDENTIALS_FILE})"
 info "  Valkey:        localhost:6379"
 info "  Queue worker:  motivya-queue.service"
-info "  Scheduler:     motivya-scheduler.timer  (every minute, logs → ${APP_DIR}/shared/storage/logs/scheduler.log)"
+info "  Scheduler:     motivya-scheduler.timer (every minute, logs → ${APP_DIR}/shared/storage/logs/scheduler.log)"
 info "  Backup:        daily at 3 AM (14-day retention)"
 info ""
 info "  Deployment mode: ${DEPLOY_MODE}"
-info "  (Switch: set DEPLOY_MODE=docker or bare-metal in scripts/infra.local, re-run provision.sh)"
+info "  (Switch: export DEPLOY_MODE=docker or bare-metal before re-running provision.sh)"
 info ""
 info "  Next steps:"
 info "  1. Verify SSH:  ssh -i ~/.ssh/motivya_deploy ${DEPLOY_USER}@<VPS_IP> whoami"
