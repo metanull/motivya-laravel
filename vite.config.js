@@ -10,6 +10,18 @@ export default defineConfig({
         }),
         tailwindcss(),
     ],
+    build: {
+        rollupOptions: {
+            output: {
+                // Emit the MapLibre worker as .js: nginx's default mime.types has
+                // no .mjs entry, and browsers refuse module workers without a JS type.
+                assetFileNames: (asset) =>
+                    asset.names?.some((name) => name.endsWith('.mjs'))
+                        ? 'assets/[name]-[hash].js'
+                        : 'assets/[name]-[hash][extname]',
+            },
+        },
+    },
     server: {
         host: '0.0.0.0',
         port: 5173,

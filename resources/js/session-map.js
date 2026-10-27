@@ -1,5 +1,10 @@
-import maplibregl from 'maplibre-gl';
+import * as maplibregl from 'maplibre-gl';
+import maplibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url';
 import 'maplibre-gl/dist/maplibre-gl.css';
+
+// MapLibre v6 locates its worker relative to its own module URL, which no
+// longer points at node_modules once Vite bundles it. Use the emitted asset.
+maplibregl.setWorkerUrl(maplibreWorkerUrl);
 
 /**
  * Return true when a value is a finite number (not NaN, not Infinity).
