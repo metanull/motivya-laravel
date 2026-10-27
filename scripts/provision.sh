@@ -318,6 +318,9 @@ else
     SSL_KEY="/etc/letsencrypt/live/${DOMAIN}/privkey.pem"
 fi
 
+# server_tokens off: Ubuntu patches its nginx package without changing the
+# upstream version number, so scanners comparing that number flag it as
+# vulnerable. Hide the version in every server block below.
 if [[ "$DEPLOY_MODE" == "docker" ]]; then
     # Docker mode: Nginx is a reverse proxy to the app container on a loopback port.
     if [[ -f "$SSL_CERT" && -f "$SSL_KEY" ]]; then
@@ -327,6 +330,7 @@ server {
     listen 80;
     listen [::]:80;
     server_name ${DOMAIN};
+    server_tokens off;
     return 301 https://\$host\$request_uri;
 }
 
@@ -334,6 +338,7 @@ server {
     listen 443 ssl;
     listen [::]:443 ssl;
     server_name ${DOMAIN};
+    server_tokens off;
 
     ssl_certificate     ${SSL_CERT};
     ssl_certificate_key ${SSL_KEY};
@@ -357,6 +362,7 @@ NGINX
 server {
     listen 80;
     server_name ${DOMAIN};
+    server_tokens off;
 
     client_max_body_size 20M;
 
@@ -381,6 +387,7 @@ server {
     listen 80;
     listen [::]:80;
     server_name ${DOMAIN};
+    server_tokens off;
     return 301 https://${DOMAIN}\$request_uri;
 }
 
@@ -388,6 +395,7 @@ server {
     listen 443 ssl;
     listen [::]:443 ssl;
     server_name ${DOMAIN};
+    server_tokens off;
 
     ssl_certificate     ${SSL_CERT};
     ssl_certificate_key ${SSL_KEY};
@@ -426,6 +434,7 @@ NGINX
 server {
     listen 80;
     server_name ${DOMAIN};
+    server_tokens off;
     root ${APP_DIR}/current/public;
     index index.php;
 
