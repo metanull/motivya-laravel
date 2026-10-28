@@ -7,7 +7,6 @@ use App\Livewire\Coach\PayoutStatements\Index;
 use App\Models\CoachPayoutStatement;
 use App\Models\CoachProfile;
 use App\Models\User;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 
@@ -84,12 +83,14 @@ describe('requestPayout', function () {
 
         $statement = CoachPayoutStatement::factory()->draft()->create(['coach_id' => $otherCoach->id]);
 
-        // The component filters by coach_id so it throws ModelNotFoundException
-        expect(function () use ($coach, $statement) {
-            Livewire::actingAs($coach)
-                ->test(Index::class)
-                ->call('requestPayout', $statement->id);
-        })->toThrow(ModelNotFoundException::class);
+        // The component filters by coach_id, so firstOrFail() raises
+        // ModelNotFoundException, which Livewire renders as a 404.
+        Livewire::actingAs($coach)
+            ->test(Index::class)
+            ->call('requestPayout', $statement->id)
+            ->assertStatus(404);
+
+        expect($statement->fresh()->status)->toBe(CoachPayoutStatementStatus::Draft);
     });
 });
 
