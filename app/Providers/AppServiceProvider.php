@@ -36,6 +36,7 @@ use App\Services\Maps\MapProviderResolver;
 use App\Services\PaymentService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Stripe\Stripe;
 
 final class AppServiceProvider extends ServiceProvider
 {
@@ -89,6 +90,8 @@ final class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Stripe::setApiVersion((string) config('services.stripe.api_version'));
+
         Gate::policy(SportSession::class, SessionPolicy::class);
         Gate::policy(Invoice::class, InvoicePolicy::class);
         Gate::policy(AuditEvent::class, AuditEventPolicy::class);

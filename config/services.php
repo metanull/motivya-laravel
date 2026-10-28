@@ -44,6 +44,10 @@ return [
     'stripe' => [
         'key' => env('STRIPE_KEY'),
         'secret' => env('STRIPE_SECRET'),
+        // Pinned Stripe API version for the static Stripe client. It must match
+        // \Stripe\Util\ApiVersion::CURRENT (which Cashier uses), so an SDK bump
+        // that changes the API version fails the test suite until reviewed.
+        'api_version' => '2026-08-26.dahlia',
         'webhook' => [
             'secret' => env('STRIPE_WEBHOOK_SECRET'),
         ],
