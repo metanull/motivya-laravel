@@ -50,6 +50,9 @@ return [
         'api_version' => '2026-08-26.dahlia',
         'webhook' => [
             'secret' => env('STRIPE_WEBHOOK_SECRET'),
+            // Signing secret of the Connect endpoint, which receives events from
+            // coaches' connected accounts (account.updated). Optional.
+            'connect_secret' => env('STRIPE_CONNECT_WEBHOOK_SECRET'),
         ],
         'manual_tests' => [
             'enabled' => env('MOTIVYA_STRIPE_LIVE_TESTS', '0'),

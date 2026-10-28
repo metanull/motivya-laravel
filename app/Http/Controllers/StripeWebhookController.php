@@ -47,10 +47,9 @@ final class StripeWebhookController extends Controller
     {
         $payload = $request->getContent();
         $signature = $request->header('Stripe-Signature', '');
-        $secret = config('services.stripe.webhook.secret');
 
         try {
-            $event = Webhook::constructEvent($payload, $signature, $secret);
+            $event = $this->constructEvent($payload, $signature);
         } catch (SignatureVerificationException $e) {
             Log::warning('Stripe webhook signature verification failed.', [
                 'error' => $e->getMessage(),
@@ -94,6 +93,32 @@ final class StripeWebhookController extends Controller
             // Return 200 to prevent Stripe retries for non-transient errors
             return response()->json(['status' => 'error']);
         }
+    }
+
+    /**
+     * Verify the payload against the platform endpoint's secret, then the Connect
+     * endpoint's. Stripe signs each endpoint with its own secret, and events from
+     * connected accounts (account.updated for coaches) only reach a Connect endpoint.
+     *
+     * @throws SignatureVerificationException
+     */
+    private function constructEvent(string $payload, string $signature): Event
+    {
+        $secrets = array_filter([
+            (string) config('services.stripe.webhook.secret'),
+            (string) config('services.stripe.webhook.connect_secret'),
+        ]);
+        $lastError = null;
+
+        foreach ($secrets as $secret) {
+            try {
+                return Webhook::constructEvent($payload, $signature, $secret);
+            } catch (SignatureVerificationException $e) {
+                $lastError = $e;
+            }
+        }
+
+        throw $lastError ?? new SignatureVerificationException('No Stripe webhook secret is configured.');
     }
 
     private function processStripeEvent(Event $event): void

@@ -143,6 +143,7 @@ When computing net coach payout, apply deductions in this order:
 - **Always** verify Stripe webhook signatures — never process unverified payloads
 - Use Laravel Cashier's `WebhookController` which handles signature verification automatically
 - Store the webhook signing secret in `config('services.stripe.webhook.secret')`, sourced from `STRIPE_WEBHOOK_SECRET` env var
+- Events from connected accounts (`account.updated` for coaches) only reach a Connect endpoint, which has its own signing secret: `config('services.stripe.webhook.connect_secret')`, sourced from `STRIPE_CONNECT_WEBHOOK_SECRET`. Both endpoints point at `/stripe/webhook`
 - **Never** access `env()` directly — always use `config()` helper
 
 ### Critical Webhooks to Handle

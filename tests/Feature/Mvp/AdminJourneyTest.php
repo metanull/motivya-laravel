@@ -190,38 +190,25 @@ describe('MVP Admin Journey', function () {
     });
 
     it('readiness reports red for missing public storage symlink', function () {
+        $this->usePrivatePublicPath();
         $admin = User::factory()->admin()->withTwoFactor()->create();
 
-        // In test environment public/storage symlink may not exist; we test the check method directly.
         $component = Livewire::actingAs($admin)->test(Readiness::class);
-        $check = $component->instance()->checks()['public_storage'];
 
-        expect($check['status'])->toBeIn(['red', 'yellow', 'green']); // valid status value
+        expect($component->instance()->checks()['public_storage']['status'])->toBe('red');
     });
 
     it('readiness reports yellow when public storage symlink present but no images uploaded', function () {
+        $this->usePrivatePublicPath();
         $admin = User::factory()->admin()->withTwoFactor()->create();
 
         $storagePath = storage_path('app/public');
         @mkdir($storagePath, 0755, true);
-        $linkPath = public_path('storage');
-        $created = false;
-
-        if (! is_link($linkPath) && ! file_exists($linkPath)) {
-            symlink($storagePath, $linkPath);
-            $created = true;
-        }
+        symlink($storagePath, public_path('storage'));
 
         $component = Livewire::actingAs($admin)->test(Readiness::class);
-        $check = $component->instance()->checks()['public_storage'];
 
-        if ($created) {
-            unlink($linkPath);
-            expect($check['status'])->toBe('yellow');
-        } else {
-            // Symlink was pre-existing; result depends on whether images also exist
-            expect($check['status'])->toBeIn(['yellow', 'green']);
-        }
+        expect($component->instance()->checks()['public_storage']['status'])->toBe('yellow');
     });
 
     it('readiness reports yellow when some sessions are missing GPS coordinates', function () {
