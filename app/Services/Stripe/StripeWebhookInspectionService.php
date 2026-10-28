@@ -26,9 +26,20 @@ class StripeWebhookInspectionService
     ];
 
     /**
+     * Required events that happen on coaches' connected accounts. Stripe only
+     * sends these to a Connect endpoint (one with an application set); a
+     * platform endpoint subscribed to them receives the platform's own events.
+     *
+     * @var list<string>
+     */
+    public const CONNECT_EVENTS = [
+        'account.updated',
+    ];
+
+    /**
      * Return a list of required event types that are not enabled on any active
-     * Stripe webhook endpoint. An empty array means every required event is
-     * covered.
+     * Stripe webhook endpoint of the right kind. Connect events are suffixed
+     * with " (Connect)". An empty array means every required event is covered.
      *
      * @return list<string>
      *
@@ -38,33 +49,41 @@ class StripeWebhookInspectionService
     {
         Stripe::setApiKey((string) config('services.stripe.secret'));
 
-        $endpoints = WebhookEndpoint::all(['limit' => 100]);
+        return $this->missingEventsFrom(WebhookEndpoint::all(['limit' => 100])->data);
+    }
 
-        $enabledEvents = [];
+    /**
+     * @param  iterable<WebhookEndpoint>  $endpoints
+     * @return list<string>
+     */
+    public function missingEventsFrom(iterable $endpoints): array
+    {
+        $enabled = ['platform' => [], 'connect' => []];
 
-        foreach ($endpoints->data as $endpoint) {
+        foreach ($endpoints as $endpoint) {
             if (($endpoint->status ?? '') !== 'enabled') {
                 continue;
             }
 
-            foreach ($endpoint->enabled_events as $eventType) {
-                if ($eventType === '*') {
-                    // Wildcard — all events are covered.
-                    return [];
-                }
+            $scope = empty($endpoint->application) ? 'platform' : 'connect';
 
-                $enabledEvents[] = $eventType;
+            foreach ($endpoint->enabled_events as $eventType) {
+                $enabled[$scope][] = $eventType;
             }
         }
 
-        $enabledEvents = array_unique($enabledEvents);
+        $missing = [];
 
-        return array_values(
-            array_filter(
-                self::REQUIRED_EVENTS,
-                fn (string $event): bool => ! in_array($event, $enabledEvents, true),
-            ),
-        );
+        foreach (self::REQUIRED_EVENTS as $event) {
+            $isConnect = in_array($event, self::CONNECT_EVENTS, true);
+            $events = $enabled[$isConnect ? 'connect' : 'platform'];
+
+            if (! in_array('*', $events, true) && ! in_array($event, $events, true)) {
+                $missing[] = $isConnect ? $event.' (Connect)' : $event;
+            }
+        }
+
+        return $missing;
     }
 
     /**

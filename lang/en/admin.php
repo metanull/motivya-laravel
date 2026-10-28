@@ -333,7 +333,7 @@ return [
     'readiness_stripe_unexpected_format' => 'Stripe keys are set but do not match the expected pk_/sk_ format.',
     'readiness_check_stripe_webhook_subscriptions' => 'Stripe webhook event subscriptions',
     'readiness_stripe_webhook_subscriptions_ok' => 'All required Stripe webhook event types are subscribed on the active endpoint.',
-    'readiness_stripe_webhook_subscriptions_missing' => 'The Stripe webhook endpoint is missing required event subscriptions: :events. Add these events to the active endpoint in the Stripe Dashboard to ensure payment, refund, and transfer events are received.',
+    'readiness_stripe_webhook_subscriptions_missing' => 'The Stripe webhook endpoint is missing required event subscriptions: :events. Add these events to the active endpoint in the Stripe Dashboard to ensure payment, refund, and transfer events are received. Events marked (Connect) must be on a separate endpoint that listens to events on connected accounts.',
     'readiness_stripe_webhook_subscriptions_no_key' => 'Stripe secret key is not configured. Cannot check webhook subscriptions.',
     'readiness_stripe_webhook_subscriptions_api_error' => 'Could not retrieve Stripe webhook endpoints: :message.',
     'readiness_mail_ok' => 'Mail driver ":driver" is configured.',

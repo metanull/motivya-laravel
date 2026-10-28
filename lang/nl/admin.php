@@ -333,7 +333,7 @@ return [
     'readiness_stripe_unexpected_format' => 'Stripe-sleutels zijn ingesteld maar komen niet overeen met het verwachte pk_/sk_-formaat.',
     'readiness_check_stripe_webhook_subscriptions' => 'Stripe webhook-gebeurtenisabonnementen',
     'readiness_stripe_webhook_subscriptions_ok' => 'Alle vereiste Stripe webhook-gebeurtenistypes zijn geabonneerd op het actieve eindpunt.',
-    'readiness_stripe_webhook_subscriptions_missing' => 'Het Stripe webhook-eindpunt mist vereiste gebeurtenisabonnementen: :events. Voeg deze gebeurtenissen toe aan het actieve eindpunt in het Stripe Dashboard.',
+    'readiness_stripe_webhook_subscriptions_missing' => 'Het Stripe webhook-eindpunt mist vereiste gebeurtenisabonnementen: :events. Voeg deze gebeurtenissen toe aan het actieve eindpunt in het Stripe Dashboard. Gebeurtenissen gemarkeerd met (Connect) moeten op een apart eindpunt staan dat luistert naar gebeurtenissen van gekoppelde accounts.',
     'readiness_stripe_webhook_subscriptions_no_key' => 'Stripe geheime sleutel is niet geconfigureerd. Kan webhook-abonnementen niet controleren.',
     'readiness_stripe_webhook_subscriptions_api_error' => 'Kon Stripe webhook-eindpunten niet ophalen: :message.',
     'readiness_mail_ok' => 'E-maildriver ":driver" is geconfigureerd.',
