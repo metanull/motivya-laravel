@@ -333,7 +333,7 @@ return [
     'readiness_stripe_unexpected_format' => 'Les clés Stripe sont définies mais ne correspondent pas au format pk_/sk_ attendu.',
     'readiness_check_stripe_webhook_subscriptions' => 'Abonnements aux événements Stripe webhook',
     'readiness_stripe_webhook_subscriptions_ok' => 'Tous les types d\'événements Stripe webhook requis sont abonnés sur le point de terminaison actif.',
-    'readiness_stripe_webhook_subscriptions_missing' => 'Le point de terminaison Stripe webhook manque des abonnements aux événements requis : :events. Ajoutez ces événements au point de terminaison actif dans le tableau de bord Stripe.',
+    'readiness_stripe_webhook_subscriptions_missing' => 'Le point de terminaison Stripe webhook manque des abonnements aux événements requis : :events. Ajoutez ces événements au point de terminaison actif dans le tableau de bord Stripe. Les événements marqués (Connect) doivent être sur un point de terminaison distinct qui écoute les événements des comptes connectés.',
     'readiness_stripe_webhook_subscriptions_no_key' => 'La clé secrète Stripe n\'est pas configurée. Impossible de vérifier les abonnements webhook.',
     'readiness_stripe_webhook_subscriptions_api_error' => 'Impossible de récupérer les points de terminaison Stripe webhook : :message.',
     'readiness_mail_ok' => 'Le pilote de courrier ":driver" est configuré.',
