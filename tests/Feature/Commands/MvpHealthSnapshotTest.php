@@ -58,6 +58,10 @@ function ensureStorageSymlink(): bool
 
 describe('mvp:health-snapshot', function () {
 
+    beforeEach(function (): void {
+        $this->usePrivatePublicPath();
+    });
+
     it('exits with failure when postal code reference is empty', function (): void {
         // No postal codes seeded — red blocker.
         expect(PostalCodeCoordinate::count())->toBe(0);

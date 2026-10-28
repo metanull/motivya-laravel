@@ -123,6 +123,7 @@ final class MakeUatEnv extends Command
             'STRIPE_KEY' => 'pk_test_',
             'STRIPE_SECRET' => 'sk_test_',
             'STRIPE_WEBHOOK_SECRET' => 'whsec_',
+            'STRIPE_CONNECT_WEBHOOK_SECRET' => 'whsec_',
         ];
 
         foreach ($rules as $key => $prefix) {

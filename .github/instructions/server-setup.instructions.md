@@ -155,6 +155,7 @@ MAIL_PORT=587
 STRIPE_KEY=<stripe-publishable>
 STRIPE_SECRET=<stripe-secret>
 STRIPE_WEBHOOK_SECRET=<stripe-webhook-secret>
+STRIPE_CONNECT_WEBHOOK_SECRET=<stripe-connect-webhook-secret>
 ```
 
 ## Deployment Flow

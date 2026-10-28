@@ -43,6 +43,7 @@ function ensureMvpSeederStorageSymlink(): bool
 describe('MvpJourneySeeder', function () {
 
     beforeEach(function (): void {
+        $this->usePrivatePublicPath();
         $GLOBALS['mvpSeederStorageSymlinkCreated'] = ensureMvpSeederStorageSymlink();
     });
 

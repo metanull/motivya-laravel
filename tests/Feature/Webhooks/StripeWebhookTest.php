@@ -71,6 +71,45 @@ describe('signature verification', function () {
         $response->assertJson(['status' => 'processed']);
     });
 
+    it('accepts events signed by the Connect endpoint secret', function () {
+        config([
+            'services.stripe.webhook.secret' => 'whsec_platform_secret',
+            'services.stripe.webhook.connect_secret' => 'whsec_connect_secret',
+        ]);
+        Event::fake();
+
+        $payload = makeStripePayload('evt_connect_account', 'account.updated', ['id' => 'acct_test_123']);
+        $signature = generateStripeSignature($payload, 'whsec_connect_secret');
+
+        $response = $this->call('POST', '/stripe/webhook', [], [], [], [
+            'HTTP_STRIPE_SIGNATURE' => $signature,
+            'CONTENT_TYPE' => 'application/json',
+        ], $payload);
+
+        $response->assertStatus(200);
+        $response->assertJson(['status' => 'processed']);
+        Event::assertDispatched(AccountUpdated::class);
+    });
+
+    it('rejects events signed by neither endpoint secret', function () {
+        config([
+            'services.stripe.webhook.secret' => 'whsec_platform_secret',
+            'services.stripe.webhook.connect_secret' => 'whsec_connect_secret',
+        ]);
+
+        $payload = makeStripePayload('evt_unknown_signer', 'account.updated', ['id' => 'acct_test_123']);
+        $signature = generateStripeSignature($payload, 'whsec_other_secret');
+
+        $response = $this->call('POST', '/stripe/webhook', [], [], [], [
+            'HTTP_STRIPE_SIGNATURE' => $signature,
+            'CONTENT_TYPE' => 'application/json',
+        ], $payload);
+
+        $response->assertStatus(400);
+        $response->assertJson(['error' => 'Invalid signature']);
+        expect(ProcessedWebhook::where('stripe_event_id', 'evt_unknown_signer')->exists())->toBeFalse();
+    });
+
 });
 
 describe('idempotency', function () {
