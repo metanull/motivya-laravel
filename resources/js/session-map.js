@@ -19,6 +19,65 @@ function isFiniteNumber(v) {
 }
 
 /**
+ * Return the URL when it is http(s) or relative (resolved against the current
+ * page), otherwise null. Blocks javascript:, data: and similar schemes.
+ *
+ * @param {*} url
+ * @returns {string|null}
+ */
+function safeHref(url) {
+    if (typeof url !== 'string' || url.trim() === '') return null;
+    try {
+        const parsed = new URL(url, window.location.href);
+        return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? parsed.href : null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Build the marker popup as DOM nodes. Session titles and coach names are
+ * user-supplied, so every value is set through textContent, never as HTML.
+ *
+ * @param {Object} props          - GeoJSON feature properties of the clicked marker
+ * @param {string} priceFormatted - Price already formatted for display
+ * @returns {HTMLElement}
+ */
+function buildPopupContent(props, priceFormatted) {
+    const text = (v) => (v === null || v === undefined ? '' : String(v));
+
+    const container = document.createElement('div');
+    container.style.minWidth = '180px';
+    container.style.padding = '4px';
+
+    const title = document.createElement('strong');
+    title.textContent = text(props.title);
+    container.append(title, document.createElement('br'));
+
+    const details = document.createElement('span');
+    details.style.fontSize = '0.85em';
+    details.style.color = '#555';
+    details.append(
+        `${text(props.coach)} — ${text(props.date)} ${text(props.time)}`,
+        document.createElement('br'),
+        `€${priceFormatted}`,
+    );
+    container.append(details);
+
+    const href = safeHref(props.url);
+    if (href !== null) {
+        const link = document.createElement('a');
+        link.href = href;
+        link.style.color = '#4f46e5';
+        link.style.fontSize = '0.85em';
+        link.textContent = 'View session →';
+        container.append(document.createElement('br'), link);
+    }
+
+    return container;
+}
+
+/**
  * Alpine.js data factory for the session map component.
  *
  * Uses MapLibre GL JS (open-source, no API key required) with free
@@ -178,10 +237,13 @@ export function sessionMap(
                 _map.on('click', 'clusters', (e) => {
                     const features = _map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
                     const clusterId = features[0].properties.cluster_id;
-                    _map.getSource('sessions').getClusterExpansionZoom(clusterId, (err, zoom) => {
-                        if (err) return;
-                        _map.easeTo({ center: features[0].geometry.coordinates, zoom });
-                    });
+                    // MapLibre v4+ returns a Promise; the old callback argument is ignored.
+                    _map.getSource('sessions')
+                        .getClusterExpansionZoom(clusterId)
+                        .then((zoom) => {
+                            _map.easeTo({ center: features[0].geometry.coordinates, zoom });
+                        })
+                        .catch(() => {});
                 });
 
                 // Click individual marker → popup
@@ -192,17 +254,7 @@ export function sessionMap(
 
                     _popup
                         .setLngLat(coords)
-                        .setHTML(`
-                            <div style="min-width:180px;padding:4px;">
-                                <strong>${props.title}</strong><br>
-                                <span style="font-size:0.85em;color:#555;">
-                                    ${props.coach} — ${props.date} ${props.time}<br>
-                                    €${priceFormatted}
-                                </span><br>
-                                <a href="${props.url}" style="color:#4f46e5;font-size:0.85em;">
-                                    View session →
-                                </a>
-                            </div>`)
+                        .setDOMContent(buildPopupContent(props, priceFormatted))
                         .addTo(_map);
                 });
 
